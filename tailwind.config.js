@@ -8,24 +8,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Custom brand colors - update these with Pauv brand colors
-        primary: {
-          50: "#f0f9ff",
-          100: "#e0f2fe",
-          200: "#bae6fd",
-          300: "#7dd3fc",
-          400: "#38bdf8",
-          500: "#0ea5e9",
-          600: "#0284c7",
-          700: "#0369a1",
-          800: "#075985",
-          900: "#0c4a6e",
-          950: "#082f49",
+        // Pauv Brand Colors
+        background: "#000000",
+        box: "#171717",
+        "box-light": "#262626",
+        "box-outline": "#404040",
+        accent: {
+          red: "#EF4444",
+          logo: "#E5C68D",
+          green: "#6EE7B7",
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+        sans: ["var(--font-fira-code)", "Fira Code", "monospace"],
+        mono: ["var(--font-fira-code)", "Fira Code", "monospace"],
       },
     },
   },

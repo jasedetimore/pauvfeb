@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Pauv Brand Colors */
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --box: #171717;
+  --box-light: #262626;
+  --box-outline: #404040;
+  --accent-red: #EF4444;
+  --accent-logo: #E5C68D;
+  --accent-green: #6EE7B7;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-fira-code), "Fira Code", monospace;
 }
 
 /* Custom utility classes */

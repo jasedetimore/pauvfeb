@@ -3,3 +3,8 @@ We are bulding a website called Pauv. here is the info on what we will be using:
   AWS with Aplify for frontend
   TypeScript using Next.js with Tailwind CSS
 Do not hallucinate, if you have questions ask them. AI first, atomic design for the frontend
+Here is the github link we'll be using: https://github.com/jasedetimore/pauvfeb.git
+Always use colors.ts, NEVER hard code colors for frontend
+to push to supabase, use this: npx supabase@latest db push
+USDP is the internal stable coin
+PV is the term for a token
