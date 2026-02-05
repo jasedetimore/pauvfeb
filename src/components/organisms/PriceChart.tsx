@@ -13,6 +13,7 @@ import {
 } from "lightweight-charts";
 import { colors } from "@/lib/constants/colors";
 import { createBrowserClient } from "@supabase/ssr";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface OHLCDataPoint {
   bucket: string;
@@ -50,6 +51,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const lineSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const firstPriceRef = useRef<number | null>(null);
 
   const [chartData, setChartData] = useState<LineData<Time>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,6 +134,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           const latestPrice = formattedData[formattedData.length - 1].value;
           const firstPrice = formattedData[0].value;
           setCurrentPrice(latestPrice);
+          firstPriceRef.current = firstPrice; // Store for realtime updates
 
           if (firstPrice > 0) {
             const change = latestPrice - firstPrice;
@@ -263,6 +267,75 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   useEffect(() => {
     fetchChartData(selectedRange);
   }, [selectedRange, fetchChartData]);
+
+  // Subscribe to Realtime updates to refresh chart when trades happen
+  useEffect(() => {
+    if (!ticker) return;
+
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    // Subscribe to changes on issuer_trading table for this ticker
+    const channel = supabase
+      .channel(`price-chart-${ticker.toUpperCase()}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "issuer_trading",
+          filter: `ticker=eq.${ticker.toUpperCase()}`,
+        },
+        (payload) => {
+          console.log(`[PriceChart] Realtime update for ${ticker}:`, payload);
+          
+          // Immediately update the chart with the new price point
+          const newPrice = payload.new?.current_price;
+          if (newPrice && lineSeriesRef.current) {
+            const now = Math.floor(Date.now() / 1000) as Time;
+            const priceValue = Number(newPrice);
+            
+            // Update the current price display immediately
+            setCurrentPrice(priceValue);
+            
+            // Add the new data point to the chart
+            lineSeriesRef.current.update({
+              time: now,
+              value: priceValue,
+            });
+            
+            // Update price change using stored first price
+            const firstPrice = firstPriceRef.current;
+            if (firstPrice && firstPrice > 0) {
+              const change = priceValue - firstPrice;
+              const percent = (change / firstPrice) * 100;
+              setPriceChange({ change, percent });
+            }
+          }
+          
+          // Also refetch full data to ensure consistency (debounced)
+          fetchChartData(selectedRange);
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log(`[PriceChart] Subscribed to realtime updates for ${ticker}`);
+        }
+      });
+
+    channelRef.current = channel;
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (channelRef.current) {
+        console.log(`[PriceChart] Unsubscribing from ${ticker}`);
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [ticker, selectedRange, fetchChartData]);
 
   // Handle range change
   const handleRangeChange = (range: string) => {

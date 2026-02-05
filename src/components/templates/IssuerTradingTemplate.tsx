@@ -154,15 +154,15 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   // Handler for buy action
   const handleBuy = (amount: number) => {
     console.log(`Buying ${amount} of ${ticker}`);
-    // TODO: Implement actual buy logic
-    alert(`Buy order placed for ${amount} ${ticker.toUpperCase()}`);
+    // Order is placed via the trading form component
+    // Realtime subscription will auto-update the UI when processed
   };
 
   // Handler for sell action
   const handleSell = (amount: number) => {
     console.log(`Selling ${amount} of ${ticker}`);
-    // TODO: Implement actual sell logic
-    alert(`Sell order placed for ${amount} ${ticker.toUpperCase()}`);
+    // Order is placed via the trading form component
+    // Realtime subscription will auto-update the UI when processed
   };
 
   // Show loading skeleton
