@@ -2,11 +2,12 @@
 
 import React from "react";
 import { colors } from "@/lib/constants/colors";
-import { TradingFormSimple } from "@/components/molecules";
+import { TradingFormSimple, UserHoldings } from "@/components/molecules";
 
 interface TradingRightSidebarProps {
   ticker: string;
   price?: number;
+  priceStep?: number;
   isLoading?: boolean;
   onBuy?: (amount: number) => void;
   onSell?: (amount: number) => void;
@@ -14,54 +15,34 @@ interface TradingRightSidebarProps {
 
 /**
  * TradingRightSidebar - Right sidebar for the trading page
- * Contains the trading form for placing orders
+ * Contains the trading form for placing orders and user holdings
  */
 export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
   ticker,
   price,
+  priceStep,
   isLoading = false,
   onBuy,
   onSell,
 }) => {
   return (
     <aside
-      className="space-y-4"
+      className="space-y-2"
       style={{ color: colors.textPrimary }}
     >
       {/* Trading Form */}
       <TradingFormSimple
         ticker={ticker}
         price={price}
+        priceStep={priceStep}
         onBuy={onBuy}
         onSell={onSell}
         isLoading={isLoading}
         disabled={!price}
       />
 
-      {/* Additional info card */}
-      <div
-        className="p-4 rounded-[10px]"
-        style={{
-          backgroundColor: colors.box,
-          border: `1px solid ${colors.boxOutline}`,
-        }}
-      >
-        <h3
-          className="font-mono text-sm font-medium mb-3"
-          style={{ color: colors.textPrimary }}
-        >
-          About Trading
-        </h3>
-        <ul
-          className="space-y-2 text-xs"
-          style={{ color: colors.textSecondary }}
-        >
-          <li>• Prices update in real-time</li>
-          <li>• No transaction fees</li>
-          <li>• Instant order execution</li>
-          <li>• Simulated trading only</li>
-        </ul>
-      </div>
+      {/* User Holdings */}
+      <UserHoldings ticker={ticker} />
     </aside>
   );
 };

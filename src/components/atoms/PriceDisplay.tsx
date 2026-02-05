@@ -83,7 +83,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
         <div className="flex items-center justify-between mb-2 px-1">
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-lg font-mono font-medium hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-lg font-mono font-medium hover:opacity-80 transition-opacity uppercase"
             style={{ color: colors.gold }}
           >
             <ChevronLeftIcon size={18} />

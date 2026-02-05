@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MainPageTemplate } from "@/components/templates";
-import { mockMarketSummary } from "@/lib/mock-data";
 import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
 import { IssuerListData } from "@/components/molecules/IssuerListView";
@@ -60,7 +59,12 @@ export default function Home() {
   });
 
   // Fetch cached issuer stats (price, volume, etc.)
-  const { statsMap, isLoading: statsLoading } = useIssuerStats();
+  const { stats, statsMap, isLoading: statsLoading } = useIssuerStats();
+
+  // Compute total market cap from cached stats (sum of total_usdp per issuer)
+  const totalMarketCap = useMemo(() => {
+    return stats.reduce((sum, s) => sum + (s.marketCap || 0), 0);
+  }, [stats]);
 
   // Transform DB issuers to include market data from cache (or fallback)
   const issuersWithMarketData: IssuerData[] = useMemo(() => {
@@ -166,9 +170,16 @@ export default function Home() {
     router.push(`/issuer/${issuer.ticker.toLowerCase()}`);
   };
 
-  // Handle tag selection
+  // Handle tag selection - navigate to /{tagname}
   const handleTagSelect = (tag: TagItemData) => {
-    setSelectedTagId((prev) => (prev === tag.id ? null : tag.id));
+    // If the same tag is already selected, deselect and go home
+    if (selectedTagId === tag.id) {
+      setSelectedTagId(null);
+      router.push("/");
+    } else {
+      setSelectedTagId(tag.id);
+      router.push(`/${tag.name.toLowerCase()}`);
+    }
   };
 
   // Handle search
@@ -192,9 +203,9 @@ export default function Home() {
   return (
     <MainPageTemplate
       // Market summary data
-      issuerCount={mockMarketSummary.totalIssuers}
-      marketCap={mockMarketSummary.totalMarketCap}
-      marketCapChange={mockMarketSummary.marketCapChange}
+      issuerCount={dbIssuers.length}
+      marketCap={totalMarketCap}
+      marketCapChange={0}
       tags={tags}
       tagsLoading={tagsLoading}
       // Issuers for card view (by sort mode) - from Supabase with cached stats

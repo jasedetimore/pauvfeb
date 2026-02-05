@@ -21,6 +21,12 @@ const getTagName = (tag: TagInput): string | null => {
   return null;
 };
 
+// Helper function to capitalize first letter
+const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 /**
  * IssuerTagsCard - Displays tags/categories for an issuer
  * Tags are clickable and link to tag-filtered views
@@ -77,7 +83,7 @@ export const IssuerTagsCard: React.FC<IssuerTagsCardProps> = ({
           <Link
             key={index}
             href={buildTagPath(index)}
-            className="px-4 py-2 rounded-md font-mono text-sm uppercase transition-colors"
+            className="px-4 py-2 rounded-md font-mono text-sm transition-colors"
             style={{
               backgroundColor: "transparent",
               border: `1px solid ${colors.boxOutline}`,
@@ -92,7 +98,7 @@ export const IssuerTagsCard: React.FC<IssuerTagsCardProps> = ({
               e.currentTarget.style.borderColor = colors.boxOutline;
             }}
           >
-            {tagName}
+            {capitalizeFirstLetter(tagName)}
           </Link>
         ))}
       </div>

@@ -59,6 +59,13 @@ export function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
               Dashboard
             </Link>
             <Link
+              href="/admin/tags"
+              className="text-sm font-medium transition-colors hover:opacity-80"
+              style={{ color: colors.textPrimary }}
+            >
+              Tags
+            </Link>
+            <Link
               href="/"
               className="text-sm transition-colors hover:opacity-80"
               style={{ color: colors.textSecondary }}

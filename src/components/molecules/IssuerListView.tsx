@@ -49,6 +49,12 @@ export function IssuerListView({
   const [sortBy, setSortBy] = useState<SortColumn>("current_price");
   const [sortOrder, setSortOrder] = useState<SortOrder>("DESC");
 
+  // Helper function to capitalize first letter
+  const capitalizeFirstLetter = (str: string): string => {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   // Handle column sort with three states: DESC -> ASC -> Default (price DESC)
   const handleColumnSort = (column: SortColumn) => {
     if (sortBy === column) {
@@ -191,7 +197,7 @@ export function IssuerListView({
             whiteSpace: "nowrap",
           }}
         >
-          {issuer.primaryTag || "—"}
+          {issuer.primaryTag ? capitalizeFirstLetter(issuer.primaryTag) : "—"}
         </div>
 
         {/* Price */}

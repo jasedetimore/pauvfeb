@@ -15,6 +15,7 @@ export interface IssuerMetrics {
   price24hChange: number | null;
   price7dChange: number | null;
   totalUsdp: number;
+  priceStep: number;
   updatedAt: string;
 }
 

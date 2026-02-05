@@ -32,7 +32,7 @@ export async function GET(
       // Get issuer trading data (current price, supply)
       supabase
         .from("issuer_trading")
-        .select("current_price, current_supply, total_usdp")
+        .select("current_price, current_supply, total_usdp, price_step")
         .eq("ticker", upperTicker)
         .single(),
 
@@ -85,10 +85,11 @@ export async function GET(
       0
     ) || 0;
 
-    // Calculate market cap
+    // Market cap = total USDP invested (from issuer_trading)
     const currentPrice = parseFloat(tradingData.data?.current_price || "0");
     const circulatingSupply = parseFloat(tradingData.data?.current_supply || "0");
-    const marketCap = currentPrice * circulatingSupply;
+    const totalUsdp = parseFloat(tradingData.data?.total_usdp || "0");
+    const marketCap = totalUsdp;
 
     // Extract price changes
     const extractPriceChange = (result: { data: unknown; error: unknown }) => {
@@ -98,6 +99,8 @@ export async function GET(
         ? parseFloat(data.price_change_percent)
         : null;
     };
+
+    const priceStep = parseFloat(tradingData.data?.price_step || "0.01");
 
     const metrics = {
       ticker: upperTicker,
@@ -109,7 +112,8 @@ export async function GET(
       price1hChange: extractPriceChange(priceChange1h),
       price24hChange: extractPriceChange(priceChange24h),
       price7dChange: extractPriceChange(priceChange7d),
-      totalUsdp: parseFloat(tradingData.data?.total_usdp || "0"),
+      totalUsdp,
+      priceStep,
       updatedAt: new Date().toISOString(),
     };
 

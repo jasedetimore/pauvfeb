@@ -33,6 +33,12 @@ export function IssuerCard({
   const [imageError, setImageError] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
 
+  // Helper function to capitalize first letter
+  const capitalizeFirstLetter = (str: string): string => {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   // Get initials from full name
   const initials = fullName
     .split(" ")
@@ -159,7 +165,7 @@ export function IssuerCard({
               fontWeight: "400",
             }}
           >
-            {primaryTag || "—"}
+            {primaryTag ? capitalizeFirstLetter(primaryTag) : "—"}
           </div>
         </div>
 

@@ -19,6 +19,12 @@ interface TagItemProps {
   onClick?: () => void;
 }
 
+// Helper function to capitalize first letter
+const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 /**
  * TagItem - A single tag in the sidebar navigation
  * Shows tag name, issuer count, and market cap
@@ -70,7 +76,7 @@ export function TagItem({
           marginBottom: "6px",
         }}
       >
-        {tag.name}
+        {capitalizeFirstLetter(tag.name)}
       </div>
 
       {/* Bottom row: Issuers on left, Mkt Cap on right */}

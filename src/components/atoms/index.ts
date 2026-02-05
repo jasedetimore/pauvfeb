@@ -24,3 +24,4 @@ export {
 export { PriceDisplay } from "./PriceDisplay";
 export { SocialMediaLinks } from "./SocialMediaLinks";
 export { PercentageChange } from "./PercentageChange";
+export { ImageUpload, type ImageUploadProps } from "./ImageUpload";

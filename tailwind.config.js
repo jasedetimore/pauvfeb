@@ -22,6 +22,19 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-fira-code)", "Fira Code", "monospace"],
         mono: ["var(--font-fira-code)", "Fira Code", "monospace"],
+        serif: [
+          "var(--font-instrument-serif)",
+          "Instrument Serif",
+          "Georgia",
+          "serif",
+        ],
+        garamond: [
+          "var(--font-eb-garamond)",
+          "EB Garamond",
+          "Garamond",
+          "Georgia",
+          "serif",
+        ],
       },
     },
   },

@@ -9,6 +9,7 @@ interface IssuerHeaderProps {
   imageUrl?: string | null;
   headline?: string | null;
   bio?: string | null;
+  tags?: string[];
   isLoading?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
   imageUrl,
   headline,
   bio,
+  tags,
   isLoading = false,
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -71,47 +73,61 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
 
   return (
     <div className="flex flex-col min-w-0">
-      <div className="flex items-start w-full justify-between gap-4 p-1">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          {/* Profile Image */}
-          {imageUrl && !imageError ? (
-            <img
-              src={imageUrl}
-              alt={`${name} logo`}
-              className="w-20 h-20 rounded-full object-cover flex-shrink-0"
-              onError={() => setImageError(true)}
-            />
-          ) : (
+      <div className="flex items-center w-full justify-between gap-3">
+        {/* Profile Image */}
+        {imageUrl && !imageError ? (
+          <img
+            src={imageUrl}
+            alt={`${name} logo`}
+            className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <span
+            className="w-20 h-20 rounded-full flex items-center justify-center text-xl font-medium flex-shrink-0"
+            style={{
+              backgroundColor: colors.boxLight,
+              border: `1px solid ${colors.boxOutline}`,
+              color: colors.textPrimary,
+            }}
+          >
+            {getInitial()}
+          </span>
+        )}
+
+        {/* Name and Headline */}
+        <div className="flex-1 min-w-0">
+          <h1
+            className="font-mono font-bold truncate text-[2rem] md:text-[2.2rem] leading-none"
+            style={{ color: colors.textPrimary }}
+          >
+            {name || ticker}
+          </h1>
+          {headline && (
+            <div
+              className="text-sm font-light mt-1"
+              style={{ color: colors.textSecondary }}
+            >
+              {headline}
+            </div>
+          )}
+        </div>
+
+        {/* Tag aligned with name */}
+        {tags && tags.length > 0 && (
+          <div className="flex-shrink-0">
             <span
-              className="w-20 h-20 rounded-full flex items-center justify-center text-xl font-medium flex-shrink-0"
+              className="px-3 py-1 rounded-full text-xs font-medium uppercase"
               style={{
-                backgroundColor: colors.boxLight,
-                border: `1px solid ${colors.boxOutline}`,
-                color: colors.textPrimary,
+                backgroundColor: `${colors.gold}20`,
+                color: colors.gold,
+                border: `1px solid ${colors.gold}40`,
               }}
             >
-              {getInitial()}
+              {tags[0]}
             </span>
-          )}
-
-          {/* Name and Headline */}
-          <div className="flex-1 min-w-0">
-            <h1
-              className="font-mono font-bold truncate text-[2rem] md:text-[2.2rem] leading-none"
-              style={{ color: colors.textPrimary }}
-            >
-              {name || ticker}
-            </h1>
-            {headline && (
-              <div
-                className="text-sm font-light mt-1"
-                style={{ color: colors.textSecondary }}
-              >
-                {headline}
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Bio Section */}

@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { colors } from "@/lib/constants/colors";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
+import { calculateTokensForUsdp, calculateUsdpForTokens } from "@/lib/trading/formulas";
 
 interface TradingFormSimpleProps {
   ticker: string;
   price?: number;
+  priceStep?: number;
   onBuy?: (amount: number) => void;
   onSell?: (amount: number) => void;
   isLoading?: boolean;
@@ -21,6 +23,7 @@ interface TradingFormSimpleProps {
 export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   ticker,
   price,
+  priceStep,
   onBuy,
   onSell,
   isLoading = false,
@@ -31,21 +34,83 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [tickerHoldings, setTickerHoldings] = useState<number>(0);
+  const [holdingsLoading, setHoldingsLoading] = useState(false);
+  const [sellAllClicked, setSellAllClicked] = useState(false);
 
   // Get user auth context for USDP balance
   const { user, profile, isLoading: authLoading } = useAuth();
   const usdpBalance = profile?.usdp_balance ?? 0;
 
+  // Fetch user's holdings for this ticker
+  const fetchHoldings = React.useCallback(async () => {
+    if (!user) {
+      setTickerHoldings(0);
+      return;
+    }
+
+    setHoldingsLoading(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("portfolio")
+        .select("pv_amount")
+        .eq("user_id", user.id)
+        .eq("ticker", ticker.toUpperCase())
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching holdings:", error);
+        setTickerHoldings(0);
+      } else {
+        setTickerHoldings(data?.pv_amount ?? 0);
+      }
+    } catch (err) {
+      console.error("Error fetching holdings:", err);
+      setTickerHoldings(0);
+    } finally {
+      setHoldingsLoading(false);
+    }
+  }, [user, ticker]);
+
+  React.useEffect(() => {
+    fetchHoldings();
+  }, [fetchHoldings]);
+
+  // Reset sellAllClicked when switching actions
+  React.useEffect(() => {
+    setSellAllClicked(false);
+  }, [selectedAction]);
+
   const numericAmount = parseFloat(amount) || 0;
   
-  // For buy orders: user enters USDP, we calculate PV received
-  // For sell orders: user enters PV, we calculate USDP received
-  const usdpAmount = selectedAction === "buy" 
-    ? numericAmount 
-    : (price && price > 0 ? numericAmount * price : 0);
-  const pvAmount = selectedAction === "buy" 
-    ? (price && price > 0 ? numericAmount / price : 0) 
-    : numericAmount;
+  // Use bonding curve formulas for accurate estimates
+  // BUY: Tokens = (-CurrentPrice + SQRT(CurrentPrice^2 + 2 * price_step * USDP)) / price_step
+  // SELL: USDP = avg_price * tokens (area under the curve)
+  const estimatedPv = useMemo(() => {
+    if (selectedAction !== "buy" || numericAmount <= 0 || !price || price <= 0) return 0;
+    const step = priceStep ?? 0.01;
+    try {
+      return calculateTokensForUsdp(numericAmount, price, step);
+    } catch {
+      return 0;
+    }
+  }, [selectedAction, numericAmount, price, priceStep]);
+
+  const estimatedUsdp = useMemo(() => {
+    if (selectedAction !== "sell" || numericAmount <= 0 || !price || price <= 0) return 0;
+    const step = priceStep ?? 0.01;
+    try {
+      return calculateUsdpForTokens(numericAmount, price, step);
+    } catch {
+      return 0;
+    }
+  }, [selectedAction, numericAmount, price, priceStep]);
+
+  // For buy orders: user enters USDP amount
+  // For sell orders: user enters PV amount
+  const usdpAmount = selectedAction === "buy" ? numericAmount : estimatedUsdp;
+  const pvAmount = selectedAction === "buy" ? estimatedPv : numericAmount;
 
   // Format currency
   const formatCurrency = (value: number): string => {
@@ -68,8 +133,11 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
       return;
     }
 
-    // TODO: For sell orders, check if user has enough PV tokens
-    // This would require fetching the user's portfolio for this ticker
+    // For sell orders, check if user has enough PV tokens
+    if (selectedAction === "sell" && numericAmount > tickerHoldings) {
+      setSubmitError(`Insufficient ${ticker.toUpperCase()} balance`);
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -137,32 +205,6 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         </h2>
       </div>
 
-      {/* USDP Balance Display */}
-      {user && (
-        <div
-          className="p-3 rounded-[10px]"
-          style={{
-            backgroundColor: colors.box,
-            border: `1px solid ${colors.boxOutline}`,
-          }}
-        >
-          <div className="flex justify-between items-center">
-            <span
-              className="text-sm font-mono"
-              style={{ color: colors.textSecondary }}
-            >
-              USDP Balance
-            </span>
-            <span
-              className="font-mono font-semibold"
-              style={{ color: colors.gold }}
-            >
-              {authLoading ? "..." : formatCurrency(usdpBalance)}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Not Logged In Warning */}
       {!user && !authLoading && (
         <div
@@ -183,14 +225,12 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
 
       {/* Form Container */}
       <div
-        className="p-4 rounded-[10px]"
         style={{
-          backgroundColor: colors.box,
-          border: `1px solid ${colors.boxOutline}`,
+          backgroundColor: colors.background,
         }}
       >
         {/* Buy/Sell Toggle */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-1 mb-2">
           <button
             onClick={() => setSelectedAction("buy")}
             className="flex-1 py-2 px-4 rounded-md font-mono font-medium transition-all"
@@ -224,32 +264,43 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         </div>
 
         {/* Amount Input */}
-        <div className="space-y-2 mb-4">
-          <label
-            className="text-xs uppercase font-light"
-            style={{ color: colors.textSecondary }}
-          >
-            {selectedAction === "buy" ? "Amount (USDP)" : "Amount (PV)"}
-          </label>
+        <div className="mb-2">
           <input
             type="text"
             value={amount}
             onChange={handleAmountChange}
-            placeholder="0.00"
+            placeholder={selectedAction === "buy" ? "Amount (USDP)" : "Amount (PV)"}
             disabled={disabled || isLoading || isSubmitting || !user}
-            className="w-full px-4 py-3 rounded-md font-mono text-lg focus:outline-none transition-colors"
+            className="w-full px-4 py-3 rounded-md font-mono text-sm focus:outline-none transition-colors"
             style={{
-              backgroundColor: colors.boxLight,
+              backgroundColor: colors.background,
               border: `1px solid ${colors.boxOutline}`,
               color: colors.textPrimary,
             }}
           />
         </div>
 
+        {/* Sell All Button */}
+        {selectedAction === "sell" && user && tickerHoldings > 0 && !sellAllClicked && (
+          <div className="mb-1 mt-1 text-center">
+            <button
+              onClick={() => {
+                setAmount(tickerHoldings.toFixed(4));
+                setSellAllClicked(true);
+              }}
+              className="text-sm underline transition-opacity hover:opacity-80"
+              style={{ color: colors.textPrimary }}
+              type="button"
+            >
+              Sell All
+            </button>
+          </div>
+        )}
+
         {/* Estimated Amount */}
         {numericAmount > 0 && price && (
           <div
-            className="mb-4 p-3 rounded-md"
+            className="mb-2 px-3 py-2 rounded-md"
             style={{ backgroundColor: colors.boxLight }}
           >
             <div className="flex justify-between text-sm">
@@ -263,7 +314,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
                 {selectedAction === "buy" 
                   ? `${pvAmount.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
-                      maximumFractionDigits: 6,
+                      maximumFractionDigits: 2,
                     })} PV`
                   : formatCurrency(usdpAmount)
                 }
@@ -277,13 +328,21 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
                 Insufficient USDP balance
               </p>
             )}
+            {selectedAction === "sell" && numericAmount > tickerHoldings && (
+              <p
+                className="text-xs mt-2"
+                style={{ color: colors.red }}
+              >
+                Insufficient {ticker.toUpperCase()} balance
+              </p>
+            )}
           </div>
         )}
 
         {/* Error Message */}
         {submitError && (
           <div
-            className="mb-4 p-3 rounded-md"
+            className="mb-2 p-3 rounded-md"
             style={{ backgroundColor: `${colors.red}15` }}
           >
             <p
@@ -298,7 +357,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         {/* Success Message */}
         {submitSuccess && (
           <div
-            className="mb-4 p-3 rounded-md"
+            className="mb-2 p-3 rounded-md"
             style={{ backgroundColor: `${colors.green}15` }}
           >
             <p
@@ -311,31 +370,64 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         )}
 
         {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={disabled || isLoading || isSubmitting || numericAmount <= 0 || !user}
-          className="w-full py-3 rounded-md font-mono font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{
-            backgroundColor:
-              selectedAction === "buy" ? colors.green : colors.red,
-            color:
-              selectedAction === "buy" ? colors.textDark : colors.textPrimary,
-          }}
-        >
-          {isSubmitting
-            ? "Placing Order..."
-            : isLoading
-            ? "Processing..."
-            : `${selectedAction === "buy" ? "Buy" : "Sell"} ${ticker.toUpperCase()}`}
-        </button>
+        {numericAmount > 0 && (
+          <div className="mb-2">
+            <button
+              onClick={handleSubmit}
+              disabled={disabled || isLoading || isSubmitting || !user}
+              className="w-full py-2 rounded-md font-mono font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor:
+                  selectedAction === "buy" ? colors.green : colors.red,
+                color:
+                  selectedAction === "buy" ? colors.textDark : colors.textPrimary,
+              }}
+            >
+              {isSubmitting
+                ? "Placing Order..."
+                : isLoading
+                ? "Processing..."
+                : `${selectedAction === "buy" ? "Buy" : "Sell"} ${ticker.toUpperCase()}`}
+            </button>
+          </div>
+        )}
 
-        {/* Disclaimer */}
-        <p
-          className="text-xs text-center mt-3"
-          style={{ color: colors.textSecondary }}
-        >
-          Trading is simulated. No real money involved.
-        </p>
+        {/* Account Summary */}
+        {user && (
+          <div className="pb-2 space-y-1">
+            <div className="flex justify-between items-center">
+              <span
+                className="text-sm font-mono"
+                style={{ color: colors.textSecondary }}
+              >
+                USDP Balance
+              </span>
+              <span
+                className="font-mono font-semibold"
+                style={{ color: colors.gold }}
+              >
+                {authLoading ? "..." : formatCurrency(usdpBalance)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span
+                className="text-sm font-mono"
+                style={{ color: colors.textSecondary }}
+              >
+                Your {ticker.toUpperCase()} Holdings
+              </span>
+              <span
+                className="font-mono font-semibold"
+                style={{ color: colors.textPrimary }}
+              >
+                {holdingsLoading ? "..." : `${tickerHoldings.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })} PV`}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

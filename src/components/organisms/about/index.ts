@@ -1,0 +1,10 @@
+export { default as AboutHero } from "./AboutHero";
+export { default as AboutVideo } from "./AboutVideo";
+export { default as AboutBenefits } from "./AboutBenefits";
+export { default as AboutProblem } from "./AboutProblem";
+export { default as AboutFAQ } from "./AboutFAQ";
+export { default as AboutHowItWorks } from "./AboutHowItWorks";
+export { default as AboutStory } from "./AboutStory";
+export { default as AboutCTA } from "./AboutCTA";
+export { default as AboutContactForm } from "./AboutContactForm";
+export { default as AboutFooter } from "./AboutFooter";

@@ -185,7 +185,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     // Create chart
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: colors.box },
+        background: { type: ColorType.Solid, color: "#000000" },
         textColor: colors.textSecondary,
       },
       grid: {
@@ -346,8 +346,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     <div
       className="rounded-[10px] overflow-hidden"
       style={{
-        backgroundColor: colors.box,
-        border: `1px solid ${colors.boxOutline}`,
+        backgroundColor: "#000000",
       }}
     >
       {/* Header with price info and range selector */}
@@ -413,7 +412,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {loading && (
           <div
             className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: `${colors.box}cc` }}
+            style={{ backgroundColor: "#000000cc" }}
           >
             <div className="flex flex-col items-center gap-2">
               <div
@@ -436,7 +435,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {error && (
           <div
             className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: colors.box }}
+            style={{ backgroundColor: "#000000" }}
           >
             <div className="text-center">
               <span
@@ -462,7 +461,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {!loading && !error && chartData.length === 0 && (
           <div
             className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: colors.box }}
+            style={{ backgroundColor: "#000000" }}
           >
             <div className="text-center">
               <span

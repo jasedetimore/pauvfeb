@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
 import { createClient } from "@/lib/supabase/client";
+import { ImageUpload } from "@/components/atoms/ImageUpload";
 
 interface IssuerDetails {
   id: string;
@@ -459,19 +460,14 @@ export default function AdminPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={labelStyle}>
-                    Photo URL
-                  </label>
-                  <input
-                    type="url"
-                    value={issuerForm.photo}
-                    onChange={(e) => setIssuerForm({ ...issuerForm, photo: e.target.value })}
-                    className="w-full px-3 py-2 rounded border focus:outline-none focus:ring-1"
-                    style={{ ...inputStyle, "--tw-ring-color": colors.gold } as React.CSSProperties}
-                    placeholder="https://example.com/photo.jpg"
-                  />
-                </div>
+                <ImageUpload
+                  value={issuerForm.photo}
+                  onChange={(url) => setIssuerForm({ ...issuerForm, photo: url })}
+                  folder="issuers"
+                  label="Photo"
+                  disabled={issuerLoading}
+                  aspectRatio={1}
+                />
 
                 {issuerError && (
                   <div className="p-3 rounded" style={{ backgroundColor: `${colors.red}20`, border: `1px solid ${colors.red}` }}>

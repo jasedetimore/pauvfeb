@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AuthHeader } from "../molecules/AuthHeader";
 import { HeroSection } from "../molecules/HeroSection";
 import { TagSidebar } from "../molecules/TagSidebar";
@@ -9,6 +9,14 @@ import { IssuerListView, IssuerListData } from "../molecules/IssuerListView";
 import { ControlsBar } from "../molecules/ControlsBar";
 import { TagItemData, ViewMode, SortMode } from "../atoms";
 import { colors } from "@/lib/constants/colors";
+
+interface SelectedTagInfo {
+  name: string;
+  description?: string | null;
+  issuerCount: number;
+  marketCap: number;
+  photoUrl?: string | null;
+}
 
 interface MainPageTemplateProps {
   // Market data
@@ -40,6 +48,10 @@ interface MainPageTemplateProps {
   onListIssuerClick?: (issuer: IssuerListData) => void;
   onTagSelect?: (tag: TagItemData) => void;
   onSearch?: (query: string) => void;
+
+  // Tag selection state
+  selectedTag?: SelectedTagInfo | null;
+  initialTagId?: string | null;
 }
 
 /**
@@ -64,11 +76,20 @@ export function MainPageTemplate({
   onListIssuerClick,
   onTagSelect,
   onSearch,
+  selectedTag = null,
+  initialTagId = null,
 }: MainPageTemplateProps) {
   // View and sort state
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [sortMode, setSortMode] = useState<SortMode>("biggest");
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(initialTagId);
+
+  // Sync selectedTagId when initialTagId changes (e.g. after async tag load)
+  useEffect(() => {
+    if (initialTagId !== null) {
+      setSelectedTagId(initialTagId);
+    }
+  }, [initialTagId]);
 
   // Get current issuers based on sort mode
   const getCurrentIssuers = (): IssuerData[] => {
@@ -108,6 +129,7 @@ export function MainPageTemplate({
           issuerCount={issuerCount}
           marketCap={marketCap}
           marketCapChange={marketCapChange}
+          selectedTag={selectedTag}
         />
 
         {/* Mobile Tags Strip */}

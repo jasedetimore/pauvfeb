@@ -24,7 +24,8 @@ interface HeaderProps {
 export function Header({
   navigationLinks = [
     { href: "/", label: "Issuers", active: true },
-    { href: "/indexes", label: "Indexes" },
+    { href: "/list-yourself", label: "List Yourself" },
+    { href: "/about", label: "About" },
   ],
   isAuthenticated = false,
   username,

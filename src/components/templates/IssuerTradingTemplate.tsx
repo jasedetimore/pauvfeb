@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { colors } from "@/lib/constants/colors";
 import { FullPageSkeleton } from "@/components/atoms";
 import { AuthHeader } from "@/components/molecules";
@@ -12,35 +12,13 @@ import {
 } from "@/components/organisms";
 import { createBrowserClient } from "@supabase/ssr";
 import { IssuerDetailsDB } from "@/lib/types/issuer";
-import { useIssuerMetrics } from "@/lib/hooks";
+import { useIssuerMetrics, useTopHolders } from "@/lib/hooks";
 
 interface IssuerTradingTemplateProps {
   ticker: string;
 }
 
-/**
- * Generate mock holders data (until we have real holder fetching)
- */
-function generateMockHolders(count: number = 10) {
-  const usernames = [
-    "whale_trader",
-    "crypto_king",
-    "diamond_hands",
-    "moon_shot",
-    "hodl_master",
-    "early_adopter",
-    "degen_investor",
-    "alpha_seeker",
-    "market_maker",
-    "smart_money",
-  ];
 
-  return usernames.slice(0, count).map((username, i) => ({
-    username,
-    quantity: Math.floor(Math.random() * 100000) / (i + 1),
-    supplyPercentage: Math.random() * 15 / (i + 1),
-  }));
-}
 
 /**
  * IssuerTradingTemplate - Full page template for issuer trading
@@ -55,6 +33,9 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   
   // Fetch real metrics from the API
   const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useIssuerMetrics(ticker);
+  
+  // Fetch real top holders data
+  const { holders, isLoading: holdersLoading, refetch: refetchHolders } = useTopHolders(ticker, 10);
 
   // Fetch issuer data from Supabase
   useEffect(() => {
@@ -129,27 +110,6 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
       isCancelled = true;
     };
   }, [ticker]);
-
-  // Generate mock holders (temporary until we have real holder data)
-  const holders = useMemo(() => {
-    return generateMockHolders(10);
-  }, []);
-
-  // Derive buy/sell data from metrics
-  const buySellData = useMemo(() => {
-    // Generate mock buy/sell ratios for now
-    const buyPercentage = 55;
-    const sellPercentage = 45;
-    const volume = metrics?.volume24h || 0;
-    return {
-      buyPercentage,
-      sellPercentage,
-      buyVolume: Math.floor(volume * 0.55),
-      sellVolume: Math.floor(volume * 0.45),
-      buyOrders: Math.floor(Math.random() * 500),
-      sellOrders: Math.floor(Math.random() * 400),
-    };
-  }, [metrics]);
 
   // Handler for buy action
   const handleBuy = (amount: number) => {
@@ -254,19 +214,37 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
 
   // Get current price from metrics
   const currentPrice = metrics?.currentPrice ?? 0;
+  const priceStep = metrics?.priceStep ?? 0.01;
 
   return (
     <>
       <AuthHeader />
       <div
-        className="min-h-screen pt-4 pb-16"
+        className="min-h-screen pb-16"
         style={{ backgroundColor: colors.background }}
       >
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Three column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Sidebar - Price, Summary, Holders */}
-            <div className="lg:col-span-3 order-2 lg:order-1">
+        {/* Fluid Layout - Sidebars pinned to sides, whole page scrolls together */}
+        <div className="flex gap-4 px-4">
+          {/* Left Sidebar - Pinned to left */}
+          <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0">
+            <TradingLeftSidebar
+              ticker={ticker}
+              price={currentPrice}
+              tradingData={tradingData}
+              holders={holders}
+              twitterUrl={null}
+              instagramUrl={null}
+              tiktokUrl={null}
+              isLoading={metricsLoading || holdersLoading}
+              onRefreshMetrics={refetchMetrics}
+              onRefreshHolders={refetchHolders}
+            />
+          </aside>
+
+          {/* Main Content - Center, flexible width */}
+          <div className="flex-1 min-w-0">
+            {/* Mobile left sidebar */}
+            <div className="lg:hidden mb-6">
               <TradingLeftSidebar
                 ticker={ticker}
                 price={currentPrice}
@@ -275,34 +253,43 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                 twitterUrl={null}
                 instagramUrl={null}
                 tiktokUrl={null}
-                isLoading={metricsLoading}
+                isLoading={metricsLoading || holdersLoading}
                 onRefreshMetrics={refetchMetrics}
-                onRefreshHolders={() => console.log("Refresh holders")}
+                onRefreshHolders={refetchHolders}
               />
             </div>
 
-            {/* Main Content - Header, Chart, Tags */}
-            <div className="lg:col-span-6 order-1 lg:order-2">
-              <TradingMainContent
-                issuer={issuer}
-                buySellData={buySellData}
-                isLoading={false}
-              >
-                <PriceChart ticker={ticker} height={350} initialRange="24h" />
-              </TradingMainContent>
-            </div>
+            <TradingMainContent
+              issuer={issuer}
+              isLoading={false}
+            >
+              <PriceChart ticker={ticker} height={350} initialRange="24h" />
+            </TradingMainContent>
 
-            {/* Right Sidebar - Trading Form */}
-            <div className="lg:col-span-3 order-3">
+            {/* Mobile right sidebar */}
+            <div className="lg:hidden mt-6">
               <TradingRightSidebar
                 ticker={ticker}
                 price={currentPrice}
+                priceStep={priceStep}
                 isLoading={metricsLoading}
                 onBuy={handleBuy}
                 onSell={handleSell}
               />
             </div>
           </div>
+
+          {/* Right Sidebar - Pinned to right */}
+          <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0">
+            <TradingRightSidebar
+              ticker={ticker}
+              price={currentPrice}
+              priceStep={priceStep}
+              isLoading={metricsLoading}
+              onBuy={handleBuy}
+              onSell={handleSell}
+            />
+          </aside>
         </div>
       </div>
     </>

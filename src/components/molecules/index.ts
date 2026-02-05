@@ -16,3 +16,4 @@ export { BuySellSpread } from "./BuySellSpread";
 export { TradingSummarySection } from "./TradingSummarySection";
 export { TradingFormSimple } from "./TradingFormSimple";
 export { HoldersSection } from "./HoldersSection";
+export { UserHoldings } from "./UserHoldings";
