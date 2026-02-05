@@ -224,7 +224,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         style={{ backgroundColor: colors.background }}
       >
         {/* Fluid Layout - Sidebars pinned to sides, whole page scrolls together */}
-        <div className="flex gap-4 px-4">
+        <div className="flex gap-6 px-4">
           {/* Left Sidebar - Pinned to left */}
           <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0">
             <TradingLeftSidebar
@@ -263,7 +263,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               issuer={issuer}
               isLoading={false}
             >
-              <PriceChart ticker={ticker} height={350} initialRange="24h" />
+              <PriceChart ticker={ticker} height={420} initialRange="24h" />
             </TradingMainContent>
 
             {/* Mobile right sidebar */}

@@ -54,23 +54,16 @@ export function Header({
           </div>
 
           {/* Desktop Navigation */}
-          <div
-            className="hidden lg:flex p-1 rounded-xl gap-2 xl:gap-5 shrink-0"
-            style={{ backgroundColor: colors.navbarBg }}
-          >
+          <div className="hidden lg:flex gap-2 xl:gap-5 shrink-0">
             <nav className="flex items-center text-sm gap-2 xl:gap-5 text-center">
               {navigationLinks.map((link) => (
                 <Link
                   key={link.href}
-                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                    link.active
-                      ? "bg-box border border-box-outline"
-                      : "hover:bg-box/50"
-                  }`}
+                  className="px-4 py-2 font-medium whitespace-nowrap transition-colors hover:bg-white/5"
                   href={link.href}
                   style={{
-                    backgroundColor: link.active ? colors.box : undefined,
-                    borderColor: link.active ? colors.boxOutline : undefined,
+                    backgroundColor: link.active ? "#1a1a1a" : undefined,
+                    borderRadius: "4px",
                   }}
                 >
                   {link.label}
@@ -195,10 +188,12 @@ export function Header({
             {navigationLinks.map((link) => (
               <Link
                 key={link.href}
-                className={`block px-4 py-3 text-base font-medium border-b last:border-b-0 ${
-                  link.active ? "bg-white/10" : ""
-                }`}
-                style={{ borderColor: colors.boxOutline }}
+                className="block px-4 py-3 text-base font-medium border-b last:border-b-0"
+                style={{
+                  borderColor: colors.boxOutline,
+                  backgroundColor: link.active ? "#1a1a1a" : undefined,
+                  borderRadius: link.active ? "4px" : undefined,
+                }}
                 href={link.href}
               >
                 {link.label}

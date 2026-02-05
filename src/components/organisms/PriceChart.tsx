@@ -189,8 +189,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         textColor: colors.textSecondary,
       },
       grid: {
-        vertLines: { color: colors.boxOutline, style: LineStyle.Dotted },
-        horzLines: { color: colors.boxOutline, style: LineStyle.Dotted },
+        vertLines: { color: "#2a2a2a", style: LineStyle.Dotted },
+        horzLines: { color: "#2a2a2a", style: LineStyle.Dotted },
       },
       width: chartContainerRef.current.clientWidth,
       height: height,
@@ -208,23 +208,23 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       },
       crosshair: {
         vertLine: {
-          color: colors.gold,
+          color: "#555555",
           width: 1,
           style: LineStyle.Dashed,
-          labelBackgroundColor: colors.gold,
+          labelBackgroundColor: "#333333",
         },
         horzLine: {
-          color: colors.gold,
+          color: "#555555",
           width: 1,
           style: LineStyle.Dashed,
-          labelBackgroundColor: colors.gold,
+          labelBackgroundColor: "#333333",
         },
       },
     });
 
-    // Create line series
+    // Create line series (color will be updated dynamically based on price direction)
     const lineSeries = chart.addSeries(LineSeries, {
-      color: colors.gold,
+      color: colors.green,
       lineWidth: 2,
       priceFormat: {
         type: "price",
@@ -255,11 +255,19 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     };
   }, [height]);
 
-  // Update chart data when it changes
+  // Update chart data and line color when data changes
   useEffect(() => {
     if (lineSeriesRef.current && chartData.length > 0) {
       lineSeriesRef.current.setData(chartData);
       chartRef.current?.timeScale().fitContent();
+
+      // Set line color based on price direction
+      const firstVal = chartData[0].value;
+      const lastVal = chartData[chartData.length - 1].value;
+      const isUp = lastVal >= firstVal;
+      lineSeriesRef.current.applyOptions({
+        color: isUp ? colors.green : colors.red,
+      });
     }
   }, [chartData]);
 
@@ -388,7 +396,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               style={{
                 backgroundColor:
                   selectedRange === option.value
-                    ? colors.gold
+                    ? colors.green
                     : "transparent",
                 color:
                   selectedRange === option.value
@@ -396,7 +404,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     : colors.textSecondary,
                 border: `1px solid ${
                   selectedRange === option.value
-                    ? colors.gold
+                    ? colors.green
                     : colors.boxOutline
                 }`,
               }}
@@ -408,7 +416,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       </div>
 
       {/* Chart Area */}
-      <div className="relative" style={{ height }}>
+      <div className="relative" style={{ height, maxWidth: "100%" }}>
         {loading && (
           <div
             className="absolute inset-0 flex items-center justify-center z-10"
@@ -419,7 +427,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 className="w-8 h-8 border-2 rounded-full animate-spin"
                 style={{
                   borderColor: colors.boxOutline,
-                  borderTopColor: colors.gold,
+                  borderTopColor: colors.green,
                 }}
               />
               <span
@@ -448,7 +456,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 onClick={() => fetchChartData(selectedRange)}
                 className="mt-2 px-4 py-1 rounded font-mono text-xs"
                 style={{
-                  backgroundColor: colors.gold,
+                  backgroundColor: colors.green,
                   color: colors.textDark,
                 }}
               >
@@ -480,7 +488,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
         )}
 
-        <div ref={chartContainerRef} style={{ height: "100%" }} />
+        <div ref={chartContainerRef} style={{ height: "100%", width: "100%" }} />
       </div>
     </div>
   );

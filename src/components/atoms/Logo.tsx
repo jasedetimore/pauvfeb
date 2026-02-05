@@ -10,15 +10,17 @@ interface LogoProps {
 
 /**
  * Logo component for Pauv branding
- * Displays the gold PAUV logo image
+ * Displays the gold or dark PAUV logo image based on variant
  */
 export function Logo({ 
   height = 30,
   variant = "default" 
 }: LogoProps) {
+  const src = variant === "dark" ? "/pauv_logo_black.png" : "/pauv_logo_gold.png";
+
   return (
     <Image
-      src="/pauv_logo_black.png"
+      src={src}
       alt="PAUV"
       width={height * 3}
       height={height}
