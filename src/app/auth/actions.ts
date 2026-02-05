@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
@@ -43,26 +44,12 @@ export async function signUp(formData: FormData) {
   return { success: true, message: "Check your email for confirmation link!" };
 }
 
-export async function signIn(formData: FormData) {
-  const supabase = await createClient();
-
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  redirect("/");
-}
-
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  
+  // Revalidate all paths to clear cached data after logout
+  revalidatePath("/", "layout");
+  
   redirect("/");
 }

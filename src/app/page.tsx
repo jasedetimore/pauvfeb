@@ -4,16 +4,16 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MainPageTemplate } from "@/components/templates";
 import { mockMarketSummary } from "@/lib/mock-data";
-import { useIssuers, useTags } from "@/lib/hooks";
+import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
 import { IssuerListData } from "@/components/molecules/IssuerListView";
 import { TagItemData } from "@/components/atoms/TagItem";
 
 /**
- * Generate mock market data for an issuer
- * This simulates price/volume data until we have real market data
+ * Generate fallback mock market data for an issuer
+ * Used when cached stats are not available yet
  */
-function generateMockMarketData(ticker: string) {
+function generateFallbackMarketData(ticker: string) {
   // Use ticker to seed random but consistent values
   const seed = ticker.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const random = (min: number, max: number) => {
@@ -35,6 +35,7 @@ function generateMockMarketData(ticker: string) {
 /**
  * Home Page - Main landing page for Pauv
  * Displays the issuer marketplace with filtering and sorting
+ * Uses cached stats (refreshed every 5 minutes) for price/volume data
  */
 export default function Home() {
   const router = useRouter();
@@ -58,48 +59,87 @@ export default function Home() {
     tag: selectedTagName ?? undefined,
   });
 
-  // Transform DB issuers to include mock market data
+  // Fetch cached issuer stats (price, volume, etc.)
+  const { statsMap, isLoading: statsLoading } = useIssuerStats();
+
+  // Transform DB issuers to include market data from cache (or fallback)
   const issuersWithMarketData: IssuerData[] = useMemo(() => {
     return dbIssuers.map((issuer) => {
-      const marketData = generateMockMarketData(issuer.ticker);
+      const cachedStats = statsMap.get(issuer.ticker);
+      
+      // Use cached stats if available, otherwise fallback to mock data
+      if (cachedStats && cachedStats.currentPrice > 0) {
+        return {
+          ticker: issuer.ticker,
+          fullName: issuer.fullName,
+          imageUrl: issuer.imageUrl,
+          currentPrice: cachedStats.currentPrice,
+          priceChange: cachedStats.price24hChange ?? 0,
+          primaryTag: issuer.primaryTag,
+        };
+      }
+      
+      // Fallback to generated data if cache is empty
+      const fallbackData = generateFallbackMarketData(issuer.ticker);
       return {
         ticker: issuer.ticker,
         fullName: issuer.fullName,
         imageUrl: issuer.imageUrl,
-        currentPrice: marketData.currentPrice,
-        priceChange: marketData.priceChange,
+        currentPrice: fallbackData.currentPrice,
+        priceChange: fallbackData.priceChange,
         primaryTag: issuer.primaryTag,
       };
     });
-  }, [dbIssuers]);
+  }, [dbIssuers, statsMap]);
 
-  // Create list view data with extended market info
+  // Create list view data with extended market info from cache
   const listViewIssuers: IssuerListData[] = useMemo(() => {
     return dbIssuers.map((issuer) => {
-      const marketData = generateMockMarketData(issuer.ticker);
+      const cachedStats = statsMap.get(issuer.ticker);
+      
+      // Use cached stats if available
+      if (cachedStats && cachedStats.currentPrice > 0) {
+        return {
+          ticker: issuer.ticker,
+          fullName: issuer.fullName,
+          primaryTag: issuer.primaryTag,
+          currentPrice: cachedStats.currentPrice,
+          price1hChange: cachedStats.price1hChange ?? 0,
+          price24hChange: cachedStats.price24hChange ?? 0,
+          price7dChange: cachedStats.price7dChange ?? 0,
+          volume24h: cachedStats.volume24h,
+          holders: cachedStats.holders,
+          marketCap: cachedStats.marketCap,
+        };
+      }
+      
+      // Fallback to generated data if cache is empty
+      const fallbackData = generateFallbackMarketData(issuer.ticker);
       return {
         ticker: issuer.ticker,
         fullName: issuer.fullName,
         primaryTag: issuer.primaryTag,
-        currentPrice: marketData.currentPrice,
-        price1hChange: marketData.price1hChange,
-        price24hChange: marketData.priceChange,
-        price7dChange: marketData.price7dChange,
-        volume24h: marketData.volume24h,
-        holders: marketData.holders,
-        marketCap: marketData.marketCap,
+        currentPrice: fallbackData.currentPrice,
+        price1hChange: fallbackData.price1hChange,
+        price24hChange: fallbackData.priceChange,
+        price7dChange: fallbackData.price7dChange,
+        volume24h: fallbackData.volume24h,
+        holders: fallbackData.holders,
+        marketCap: fallbackData.marketCap,
       };
     });
-  }, [dbIssuers]);
+  }, [dbIssuers, statsMap]);
 
-  // Sort issuers by different criteria
+  // Sort issuers by different criteria using cached stats
   const biggestIssuers = useMemo(() => {
     return [...issuersWithMarketData].sort((a, b) => {
-      const aMarket = generateMockMarketData(a.ticker).marketCap;
-      const bMarket = generateMockMarketData(b.ticker).marketCap;
+      const aStats = statsMap.get(a.ticker);
+      const bStats = statsMap.get(b.ticker);
+      const aMarket = aStats?.marketCap ?? generateFallbackMarketData(a.ticker).marketCap;
+      const bMarket = bStats?.marketCap ?? generateFallbackMarketData(b.ticker).marketCap;
       return bMarket - aMarket;
     });
-  }, [issuersWithMarketData]);
+  }, [issuersWithMarketData, statsMap]);
 
   const trendingIssuers = useMemo(() => {
     return [...issuersWithMarketData].sort((a, b) => b.priceChange - a.priceChange);
@@ -146,6 +186,9 @@ export default function Home() {
     console.error("Error loading tags:", tagsError);
   }
 
+  // Combined loading state - show loading while fetching issuers or stats
+  const combinedLoading = isLoading || statsLoading;
+
   return (
     <MainPageTemplate
       // Market summary data
@@ -154,14 +197,14 @@ export default function Home() {
       marketCapChange={mockMarketSummary.marketCapChange}
       tags={tags}
       tagsLoading={tagsLoading}
-      // Issuers for card view (by sort mode) - from Supabase
+      // Issuers for card view (by sort mode) - from Supabase with cached stats
       biggestIssuers={biggestIssuers}
       trendingIssuers={trendingIssuers}
       newestIssuers={newestIssuers}
       alphabeticalIssuers={alphabeticalIssuers}
-      // Issuers for list view - from Supabase
+      // Issuers for list view - from Supabase with cached stats
       listViewIssuers={listViewIssuers}
-      issuersLoading={isLoading}
+      issuersLoading={combinedLoading}
       // Auth state (not authenticated by default)
       isAuthenticated={false}
       // Callbacks

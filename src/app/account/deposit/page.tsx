@@ -11,10 +11,9 @@ export default function DepositPage() {
   if (isLoading) {
     return (
       <div
-        className="rounded-xl border p-6"
+        className="rounded-lg p-6"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <div className="animate-pulse space-y-4">
@@ -28,10 +27,9 @@ export default function DepositPage() {
   if (!user) {
     return (
       <div
-        className="rounded-xl border p-6 text-center"
+        className="rounded-lg p-6 text-center"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <p style={{ color: colors.textSecondary }}>
@@ -51,10 +49,9 @@ export default function DepositPage() {
   return (
     <div className="space-y-6">
       <div
-        className="rounded-xl border p-6"
+        className="rounded-lg p-6"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <h1

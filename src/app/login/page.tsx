@@ -1,30 +1,79 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
 import { Logo } from "@/components/atoms/Logo";
-import { signIn } from "@/app/auth/actions";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isLoading: authLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get redirect URL from search params, default to home
+  const redirectTo = searchParams.get("redirectTo") || "/";
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(redirectTo);
+    }
+  }, [user, authLoading, router, redirectTo]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const result = await signIn(formData);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
 
-    if (result?.error) {
-      setError(result.error);
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Successful login - redirect to intended destination and refresh to update server state
+      router.push(redirectTo);
+      router.refresh();
+    } catch (err) {
+      setError("An unexpected error occurred");
       setIsLoading(false);
     }
-    // If successful, the server action will redirect
+  }
+
+  // Show loading spinner while checking auth
+  if (authLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: colors.backgroundDark }}
+      >
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-b-2"
+          style={{ borderColor: colors.gold }}
+        />
+      </div>
+    );
+  }
+
+  // If user is logged in, don't render the form (redirect will happen)
+  if (user) {
+    return null;
   }
 
   return (

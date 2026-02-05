@@ -11,10 +11,9 @@ export default function AccountPage() {
   if (isLoading) {
     return (
       <div
-        className="rounded-xl border p-6"
+        className="rounded-lg p-6"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <div className="animate-pulse space-y-4">
@@ -29,10 +28,9 @@ export default function AccountPage() {
   if (!user) {
     return (
       <div
-        className="rounded-xl border p-6 text-center"
+        className="rounded-lg p-6 text-center"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <p style={{ color: colors.textSecondary }}>
@@ -46,10 +44,9 @@ export default function AccountPage() {
     <div className="space-y-6">
       {/* Account Info Card */}
       <div
-        className="rounded-xl border p-6"
+        className="rounded-lg p-6"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <h1
@@ -133,11 +130,10 @@ export default function AccountPage() {
       <form action={signOut}>
         <button
           type="submit"
-          className="px-6 py-3 rounded-lg font-semibold border transition-colors hover:opacity-90"
+          className="px-6 py-3 rounded-lg font-semibold transition-colors hover:opacity-90"
           style={{
             backgroundColor: "transparent",
             color: colors.red,
-            borderColor: colors.red,
           }}
         >
           Sign Out

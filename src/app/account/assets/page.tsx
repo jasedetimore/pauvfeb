@@ -10,10 +10,9 @@ export default function AssetsPage() {
   if (isLoading) {
     return (
       <div
-        className="rounded-xl border p-6"
+        className="rounded-lg p-6"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <div className="animate-pulse space-y-4">
@@ -27,10 +26,9 @@ export default function AssetsPage() {
   if (!user) {
     return (
       <div
-        className="rounded-xl border p-6 text-center"
+        className="rounded-lg p-6 text-center"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <p style={{ color: colors.textSecondary }}>
@@ -44,10 +42,9 @@ export default function AssetsPage() {
     <div className="space-y-6">
       {/* USDP Balance Card */}
       <div
-        className="rounded-xl border p-6"
+        className="rounded-lg p-6"
         style={{
           backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
         }}
       >
         <h1

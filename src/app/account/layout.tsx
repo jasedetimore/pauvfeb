@@ -46,45 +46,48 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen flex flex-col"
       style={{ backgroundColor: colors.backgroundDark }}
     >
       <AuthHeader />
       
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
-          <aside
-            className="w-full lg:w-64 shrink-0 rounded-xl border p-4"
-            style={{
-              backgroundColor: colors.box,
-              borderColor: colors.boxOutline,
-            }}
-          >
-            <nav className="space-y-2">
-              {sidebarLinks.map((link) => {
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors"
-                    style={{
-                      backgroundColor: isActive ? colors.gold : "transparent",
-                      color: isActive ? colors.textDark : colors.textPrimary,
-                    }}
-                  >
-                    <SidebarIcon icon={link.icon} />
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          </aside>
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <aside
+          className="w-64 shrink-0 flex flex-col p-6"
+          style={{
+            backgroundColor: colors.background,
+          }}
+        >
+          <nav className="space-y-2">
+            {sidebarLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                  style={{
+                    backgroundColor: isActive ? colors.boxLight : "transparent",
+                    color: colors.textPrimary,
+                  }}
+                >
+                  <SidebarIcon icon={link.icon} />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
 
-          {/* Main Content */}
-          <main className="flex-1">{children}</main>
-        </div>
+        {/* Divider */}
+        <div
+          className="w-px flex-shrink-0"
+          style={{ backgroundColor: colors.boxOutline }}
+        />
+
+        {/* Main Content */}
+        <main className="flex-1 p-8">{children}</main>
       </div>
     </div>
   );

@@ -8,40 +8,18 @@ import {
   TradingLeftSidebar,
   TradingMainContent,
   TradingRightSidebar,
+  PriceChart,
 } from "@/components/organisms";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 import { IssuerDetailsDB } from "@/lib/types/issuer";
+import { useIssuerMetrics } from "@/lib/hooks";
 
 interface IssuerTradingTemplateProps {
   ticker: string;
 }
 
 /**
- * Generate mock market data for an issuer (temporary until real data)
- */
-function generateMockMarketData(ticker: string) {
-  const seed = ticker.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const random = (min: number, max: number) => {
-    const x = Math.sin(seed) * 10000;
-    return min + (x - Math.floor(x)) * (max - min);
-  };
-
-  return {
-    currentPrice: random(0.00001, 0.01),
-    price1hChange: random(-5, 5),
-    price24hChange: random(-15, 15),
-    price7dChange: random(-25, 25),
-    volume24h: Math.floor(random(10000, 500000)),
-    circulatingSupply: Math.floor(random(1000000, 50000000)),
-    holders: Math.floor(random(100, 5000)),
-    marketCap: Math.floor(random(50000, 2000000)),
-    buyPercentage: random(30, 70),
-    sellPercentage: random(30, 70),
-  };
-}
-
-/**
- * Generate mock holders data
+ * Generate mock holders data (until we have real holder fetching)
  */
 function generateMockHolders(count: number = 10) {
   const usernames = [
@@ -74,67 +52,104 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   const [issuerData, setIssuerData] = useState<IssuerDetailsDB | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Fetch real metrics from the API
+  const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useIssuerMetrics(ticker);
 
   // Fetch issuer data from Supabase
   useEffect(() => {
+    let isCancelled = false;
+    
     const fetchIssuer = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        const supabase = createClient();
+        // Create a local client that ignores the user's session.
+        // This prevents any "waiting for session restore" delays when logged in,
+        // ensuring the public data loads immediately regardless of auth state.
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false,
+            },
+          }
+        );
+        
         const { data, error: fetchError } = await supabase
           .from("issuer_details")
           .select("*")
           .eq("ticker", ticker.toUpperCase())
           .single();
 
+        if (isCancelled) {
+          return;
+        }
+
         if (fetchError) {
           if (fetchError.code === "PGRST116") {
             setError("Issuer not found");
           } else {
-            setError("Failed to load issuer data");
+            setError(`Failed to load issuer data: ${fetchError.message}`);
           }
-          console.error("Supabase error:", fetchError);
+          console.error("[IssuerTradingTemplate] Supabase error:", fetchError);
+          return;
+        }
+
+        if (!data) {
+          setError("No data returned from database");
           return;
         }
 
         setIssuerData(data);
       } catch (err) {
-        console.error("Error fetching issuer:", err);
-        setError("An unexpected error occurred");
+        if (!isCancelled) {
+          console.error("[IssuerTradingTemplate] Error fetching issuer:", err);
+          const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+          setError(errorMessage.includes("aborted") ? "Request timeout - please try again" : errorMessage);
+        }
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     if (ticker) {
       fetchIssuer();
+    } else {
+      setIsLoading(false);
     }
+
+    return () => {
+      isCancelled = true;
+    };
   }, [ticker]);
 
-  // Generate mock market data
-  const marketData = useMemo(() => {
-    return generateMockMarketData(ticker);
-  }, [ticker]);
-
-  // Generate mock holders
+  // Generate mock holders (temporary until we have real holder data)
   const holders = useMemo(() => {
     return generateMockHolders(10);
   }, []);
 
-  // Normalize buy/sell percentages
+  // Derive buy/sell data from metrics
   const buySellData = useMemo(() => {
-    const total = marketData.buyPercentage + marketData.sellPercentage;
+    // Generate mock buy/sell ratios for now
+    const buyPercentage = 55;
+    const sellPercentage = 45;
+    const volume = metrics?.volume24h || 0;
     return {
-      buyPercentage: (marketData.buyPercentage / total) * 100,
-      sellPercentage: (marketData.sellPercentage / total) * 100,
-      buyVolume: Math.floor(marketData.volume24h * 0.55),
-      sellVolume: Math.floor(marketData.volume24h * 0.45),
+      buyPercentage,
+      sellPercentage,
+      buyVolume: Math.floor(volume * 0.55),
+      sellVolume: Math.floor(volume * 0.45),
       buyOrders: Math.floor(Math.random() * 500),
       sellOrders: Math.floor(Math.random() * 400),
     };
-  }, [marketData]);
+  }, [metrics]);
 
   // Handler for buy action
   const handleBuy = (amount: number) => {
@@ -226,15 +241,19 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     tags: issuerData.tag ? [issuerData.tag] : [],
   };
 
+  // Use real metrics data from the API
   const tradingData = {
-    volume24h: marketData.volume24h,
-    circulatingSupply: marketData.circulatingSupply,
-    holders: marketData.holders,
-    marketCap: marketData.marketCap,
-    price1hChange: marketData.price1hChange,
-    price24hChange: marketData.price24hChange,
-    price7dChange: marketData.price7dChange,
+    volume24h: metrics?.volume24h ?? null,
+    circulatingSupply: metrics?.circulatingSupply ?? null,
+    holders: metrics?.holders ?? null,
+    marketCap: metrics?.marketCap ?? null,
+    price1hChange: metrics?.price1hChange ?? null,
+    price24hChange: metrics?.price24hChange ?? null,
+    price7dChange: metrics?.price7dChange ?? null,
   };
+
+  // Get current price from metrics
+  const currentPrice = metrics?.currentPrice ?? 0;
 
   return (
     <>
@@ -250,14 +269,14 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             <div className="lg:col-span-3 order-2 lg:order-1">
               <TradingLeftSidebar
                 ticker={ticker}
-                price={marketData.currentPrice}
+                price={currentPrice}
                 tradingData={tradingData}
                 holders={holders}
                 twitterUrl={null}
                 instagramUrl={null}
                 tiktokUrl={null}
-                isLoading={false}
-                onRefreshMetrics={() => console.log("Refresh metrics")}
+                isLoading={metricsLoading}
+                onRefreshMetrics={refetchMetrics}
                 onRefreshHolders={() => console.log("Refresh holders")}
               />
             </div>
@@ -268,15 +287,17 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                 issuer={issuer}
                 buySellData={buySellData}
                 isLoading={false}
-              />
+              >
+                <PriceChart ticker={ticker} height={350} initialRange="24h" />
+              </TradingMainContent>
             </div>
 
             {/* Right Sidebar - Trading Form */}
             <div className="lg:col-span-3 order-3">
               <TradingRightSidebar
                 ticker={ticker}
-                price={marketData.currentPrice}
-                isLoading={false}
+                price={currentPrice}
+                isLoading={metricsLoading}
                 onBuy={handleBuy}
                 onSell={handleSell}
               />

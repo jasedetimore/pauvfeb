@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { useAuth } from "@/lib/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 
 interface IssuerDetails {
@@ -33,7 +32,7 @@ interface TagData {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  // Auth is already validated by the server-side layout, so user is guaranteed to exist
   const [activeTab, setActiveTab] = useState<"create-issuer" | "list-trading">("create-issuer");
   
   // Issuer form state
@@ -52,8 +51,8 @@ export default function AdminPage() {
   // Trading form state
   const [tradingForm, setTradingForm] = useState({
     ticker: "",
-    base_price: "1.00",
-    price_step: "0.01",
+    base_price: "0.01",
+    price_step: "0.001",
   });
   const [tradingLoading, setTradingLoading] = useState(false);
   const [tradingError, setTradingError] = useState<string | null>(null);
@@ -63,7 +62,7 @@ export default function AdminPage() {
   const [issuers, setIssuers] = useState<IssuerDetails[]>([]);
   const [tradingRecords, setTradingRecords] = useState<IssuerTrading[]>([]);
   const [tags, setTags] = useState<TagData[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [loadingData, setLoadingData] = useState(false);
 
   // Calculate unlisted issuers (in issuer_details but not in issuer_trading)
   const unlistedIssuers = React.useMemo(() => {
@@ -73,61 +72,122 @@ export default function AdminPage() {
 
   // Fetch data
   const fetchData = useCallback(async () => {
-    if (!user) return;
+    console.log("[Admin] fetchData called");
     
     setLoadingData(true);
-    const supabase = createClient();
     
     try {
-      // Get session for auth header
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      // Fetch issuers
-      const { data: issuerData, error: issuerError } = await supabase
-        .from("issuer_details")
-        .select("*")
-        .order("name");
-      
-      console.log("[Admin] Fetched issuers:", issuerData?.length, issuerError);
-      if (issuerData) {
-        setIssuers(issuerData);
-      }
-
-      // Fetch trading records (admin API)
-      let tradingData: IssuerTrading[] = [];
-      if (token) {
-        const tradingRes = await fetch("/api/admin/issuer-trading", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const tradingJson = await tradingRes.json();
-        console.log("[Admin] Fetched trading:", tradingJson);
-        if (tradingJson.success) {
-          tradingData = tradingJson.data || [];
-          setTradingRecords(tradingData);
+      // Fetch issuers - public data, no auth needed
+      console.log("[Admin] Fetching issuers...");
+      try {
+        const issuerRes = await fetch("/api/issuers");
+        console.log("[Admin] Issuer API response status:", issuerRes.status);
+        if (!issuerRes.ok) {
+          console.error("[Admin] Issuer API returned error status:", issuerRes.status);
         }
+        const issuerJson = await issuerRes.json();
+        console.log("[Admin] Fetched issuers from API:", issuerJson);
+        if (issuerJson.error) {
+          console.error("[Admin] Issuer API error:", issuerJson.error);
+        }
+        if (issuerJson.issuers && Array.isArray(issuerJson.issuers)) {
+          // Map API response to match our IssuerDetails interface
+          // API returns IssuerCardData with fullName, we need name
+          const mappedIssuers: IssuerDetails[] = issuerJson.issuers.map((i: { 
+            ticker: string; 
+            fullName: string; 
+            bio?: string; 
+            headline?: string; 
+            primaryTag?: string; 
+            imageUrl?: string; 
+          }) => ({
+            id: i.ticker, // Use ticker as ID since API doesn't return id
+            name: i.fullName,
+            ticker: i.ticker,
+            bio: i.bio || null,
+            headline: i.headline || null,
+            tag: i.primaryTag || null,
+            photo: i.imageUrl || null,
+            created_at: new Date().toISOString(),
+          }));
+          setIssuers(mappedIssuers);
+          console.log("[Admin] Mapped issuers:", mappedIssuers.length);
+        } else {
+          console.log("[Admin] No issuers array in response");
+        }
+      } catch (issuerApiError) {
+        console.error("[Admin] Issuer API fetch error:", issuerApiError);
       }
 
-      // Fetch tags
-      const { data: tagData, error: tagError } = await supabase
-        .from("tags")
-        .select("id, tag")
-        .order("tag");
-      
-      console.log("[Admin] Fetched tags:", tagData?.length, tagError);
-      if (tagData) {
-        setTags(tagData);
+      // Fetch tags - public data, no auth needed
+      console.log("[Admin] Fetching tags...");
+      try {
+        const tagRes = await fetch("/api/tags");
+        console.log("[Admin] Tags API response status:", tagRes.status);
+        if (!tagRes.ok) {
+          console.error("[Admin] Tags API returned error status:", tagRes.status);
+        }
+        const tagJson = await tagRes.json();
+        console.log("[Admin] Fetched tags from API:", tagJson);
+        if (tagJson.error) {
+          console.error("[Admin] Tags API error:", tagJson.error);
+        }
+        if (tagJson.tags && Array.isArray(tagJson.tags)) {
+          // Map API response to match our TagData interface
+          const mappedTags = tagJson.tags.map((t: { id: string; name: string }) => ({
+            id: t.id,
+            tag: t.name, // API returns 'name', we need 'tag'
+          }));
+          setTags(mappedTags);
+          console.log("[Admin] Mapped tags:", mappedTags.length);
+        } else {
+          console.log("[Admin] No tags array in response");
+        }
+      } catch (tagApiError) {
+        console.error("[Admin] Tags API fetch error:", tagApiError);
+      }
+
+      // Fetch trading records (admin API) - requires auth
+      console.log("[Admin] Fetching trading records...");
+      try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        
+        if (token) {
+          const tradingRes = await fetch("/api/admin/issuer-trading", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const tradingJson = await tradingRes.json();
+          console.log("[Admin] Fetched trading:", tradingJson);
+          if (tradingJson.success) {
+            setTradingRecords(tradingJson.data || []);
+          }
+        } else {
+          console.log("[Admin] No session token, skipping trading fetch");
+        }
+      } catch (tradingError) {
+        console.error("[Admin] Trading API fetch error:", tradingError);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
+      console.log("[Admin] fetchData complete, setting loadingData to false");
       setLoadingData(false);
     }
-  }, [user]);
+  }, []);
 
+  // Fetch data when component mounts - auth is guaranteed by server layout
   useEffect(() => {
+    console.log("[Admin] Initial mount - fetching data");
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  
+  // Allow manual refresh
+  const refreshData = useCallback(() => {
     fetchData();
   }, [fetchData]);
 
@@ -172,7 +232,7 @@ export default function AdminPage() {
       });
       
       // Refresh data
-      fetchData();
+      refreshData();
     } catch (error) {
       setIssuerError(error instanceof Error ? error.message : "Unknown error");
     } finally {
@@ -220,12 +280,12 @@ export default function AdminPage() {
       setTradingSuccess(`Successfully listed ${tradingForm.ticker} for trading!`);
       setTradingForm({
         ticker: "",
-        base_price: "1.00",
-        price_step: "0.01",
+        base_price: "0.01",
+        price_step: "0.001",
       });
       
       // Refresh data
-      fetchData();
+      refreshData();
     } catch (error) {
       setTradingError(error instanceof Error ? error.message : "Unknown error");
     } finally {
@@ -245,9 +305,28 @@ export default function AdminPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8" style={{ color: colors.gold }}>
-        Admin Dashboard
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold" style={{ color: colors.gold }}>
+          Admin Dashboard
+        </h1>
+        <button
+          onClick={refreshData}
+          disabled={loadingData}
+          className="px-4 py-2 rounded font-medium transition-colors disabled:opacity-50"
+          style={{
+            backgroundColor: colors.box,
+            color: colors.textPrimary,
+            border: `1px solid ${colors.boxOutline}`,
+          }}
+        >
+          {loadingData ? "Loading..." : "↻ Refresh Data"}
+        </button>
+      </div>
+
+      {/* Debug info */}
+      <div className="mb-4 text-xs" style={{ color: colors.textSecondary }}>
+        Tags: {tags.length} | Issuers: {issuers.length} | Trading: {tradingRecords.length} | Unlisted: {unlistedIssuers.length}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
@@ -355,21 +434,29 @@ export default function AdminPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-1" style={labelStyle}>
-                    Tag
+                    Tag {loadingData && "(Loading...)"}
                   </label>
                   <select
                     value={issuerForm.tag}
                     onChange={(e) => setIssuerForm({ ...issuerForm, tag: e.target.value })}
                     className="w-full px-3 py-2 rounded border focus:outline-none focus:ring-1"
                     style={{ ...inputStyle, "--tw-ring-color": colors.gold } as React.CSSProperties}
+                    disabled={loadingData}
                   >
-                    <option value="">Select a tag...</option>
+                    <option value="">
+                      {loadingData ? "Loading tags..." : tags.length === 0 ? "No tags available" : "Select a tag..."}
+                    </option>
                     {tags.map((tag) => (
                       <option key={tag.id} value={tag.tag}>
                         {tag.tag}
                       </option>
                     ))}
                   </select>
+                  {!loadingData && tags.length === 0 && (
+                    <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                      No tags found in database. Check Supabase migrations.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -425,7 +512,7 @@ export default function AdminPage() {
               <form onSubmit={handleCreateTrading} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={labelStyle}>
-                    Select Issuer *
+                    Select Issuer * {loadingData && "(Loading...)"}
                   </label>
                   <select
                     required
@@ -433,15 +520,23 @@ export default function AdminPage() {
                     onChange={(e) => setTradingForm({ ...tradingForm, ticker: e.target.value })}
                     className="w-full px-3 py-2 rounded border focus:outline-none focus:ring-1"
                     style={{ ...inputStyle, "--tw-ring-color": colors.gold } as React.CSSProperties}
+                    disabled={loadingData}
                   >
-                    <option value="">Select an unlisted issuer...</option>
+                    <option value="">
+                      {loadingData ? "Loading issuers..." : unlistedIssuers.length === 0 ? "No unlisted issuers" : "Select an unlisted issuer..."}
+                    </option>
                     {unlistedIssuers.map((issuer) => (
                       <option key={issuer.id} value={issuer.ticker}>
                         {issuer.name} ({issuer.ticker})
                       </option>
                     ))}
                   </select>
-                  {unlistedIssuers.length === 0 && !loadingData && (
+                  {unlistedIssuers.length === 0 && !loadingData && issuers.length === 0 && (
+                    <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                      No issuers found in database. Create an issuer first.
+                    </p>
+                  )}
+                  {unlistedIssuers.length === 0 && !loadingData && issuers.length > 0 && (
                     <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
                       All issuers are already listed for trading.
                     </p>

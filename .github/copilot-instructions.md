@@ -8,3 +8,4 @@ Always use colors.ts, NEVER hard code colors for frontend
 to push to supabase, use this: npx supabase@latest db push
 USDP is the internal stable coin
 PV is the term for a token
+Always use supabase.auth.getUser() for initial session hydration in the AuthProvider and keep onAuthStateChange callbacks synchronous to prevent stale token deadlocks.
