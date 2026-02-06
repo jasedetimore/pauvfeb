@@ -3,6 +3,7 @@
 import React from "react";
 import { colors } from "@/lib/constants/colors";
 import { IssuerHeader, IssuerTagsCard } from "@/components/molecules";
+import { IssuerLinksDB } from "@/lib/types/issuer-links";
 
 interface IssuerData {
   ticker: string;
@@ -15,6 +16,7 @@ interface IssuerData {
 
 interface TradingMainContentProps {
   issuer: IssuerData;
+  issuerLinks?: IssuerLinksDB | null;
   isLoading?: boolean;
   children?: React.ReactNode; // For chart component
 }
@@ -25,6 +27,7 @@ interface TradingMainContentProps {
  */
 export const TradingMainContent: React.FC<TradingMainContentProps> = ({
   issuer,
+  issuerLinks,
   isLoading = false,
   children,
 }) => {
@@ -38,6 +41,7 @@ export const TradingMainContent: React.FC<TradingMainContentProps> = ({
         headline={issuer.headline}
         bio={issuer.bio}
         tags={issuer.tags}
+        issuerLinks={issuerLinks}
         isLoading={isLoading}
       />
 

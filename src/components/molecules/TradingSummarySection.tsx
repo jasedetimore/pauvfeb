@@ -2,7 +2,7 @@
 
 import React from "react";
 import { colors } from "@/lib/constants/colors";
-import { PercentageChange } from "@/components/atoms";
+import { PercentageChange, TradingSummarySkeleton } from "@/components/atoms";
 
 interface TradingSummaryData {
   volume24h?: number | null;
@@ -17,6 +17,8 @@ interface TradingSummaryData {
 interface TradingSummarySectionProps {
   data?: TradingSummaryData | null;
   isLoading?: boolean;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
   onRefresh?: () => void;
 }
 
@@ -27,6 +29,7 @@ interface TradingSummarySectionProps {
 export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
   data,
   isLoading = false,
+  isTradable = true,
   onRefresh,
 }) => {
   // Format currency values
@@ -56,11 +59,22 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
     return value.toFixed(2);
   };
 
+  const formatSupply = (value?: number | null): string => {
+    if (value == null) return "—";
+    if (value >= 1000000000000) {
+      return value.toExponential(4).replace("e+", "e");
+    }
+    if (value >= 1000000000) {
+      return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+    return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
+
   const metrics = [
-    { label: "24h Volume", value: formatCurrency(data?.volume24h) },
-    { label: "Circulating Supply", value: formatNumber(data?.circulatingSupply) },
-    { label: "Holders", value: formatNumber(data?.holders) },
-    { label: "Market Cap", value: formatCurrency(data?.marketCap) },
+    { label: "24h Volume", value: isTradable ? formatCurrency(data?.volume24h) : "---" },
+    { label: "Circulating Supply", value: isTradable ? formatSupply(data?.circulatingSupply) : "---" },
+    { label: "Holders", value: isTradable ? formatNumber(data?.holders) : "---" },
+    { label: "Market Cap", value: isTradable ? formatCurrency(data?.marketCap) : "---" },
   ];
 
   const priceChanges = [
@@ -70,30 +84,7 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
   ];
 
   if (isLoading) {
-    return (
-      <div
-        className="p-4 rounded-[10px] animate-pulse"
-        style={{
-          backgroundColor: colors.box,
-          border: `1px solid ${colors.boxOutline}`,
-        }}
-      >
-        <div className="grid grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="space-y-2">
-              <div
-                className="h-3 w-16 rounded"
-                style={{ backgroundColor: colors.boxLight }}
-              />
-              <div
-                className="h-5 w-24 rounded"
-                style={{ backgroundColor: colors.boxLight }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <TradingSummarySkeleton />;
   }
 
   return (
@@ -129,7 +120,7 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
           border: `1px solid ${colors.boxOutline}`,
         }}
       >
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           {metrics.map((metric, i) => (
             <div key={i}>
               <div
@@ -150,19 +141,26 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
 
         {/* Price Changes */}
         <div
-          className="mt-4 pt-4 flex justify-between"
+          className="mt-2 pt-2 flex justify-between"
           style={{ borderTop: `1px solid ${colors.boxOutline}` }}
         >
           {priceChanges.map((change, i) => (
             <div key={i} className="text-center">
               <div
-                className="text-xs font-light uppercase mb-1"
+                className="text-xs font-light uppercase mb-0.5"
                 style={{ color: colors.textSecondary }}
               >
                 {change.label}
               </div>
-              {change.value != null ? (
-                <PercentageChange value={change.value} size="sm" />
+              {!isTradable ? (
+                <span
+                  className="text-sm font-mono"
+                  style={{ color: colors.textSecondary }}
+                >
+                  ---
+                </span>
+              ) : change.value != null ? (
+                <PercentageChange value={change.value} size="lg" />
               ) : (
                 <span
                   className="text-sm font-mono"

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { colors } from "@/lib/constants/colors";
-import { Logo } from "@/components/atoms/Logo";
+import { GoogleSignInButton } from "@/components/atoms/GoogleSignInButton";
 import { signUp } from "@/app/auth/actions";
 
 export default function RegisterPage() {
@@ -48,84 +48,80 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 py-8"
+      className="min-h-screen flex flex-col"
       style={{ backgroundColor: colors.backgroundDark }}
     >
-      <div
-        className="w-full max-w-md p-8 rounded-2xl border"
-        style={{
-          backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
-        }}
-      >
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/">
-            <Logo height={40} />
-          </Link>
-        </div>
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          {/* Title - OUTSIDE BOX */}
+          <h1
+            className="text-2xl font-bold text-center mb-1"
+            style={{ color: colors.textPrimary }}
+          >
+            Create Account
+          </h1>
+          <p
+            className="text-center mb-4"
+            style={{ color: colors.textSecondary }}
+          >
+            Join Pauv and start trading
+          </p>
 
-        {/* Title */}
-        <h1
-          className="text-2xl font-bold text-center mb-2"
-          style={{ color: colors.textPrimary }}
-        >
-          Create Account
-        </h1>
-        <p
-          className="text-center mb-8"
-          style={{ color: colors.textSecondary }}
-        >
-          Join Pauv and start trading
-        </p>
-
-        {/* Error Message */}
-        {error && (
+          {/* Box - containing only form */}
           <div
-            className="mb-6 p-4 rounded-lg border"
+            className="p-8 rounded-lg border"
             style={{
-              backgroundColor: `${colors.red}20`,
-              borderColor: colors.red,
-              color: colors.red,
+              backgroundColor: colors.box,
+              borderColor: colors.boxOutline,
             }}
           >
-            {error}
-          </div>
-        )}
-
-        {/* Success Message */}
-        {success && (
-          <div
-            className="mb-6 p-4 rounded-lg border"
-            style={{
-              backgroundColor: `${colors.green}20`,
-              borderColor: colors.green,
-              color: colors.green,
-            }}
-          >
-            {success}
-            <p className="mt-2 text-sm">
-              <Link
-                href="/login"
-                className="underline font-semibold"
+            {/* Error Message */}
+            {error && (
+              <div
+                className="mb-6 p-4 rounded-lg border"
+                style={{
+                  backgroundColor: `${colors.red}20`,
+                  borderColor: colors.red,
+                  color: colors.red,
+                }}
               >
-                Click here to login
-              </Link>
-            </p>
-          </div>
-        )}
+                {error}
+              </div>
+            )}
 
-        {/* Form */}
-        {!success && (
-          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Success Message */}
+            {success && (
+              <div
+                className="mb-6 p-4 rounded-lg border"
+                style={{
+                  backgroundColor: `${colors.green}20`,
+                  borderColor: colors.green,
+                  color: colors.green,
+                }}
+              >
+                {success}
+                <p className="mt-2 text-sm">
+                  <Link
+                    href="/login"
+                    className="underline font-semibold"
+                  >
+                    Click here to login
+                  </Link>
+                </p>
+              </div>
+            )}
+
+            {/* Form */}
+            {!success && (
+              <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
             <div>
               <label
                 htmlFor="username"
                 className="block text-sm font-medium mb-2"
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.textPrimary }}
               >
-                Username
+                Username<span style={{ color: colors.red }}> *</span>
               </label>
               <input
                 type="text"
@@ -134,7 +130,7 @@ export default function RegisterPage() {
                 required
                 className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
                 style={{
-                  backgroundColor: colors.boxLight,
+                  backgroundColor: colors.box,
                   borderColor: colors.boxOutline,
                   color: colors.textPrimary,
                 }}
@@ -147,9 +143,9 @@ export default function RegisterPage() {
               <label
                 htmlFor="email"
                 className="block text-sm font-medium mb-2"
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.textPrimary }}
               >
-                Email
+                Email<span style={{ color: colors.red }}> *</span>
               </label>
               <input
                 type="email"
@@ -158,7 +154,7 @@ export default function RegisterPage() {
                 required
                 className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
                 style={{
-                  backgroundColor: colors.boxLight,
+                  backgroundColor: colors.box,
                   borderColor: colors.boxOutline,
                   color: colors.textPrimary,
                 }}
@@ -171,9 +167,9 @@ export default function RegisterPage() {
               <label
                 htmlFor="password"
                 className="block text-sm font-medium mb-2"
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.textPrimary }}
               >
-                Password
+                Password<span style={{ color: colors.red }}> *</span>
               </label>
               <input
                 type="password"
@@ -183,7 +179,7 @@ export default function RegisterPage() {
                 minLength={6}
                 className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
                 style={{
-                  backgroundColor: colors.boxLight,
+                  backgroundColor: colors.box,
                   borderColor: colors.boxOutline,
                   color: colors.textPrimary,
                 }}
@@ -196,9 +192,9 @@ export default function RegisterPage() {
               <label
                 htmlFor="confirmPassword"
                 className="block text-sm font-medium mb-2"
-                style={{ color: colors.textSecondary }}
+                style={{ color: colors.textPrimary }}
               >
-                Confirm Password
+                Confirm Password<span style={{ color: colors.red }}> *</span>
               </label>
               <input
                 type="password"
@@ -208,7 +204,7 @@ export default function RegisterPage() {
                 minLength={6}
                 className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
                 style={{
-                  backgroundColor: colors.boxLight,
+                  backgroundColor: colors.box,
                   borderColor: colors.boxOutline,
                   color: colors.textPrimary,
                 }}
@@ -228,41 +224,48 @@ export default function RegisterPage() {
             >
               {isLoading ? "Creating Account..." : "Create Account"}
             </button>
-          </form>
-        )}
+              </form>
+            )}
+          </div>
 
-        {/* Divider */}
-        <div className="my-8 flex items-center">
-          <div
-            className="flex-1 h-px"
-            style={{ backgroundColor: colors.boxOutline }}
-          />
-          <span
-            className="px-4 text-sm"
-            style={{ color: colors.textMuted }}
+          {/* Divider - OUTSIDE BOX */}
+          <div className="my-0 mt-2.5 flex items-center">
+            <div
+              className="flex-1 h-px"
+              style={{ backgroundColor: colors.boxOutline }}
+            />
+            <span
+              className="px-4 text-sm"
+              style={{ color: colors.textMuted }}
+            >
+              or
+            </span>
+            <div
+              className="flex-1 h-px"
+              style={{ backgroundColor: colors.boxOutline }}
+            />
+          </div>
+
+          {/* Google Sign Up - OUTSIDE BOX */}
+          <div className="mt-2.5">
+            <GoogleSignInButton label="Sign up with Google" />
+          </div>
+
+          {/* Sign In Link - OUTSIDE BOX */}
+          <p
+            className="text-center mt-2.5"
+            style={{ color: colors.textSecondary }}
           >
-            or
-          </span>
-          <div
-            className="flex-1 h-px"
-            style={{ backgroundColor: colors.boxOutline }}
-          />
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="font-semibold hover:underline"
+              style={{ color: colors.gold }}
+            >
+              Sign In
+            </Link>
+          </p>
         </div>
-
-        {/* Sign In Link */}
-        <p
-          className="text-center"
-          style={{ color: colors.textSecondary }}
-        >
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-semibold hover:underline"
-            style={{ color: colors.gold }}
-          >
-            Sign In
-          </Link>
-        </p>
       </div>
     </div>
   );

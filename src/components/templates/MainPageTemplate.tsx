@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { AuthHeader } from "../molecules/AuthHeader";
 import { HeroSection } from "../molecules/HeroSection";
 import { TagSidebar } from "../molecules/TagSidebar";
 import { IssuerGrid, IssuerData } from "../molecules/IssuerGrid";
 import { IssuerListView, IssuerListData } from "../molecules/IssuerListView";
-import { ControlsBar } from "../molecules/ControlsBar";
+import { Navigation } from "../molecules/Navigation";
 import { TagItemData, ViewMode, SortMode } from "../atoms";
 import { colors } from "@/lib/constants/colors";
 
@@ -117,11 +116,6 @@ export function MainPageTemplate({
       className="min-h-screen"
       style={{ backgroundColor: colors.backgroundDark }}
     >
-      {/* Header */}
-      <AuthHeader
-        onSearch={onSearch}
-      />
-
       {/* Main Container with Max Width */}
       <div style={{ maxWidth: "1250px", margin: "0 auto", width: "100%" }}>
         {/* Hero Section */}
@@ -197,8 +191,8 @@ export function MainPageTemplate({
 
             {/* Right side - Controls and Content */}
             <div style={{ flex: "1", minWidth: "0" }}>
-              {/* Controls Bar */}
-              <ControlsBar
+              {/* Navigation */}
+              <Navigation
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 sortMode={sortMode}

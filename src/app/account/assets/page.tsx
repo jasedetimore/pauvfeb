@@ -132,7 +132,7 @@ export default function AssetsPage() {
         className="font-mono"
         style={{
           display: "grid",
-          gridTemplateColumns: "80px 80px 90px 80px 90px 110px 100px",
+          gridTemplateColumns: "1.2fr 1fr 1.2fr 1fr 1.2fr 1.5fr 1.2fr",
           gap: "12px",
           padding: "10px 20px",
           borderBottom: `1px solid ${colors.boxLight}`,
@@ -234,9 +234,10 @@ export default function AssetsPage() {
   if (isLoading) {
     return (
       <div
-        className="rounded-lg p-6"
+        className="rounded-lg p-6 border"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
+          borderColor: colors.boxOutline,
         }}
       >
         <div className="animate-pulse space-y-4">
@@ -250,9 +251,10 @@ export default function AssetsPage() {
   if (!user) {
     return (
       <div
-        className="rounded-lg p-6 text-center"
+        className="rounded-lg p-6 text-center border"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
+          borderColor: colors.boxOutline,
         }}
       >
         <p style={{ color: colors.textSecondary }}>
@@ -266,9 +268,10 @@ export default function AssetsPage() {
     <div className="space-y-6">
       {/* USDP Balance Card */}
       <div
-        className="rounded-lg p-6"
+        className="rounded-lg p-6 border"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
+          borderColor: colors.boxOutline,
         }}
       >
         <h1
@@ -280,8 +283,11 @@ export default function AssetsPage() {
 
         {/* Total Value */}
         <div
-          className="p-4 rounded-lg mb-6"
-          style={{ backgroundColor: colors.boxLight }}
+          className="p-4 rounded-lg mb-6 border"
+          style={{
+            backgroundColor: colors.boxLight,
+            borderColor: colors.boxOutline,
+          }}
         >
           <p
             className="text-sm mb-1"
@@ -291,9 +297,12 @@ export default function AssetsPage() {
           </p>
           <p
             className="text-3xl font-bold"
-            style={{ color: colors.gold }}
+            style={{ color: colors.textPrimary }}
           >
-            ${profile?.usdp_balance?.toLocaleString() || "0.00"}
+            ${(
+              (profile?.usdp_balance || 0) +
+              holdings.reduce((sum, h) => sum + h.pvAmount * h.currentPrice, 0)
+            ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
 
@@ -307,23 +316,23 @@ export default function AssetsPage() {
           </h2>
           
           <div
-            className="flex items-center justify-between p-4 rounded-lg border"
+            className="flex items-center p-4 rounded-lg border"
             style={{
               backgroundColor: colors.boxLight,
               borderColor: colors.boxOutline,
             }}
           >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
-                style={{
-                  backgroundColor: colors.gold,
-                  color: colors.textDark,
-                }}
-              >
-                $
-              </div>
-              <div>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+              style={{
+                backgroundColor: colors.box,
+                color: colors.textPrimary,
+              }}
+            >
+              $
+            </div>
+            <div className="ml-3">
+              <div className="flex items-center gap-3">
                 <p
                   className="font-semibold"
                   style={{ color: colors.textPrimary }}
@@ -331,19 +340,19 @@ export default function AssetsPage() {
                   USDP
                 </p>
                 <p
-                  className="text-sm"
-                  style={{ color: colors.textSecondary }}
+                  className="text-lg font-semibold"
+                  style={{ color: colors.textPrimary }}
                 >
-                  Pauv Stable Coin
+                  {profile?.usdp_balance?.toLocaleString() || "0.00"}
                 </p>
               </div>
+              <p
+                className="text-sm"
+                style={{ color: colors.textSecondary }}
+              >
+                Pauv Stable Coin
+              </p>
             </div>
-            <p
-              className="text-lg font-semibold"
-              style={{ color: colors.textPrimary }}
-            >
-              {profile?.usdp_balance?.toLocaleString() || "0.00"}
-            </p>
           </div>
         </div>
 
@@ -399,7 +408,7 @@ export default function AssetsPage() {
                 className="font-mono"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "80px 80px 90px 80px 90px 110px 100px",
+                  gridTemplateColumns: "1.2fr 1fr 1.2fr 1fr 1.2fr 1.5fr 1.2fr",
                   gap: "12px",
                   padding: "8px 20px",
                   backgroundColor: colors.background,

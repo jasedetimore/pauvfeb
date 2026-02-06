@@ -2,10 +2,14 @@
 
 import React from "react";
 import { colors } from "@/lib/constants/colors";
+import { UserHoldingsSkeleton } from "@/components/atoms";
 import { useUserTransactions, UserTransaction } from "@/lib/hooks/useUserTransactions";
 
 interface UserHoldingsProps {
   ticker: string;
+  onRefetchRef?: (refetch: () => Promise<void>) => void;
+  forceSkeleton?: boolean;
+  onLoadingChange?: (isLoading: boolean) => void;
 }
 
 /**
@@ -27,8 +31,8 @@ function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
   }).format(value);
 }
 
@@ -37,8 +41,8 @@ function formatCurrency(value: number): string {
  */
 function formatPV(value: number): string {
   return value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
   });
 }
 
@@ -53,14 +57,14 @@ const TransactionRow: React.FC<{ transaction: UserTransaction; isLast: boolean }
 
   return (
     <div
-      className="py-2 flex items-center justify-between"
+      className="py-2 grid items-center justify-center grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)] overflow-hidden"
       style={{
         borderBottom: isLast ? "none" : `1px solid ${colors.boxOutline}`,
       }}
     >
       {/* BUY/SELL badge */}
       <span
-        className="text-xs font-semibold px-2 py-1 rounded"
+        className="text-xs font-semibold px-2 py-1 rounded text-center w-[52px] justify-self-center"
         style={{
           backgroundColor: isBuy ? `${colors.green}20` : `${colors.red}20`,
           color: isBuy ? colors.green : colors.red,
@@ -71,7 +75,7 @@ const TransactionRow: React.FC<{ transaction: UserTransaction; isLast: boolean }
 
       {/* USDP Change */}
       <span
-        className="text-sm font-medium font-mono"
+        className="text-sm font-medium font-mono text-center truncate"
         style={{ color: colors.textPrimary }}
       >
         {formatCurrency(transaction.amount_usdp)}
@@ -79,7 +83,7 @@ const TransactionRow: React.FC<{ transaction: UserTransaction; isLast: boolean }
 
       {/* PV Change */}
       <span
-        className="text-sm font-medium font-mono"
+        className="text-sm font-medium font-mono text-center truncate"
         style={{ color: isBuy ? colors.green : colors.red }}
       >
         {isBuy ? "+" : "-"}{formatPV(transaction.pv_traded)} PV
@@ -104,21 +108,45 @@ const EmptyState: React.FC = () => (
 /**
  * Loading state component
  */
-const LoadingState: React.FC = () => (
-  <div
-    className="text-center py-4"
-    style={{ color: colors.textSecondary }}
-  >
-    <p className="text-sm">Loading transactions...</p>
-  </div>
-);
+const LoadingState: React.FC = () => <UserHoldingsSkeleton />;
 
 /**
  * UserHoldings - Displays transaction history for the current user and issuer
  * Shows BUY/SELL, amount in PV, cost basis, and date
  */
-export const UserHoldings: React.FC<UserHoldingsProps> = ({ ticker }) => {
-  const { transactions, isLoading, error } = useUserTransactions(ticker);
+export const UserHoldings: React.FC<UserHoldingsProps> = ({
+  ticker,
+  onRefetchRef,
+  forceSkeleton = false,
+  onLoadingChange,
+}) => {
+  const { transactions, isLoading, error, refetch } = useUserTransactions(ticker);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  // Expose refetch to parent via callback ref
+  React.useEffect(() => {
+    if (onRefetchRef) {
+      onRefetchRef(refetch);
+    }
+  }, [onRefetchRef, refetch]);
+
+  React.useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
+  const effectiveLoading = forceSkeleton || isLoading;
+
+  if (effectiveLoading) {
+    return <UserHoldingsSkeleton />;
+  }
 
   return (
     <div>
@@ -131,12 +159,27 @@ export const UserHoldings: React.FC<UserHoldingsProps> = ({ ticker }) => {
         }}
       />
 
-      <h2
-        className="font-mono text-lg font-semibold mb-3"
-        style={{ color: colors.textPrimary }}
-      >
-        Transaction History
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2
+          className="font-mono text-lg font-semibold"
+          style={{ color: colors.textPrimary }}
+        >
+          Transaction History
+        </h2>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="text-xs px-3 py-1 rounded transition-colors hover:opacity-80 disabled:opacity-50"
+          style={{
+            backgroundColor: colors.background,
+            border: `1px solid ${colors.boxOutline}`,
+            color: colors.textPrimary,
+          }}
+          title="Refresh transactions"
+        >
+          Refresh
+        </button>
+      </div>
       
       <div
         className="px-4 py-2 rounded-[10px]"
@@ -145,9 +188,7 @@ export const UserHoldings: React.FC<UserHoldingsProps> = ({ ticker }) => {
           border: `1px solid ${colors.boxOutline}`,
         }}
       >
-        {isLoading ? (
-          <LoadingState />
-        ) : error ? (
+        {error ? (
           <div
             className="text-center py-4 text-xs"
             style={{ color: colors.red }}

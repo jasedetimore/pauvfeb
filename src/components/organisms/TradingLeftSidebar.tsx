@@ -2,7 +2,7 @@
 
 import React from "react";
 import { colors } from "@/lib/constants/colors";
-import { PriceDisplay, SocialMediaLinks } from "@/components/atoms";
+import { PriceDisplay } from "@/components/atoms";
 import { TradingSummarySection, HoldersSection } from "@/components/molecules";
 
 interface Holder {
@@ -26,10 +26,9 @@ interface TradingLeftSidebarProps {
   price?: number | null;
   tradingData?: TradingData | null;
   holders: Holder[];
-  twitterUrl?: string | null;
-  instagramUrl?: string | null;
-  tiktokUrl?: string | null;
   isLoading?: boolean;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
   onRefreshMetrics?: () => void;
   onRefreshHolders?: () => void;
 }
@@ -43,10 +42,8 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
   price,
   tradingData,
   holders,
-  twitterUrl,
-  instagramUrl,
-  tiktokUrl,
   isLoading = false,
+  isTradable = true,
   onRefreshMetrics,
   onRefreshHolders,
 }) => {
@@ -61,19 +58,14 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
         price={price}
         loading={isLoading}
         showBackButton={true}
-      />
-
-      {/* Social Media Links */}
-      <SocialMediaLinks
-        twitterUrl={twitterUrl}
-        instagramUrl={instagramUrl}
-        tiktokUrl={tiktokUrl}
+        isTradable={isTradable}
       />
 
       {/* Trading Summary */}
       <TradingSummarySection
         data={tradingData}
         isLoading={isLoading}
+        isTradable={isTradable}
         onRefresh={onRefreshMetrics}
       />
 

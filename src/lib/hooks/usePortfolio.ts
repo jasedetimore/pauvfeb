@@ -82,7 +82,7 @@ export function usePortfolio(): UsePortfolioResult {
             .select("date")
             .eq("user_id", user.id)
             .eq("ticker", holding.ticker)
-            .eq("order_type", "BUY")
+            .eq("order_type", "buy")
             .eq("status", "completed")
             .order("date", { ascending: false })
             .limit(1)

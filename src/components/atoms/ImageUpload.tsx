@@ -89,7 +89,7 @@ export function ImageUpload({
   const pendingFileRef = useRef<File | null>(null);
 
   const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-  const maxSizeMB = 5;
+  const maxSizeMB = 10;
 
   const validateFile = (file: File): string | null => {
     if (!allowedTypes.includes(file.type)) {

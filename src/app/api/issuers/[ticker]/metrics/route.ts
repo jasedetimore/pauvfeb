@@ -70,8 +70,13 @@ export async function GET(
       }),
     ]);
 
-    // Handle errors
+    // Handle missing trading data — issuer exists in issuer_details but
+    // has not been added to issuer_trading yet ("Launching soon" state).
     if (tradingData.error) {
+      // PGRST116 = "no rows returned" from .single()
+      if (tradingData.error.code === "PGRST116") {
+        return NextResponse.json({ metrics: null, tradable: false });
+      }
       console.error("[Metrics API] Trading data error:", tradingData.error);
       return NextResponse.json(
         { error: "Failed to fetch trading data" },
@@ -117,7 +122,7 @@ export async function GET(
       updatedAt: new Date().toISOString(),
     };
 
-    return NextResponse.json({ metrics });
+    return NextResponse.json({ metrics, tradable: true });
   } catch (error) {
     console.error("[Metrics API] Unexpected error:", error);
     return NextResponse.json(

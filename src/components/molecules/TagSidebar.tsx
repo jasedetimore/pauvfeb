@@ -41,20 +41,6 @@ export function TagSidebar({
           height: "fit-content",
         }}
       >
-        {/* Title */}
-        <h3
-          style={{
-            color: colors.textPrimary,
-            fontSize: "16px",
-            fontWeight: "600",
-            marginTop: "0",
-            marginBottom: "12px",
-            paddingLeft: "8px",
-          }}
-        >
-          {title}
-        </h3>
-
         {/* Tag List */}
         <div
           style={{
@@ -97,32 +83,6 @@ export function TagSidebar({
                 />
               ))}
 
-              {/* Request a Tag button */}
-              <div
-                style={{
-                  padding: "12px 8px",
-                  borderTop: `1px solid ${colors.border}`,
-                  marginTop: "8px",
-                }}
-              >
-                <button
-                  style={{
-                    width: "100%",
-                    backgroundColor: colors.background,
-                    color: colors.textPrimary,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: "8px",
-                    padding: "10px 16px",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  + Request a Tag
-                </button>
-              </div>
             </>
           )}
         </div>

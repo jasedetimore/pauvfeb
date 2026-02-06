@@ -7,6 +7,7 @@ import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
 import { IssuerListData } from "@/components/molecules/IssuerListView";
 import { TagItemData } from "@/components/atoms/TagItem";
+import { TagPageSkeleton } from "@/components/atoms";
 
 /**
  * Generate fallback mock market data for an issuer
@@ -227,14 +228,19 @@ export default function TagPage({
     console.log("Searching for:", query);
   };
 
+  const combinedLoading = isLoading || statsLoading;
+  const showSkeleton = tagsLoading || combinedLoading;
+
+  if (showSkeleton) {
+    return <TagPageSkeleton />;
+  }
+
   if (error) {
     console.error("Error loading issuers:", error);
   }
   if (tagsError) {
     console.error("Error loading tags:", tagsError);
   }
-
-  const combinedLoading = isLoading || statsLoading;
 
   return (
     <MainPageTemplate

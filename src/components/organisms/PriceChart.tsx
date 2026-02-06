@@ -29,6 +29,9 @@ export interface PriceChartProps {
   ticker: string;
   height?: number;
   initialRange?: string;
+  refreshTrigger?: number;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
 }
 
 const RANGE_OPTIONS = [
@@ -47,12 +50,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   ticker,
   height = 350,
   initialRange = "24h",
+  refreshTrigger,
+  isTradable = true,
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const lineSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const firstPriceRef = useRef<number | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const [chartData, setChartData] = useState<LineData<Time>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +88,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   // Fetch OHLC data from Supabase
   const fetchChartData = useCallback(
     async (range: string) => {
-      setLoading(true);
+      // Only show loading on initial fetch, not on silent refetches
+      if (!hasFetchedRef.current) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -142,6 +151,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             setPriceChange({ change, percent });
           }
         }
+        hasFetchedRef.current = true;
       } catch (err) {
         console.error("[PriceChart] Error:", err);
         setError(err instanceof Error ? err.message : "Failed to load chart data");
@@ -276,6 +286,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     fetchChartData(selectedRange);
   }, [selectedRange, fetchChartData]);
 
+  // Refetch when refreshTrigger changes (after an order)
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchChartData(selectedRange);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
+
   // Subscribe to Realtime updates to refresh chart when trades happen
   useEffect(() => {
     if (!ticker) return;
@@ -345,10 +363,93 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     };
   }, [ticker, selectedRange, fetchChartData]);
 
-  // Handle range change
+  // Handle range change - show loading when switching ranges
   const handleRangeChange = (range: string) => {
+    hasFetchedRef.current = false;
     setSelectedRange(range);
   };
+
+  // If issuer is not tradable, show a big "Launching soon..." placeholder with email signup
+  const [launchEmail, setLaunchEmail] = React.useState("");
+  const [emailSubmitted, setEmailSubmitted] = React.useState(false);
+
+  const handleEmailSubmit = async () => {
+    if (!launchEmail || !launchEmail.includes("@")) return;
+    try {
+      const res = await fetch("/api/launch-notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: launchEmail, ticker }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("[PriceChart] Email signup failed:", data.error);
+        return;
+      }
+      setEmailSubmitted(true);
+    } catch (err) {
+      console.error("[PriceChart] Email signup error:", err);
+    }
+  };
+
+  if (!isTradable) {
+    return (
+      <div
+        className="rounded-[10px] overflow-hidden"
+        style={{ backgroundColor: "#000000" }}
+      >
+        <div
+          className="flex flex-col items-center justify-start gap-4 pt-16"
+          style={{ height }}
+        >
+          <span
+            className="font-mono text-2xl font-bold"
+            style={{ color: colors.textPrimary }}
+          >
+            Launching soon...
+          </span>
+
+          {emailSubmitted ? (
+            <p className="font-mono text-sm" style={{ color: colors.green }}>
+              You&apos;ll be notified when ${ticker.toUpperCase()} launches!
+            </p>
+          ) : (
+            <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4">
+              <p className="font-mono text-base" style={{ color: colors.textSecondary }}>
+                Get notified when trading goes live
+              </p>
+              <div className="flex w-full gap-2">
+                <input
+                  type="email"
+                  value={launchEmail}
+                  onChange={(e) => setLaunchEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
+                  placeholder="Your email"
+                  className="flex-1 min-w-0 px-3 py-2 rounded-md font-mono text-sm focus:outline-none"
+                  style={{
+                    backgroundColor: colors.background,
+                    border: `1px solid ${colors.boxOutline}`,
+                    color: colors.textPrimary,
+                  }}
+                />
+                <button
+                  onClick={handleEmailSubmit}
+                  className="px-4 py-2 rounded-md font-mono text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                  style={{
+                    backgroundColor: colors.gold,
+                    cursor: "pointer",
+                    color: colors.textDark,
+                  }}
+                >
+                  Notify Me
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -419,23 +520,17 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       <div className="relative" style={{ height, maxWidth: "100%" }}>
         {loading && (
           <div
-            className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: "#000000cc" }}
+            className="absolute inset-0 z-10"
+            style={{ backgroundColor: "#000000" }}
           >
-            <div className="flex flex-col items-center gap-2">
-              <div
-                className="w-8 h-8 border-2 rounded-full animate-spin"
-                style={{
-                  borderColor: colors.boxOutline,
-                  borderTopColor: colors.green,
-                }}
-              />
-              <span
-                className="font-mono text-sm"
-                style={{ color: colors.textSecondary }}
-              >
-                Loading chart...
-              </span>
+            {/* Subtle shimmer lines hinting at chart grid */}
+            <div className="absolute inset-0 flex flex-col justify-between py-6 px-4 opacity-20 animate-pulse">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  style={{ height: "1px", backgroundColor: colors.boxOutline }}
+                />
+              ))}
             </div>
           </div>
         )}

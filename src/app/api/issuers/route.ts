@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const tag = searchParams.get("tag");
+    const search = searchParams.get("search");
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
@@ -35,11 +36,18 @@ export async function GET(request: Request) {
       query = query.ilike("tag", tag);
     }
 
+    // Apply search filter (matches name or ticker)
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,ticker.ilike.%${search}%`);
+    }
+
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
 
-    // Order by name by default
-    query = query.order("name", { ascending: true });
+    // Order by most recently created first when no search, otherwise by name
+    query = search
+      ? query.order("name", { ascending: true })
+      : query.order("created_at", { ascending: false });
 
     const { data, error, count } = await query;
 

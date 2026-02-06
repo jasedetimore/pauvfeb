@@ -10,6 +10,8 @@ export interface IssuerCardProps {
   currentPrice: number;
   priceChange: number;
   primaryTag?: string;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
   backgroundColor?: string;
   hoverBackgroundColor?: string;
   onClick?: () => void;
@@ -26,6 +28,7 @@ export function IssuerCard({
   currentPrice,
   priceChange,
   primaryTag,
+  isTradable = true,
   backgroundColor = colors.background,
   hoverBackgroundColor = colors.boxHover,
   onClick,
@@ -125,30 +128,30 @@ export function IssuerCard({
           flexDirection: "column",
           justifyContent: "center",
           height: "88px",
+          gap: "2px",
+          paddingTop: "1px",
+          paddingBottom: "1px",
         }}
       >
-        {/* Top section */}
-        <div>
-          {/* Ticker */}
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: "600",
-              color: colors.gold,
-              marginBottom: "5px",
-              fontFamily: "monospace",
-            }}
-          >
-            ${ticker}
-          </div>
+        {/* Ticker */}
+        <div
+          style={{
+            fontSize: "14px",
+            fontWeight: "600",
+            color: colors.gold,
+            fontFamily: "monospace",
+          }}
+        >
+          ${ticker}
+        </div>
 
+        <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
           {/* Stock Name */}
           <div
             style={{
               fontSize: "16px",
               fontWeight: "700",
               color: colors.textPrimary,
-              marginBottom: "5px",
               lineHeight: "1.2",
               wordWrap: "break-word",
               overflowWrap: "break-word",
@@ -178,56 +181,71 @@ export function IssuerCard({
             gap: "8px",
           }}
         >
-          {/* Price */}
-          <div
-            style={{
-              fontSize: "16px",
-              fontWeight: "400",
-              color: colors.textPrimary,
-              letterSpacing: "-0.5px",
-              flexShrink: 1,
-              minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {formatPrice(currentPrice)}
-          </div>
+          {isTradable ? (
+            <>
+              {/* Price */}
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "400",
+                  color: colors.textPrimary,
+                  letterSpacing: "-0.5px",
+                  flexShrink: 1,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {formatPrice(currentPrice)}
+              </div>
 
-          {/* 24hr Change with triangle */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "3px",
-              flexShrink: 0,
-            }}
-          >
-            {/* Triangle indicator */}
-            <span
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: "4px solid transparent",
-                borderRight: "4px solid transparent",
-                ...(isPositiveChange
-                  ? { borderBottom: `5px solid ${colors.green}` }
-                  : { borderTop: `5px solid ${colors.red}` }),
-              }}
-            />
+              {/* 24hr Change with triangle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  flexShrink: 0,
+                }}
+              >
+                {/* Triangle indicator */}
+                <span
+                  style={{
+                    width: 0,
+                    height: 0,
+                    borderLeft: "4px solid transparent",
+                    borderRight: "4px solid transparent",
+                    ...(isPositiveChange
+                      ? { borderBottom: `5px solid ${colors.green}` }
+                      : { borderTop: `5px solid ${colors.red}` }),
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: changeColor,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {isPositiveChange ? "+" : ""}
+                  {priceChange.toFixed(2)}%
+                </div>
+              </div>
+            </>
+          ) : (
             <div
               style={{
                 fontSize: "13px",
-                fontWeight: "700",
-                color: changeColor,
-                whiteSpace: "nowrap",
+                fontWeight: "400",
+                color: colors.textPrimary,
+                fontStyle: "italic",
               }}
             >
-              {isPositiveChange ? "+" : ""}
-              {priceChange.toFixed(2)}%
+              Launching soon...
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

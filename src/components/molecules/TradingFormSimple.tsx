@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { colors } from "@/lib/constants/colors";
+import { TradingFormSkeleton } from "@/components/atoms";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 import { calculateTokensForUsdp, calculateUsdpForTokens } from "@/lib/trading/formulas";
@@ -12,8 +13,11 @@ interface TradingFormSimpleProps {
   priceStep?: number;
   onBuy?: (amount: number) => void;
   onSell?: (amount: number) => void;
+  onOrderComplete?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
 }
 
 /**
@@ -26,8 +30,10 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   priceStep,
   onBuy,
   onSell,
+  onOrderComplete,
   isLoading = false,
   disabled = false,
+  isTradable = true,
 }) => {
   const [amount, setAmount] = useState<string>("");
   const [selectedAction, setSelectedAction] = useState<"buy" | "sell">("buy");
@@ -175,6 +181,15 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         onSell(pvAmount);
       }
 
+      // Refresh holdings in the form
+      fetchHoldings();
+
+      // Notify parent to refresh all sections
+      if (onOrderComplete) {
+        // Small delay to allow queue processing to start
+        setTimeout(() => onOrderComplete(), 1500);
+      }
+
       // Clear success message after 3 seconds
       setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (err) {
@@ -193,6 +208,11 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
     }
   };
 
+  // Show skeleton when still loading
+  if (isLoading) {
+    return <TradingFormSkeleton />;
+  }
+
   return (
     <div className="space-y-4">
       {/* Section Header */}
@@ -206,7 +226,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
       </div>
 
       {/* Not Logged In Warning */}
-      {!user && !authLoading && (
+      {!user && !authLoading && isTradable && (
         <div
           className="p-3 rounded-[10px]"
           style={{
@@ -232,31 +252,39 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         {/* Buy/Sell Toggle */}
         <div className="flex gap-1 mb-2">
           <button
-            onClick={() => setSelectedAction("buy")}
+            onClick={() => !disabled && setSelectedAction("buy")}
             className="flex-1 py-2 px-4 rounded-md font-mono font-medium transition-all"
             style={{
               backgroundColor:
-                selectedAction === "buy" ? colors.green : "transparent",
-              border: `1px solid ${selectedAction === "buy" ? colors.green : colors.boxOutline}`,
+                selectedAction === "buy"
+                  ? disabled ? colors.textSecondary : colors.green
+                  : "transparent",
+              border: `1px solid ${selectedAction === "buy" ? (disabled ? colors.textSecondary : colors.green) : colors.boxOutline}`,
               color:
                 selectedAction === "buy"
                   ? colors.textDark
                   : colors.textSecondary,
+              cursor: disabled ? "not-allowed" : "pointer",
+              opacity: disabled ? 0.5 : 1,
             }}
           >
             Buy
           </button>
           <button
-            onClick={() => setSelectedAction("sell")}
+            onClick={() => !disabled && setSelectedAction("sell")}
             className="flex-1 py-2 px-4 rounded-md font-mono font-medium transition-all"
             style={{
               backgroundColor:
-                selectedAction === "sell" ? colors.red : "transparent",
-              border: `1px solid ${selectedAction === "sell" ? colors.red : colors.boxOutline}`,
+                selectedAction === "sell"
+                  ? disabled ? colors.textSecondary : colors.red
+                  : "transparent",
+              border: `1px solid ${selectedAction === "sell" ? (disabled ? colors.textSecondary : colors.red) : colors.boxOutline}`,
               color:
                 selectedAction === "sell"
                   ? colors.textPrimary
                   : colors.textSecondary,
+              cursor: disabled ? "not-allowed" : "pointer",
+              opacity: disabled ? 0.5 : 1,
             }}
           >
             Sell
@@ -394,7 +422,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
 
         {/* Account Summary */}
         {user && (
-          <div className="pb-2 space-y-1">
+          <div className="pb-2 space-y-0.5">
             <div className="flex justify-between items-center">
               <span
                 className="text-sm font-mono"
@@ -403,8 +431,8 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
                 USDP Balance
               </span>
               <span
-                className="font-mono font-semibold"
-                style={{ color: colors.gold }}
+                className="font-mono font-normal"
+                style={{ color: colors.textPrimary }}
               >
                 {authLoading ? "..." : formatCurrency(usdpBalance)}
               </span>
@@ -417,7 +445,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
                 Your {ticker.toUpperCase()} Holdings
               </span>
               <span
-                className="font-mono font-semibold"
+                className="font-mono font-normal"
                 style={{ color: colors.textPrimary }}
               >
                 {holdingsLoading ? "..." : `${tickerHoldings.toLocaleString("en-US", {

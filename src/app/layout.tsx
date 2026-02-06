@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { EB_Garamond, Fira_Code, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { AuthHeader } from "@/components/molecules/AuthHeader";
+import { Footer } from "@/components/organisms/Footer";
 
 const firaCode = Fira_Code({
   variable: "--font-fira-code",
@@ -45,7 +47,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
+          <AuthHeader />
           {children}
+          <Footer />
         </AuthProvider>
       </body>
     </html>

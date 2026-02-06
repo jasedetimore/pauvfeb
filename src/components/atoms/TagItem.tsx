@@ -57,8 +57,8 @@ export function TagItem({
       onClick={onClick}
       style={{
         backgroundColor: isSelected || isHovered ? colors.boxHover : "transparent",
-        border: isSelected ? `1px solid ${colors.gold}` : "none",
-        borderBottom: !isLast && !isSelected ? `1px solid ${colors.border}` : (isSelected ? `1px solid ${colors.gold}` : "none"),
+        border: isSelected ? `1px solid ${colors.textPrimary}` : "none",
+        borderBottom: !isLast && !isSelected ? `1px solid ${colors.border}` : (isSelected ? `1px solid ${colors.textPrimary}` : "none"),
         borderRadius: isSelected ? "5px" : "0",
         padding: "8px 11px",
         cursor: "pointer",

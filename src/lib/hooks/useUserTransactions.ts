@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -25,19 +25,26 @@ interface UseUserTransactionsResult {
  * @param ticker - The issuer ticker to filter transactions by
  */
 export function useUserTransactions(ticker: string): UseUserTransactionsResult {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState<UserTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const fetchTransactions = useCallback(async () => {
+    // Wait for auth to finish hydrating before deciding there's no user
+    if (authLoading) return;
+
     if (!user || !ticker) {
       setTransactions([]);
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    // Only show loading state on initial fetch, not on refetches
+    if (!hasFetchedRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -57,6 +64,7 @@ export function useUserTransactions(ticker: string): UseUserTransactionsResult {
       }
 
       setTransactions(data || []);
+      hasFetchedRef.current = true;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
@@ -64,7 +72,7 @@ export function useUserTransactions(ticker: string): UseUserTransactionsResult {
     } finally {
       setIsLoading(false);
     }
-  }, [user, ticker]);
+  }, [user, ticker, authLoading]);
 
   useEffect(() => {
     fetchTransactions();

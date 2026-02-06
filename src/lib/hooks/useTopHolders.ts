@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export interface Holder {
   username: string;
@@ -36,8 +36,9 @@ interface UseTopHoldersResult {
 export function useTopHolders(ticker: string | null, limit: number = 10): UseTopHoldersResult {
   const [holders, setHolders] = useState<Holder[]>([]);
   const [totalSupply, setTotalSupply] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!ticker);
   const [error, setError] = useState<string | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const fetchHolders = useCallback(async () => {
     if (!ticker) {
@@ -46,7 +47,10 @@ export function useTopHolders(ticker: string | null, limit: number = 10): UseTop
       return;
     }
 
-    setIsLoading(true);
+    // Only show loading skeleton on initial fetch, not on refetches
+    if (!hasFetchedRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -69,6 +73,7 @@ export function useTopHolders(ticker: string | null, limit: number = 10): UseTop
 
       setHolders(data.holders || []);
       setTotalSupply(data.totalSupply || 0);
+      hasFetchedRef.current = true;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch holders";

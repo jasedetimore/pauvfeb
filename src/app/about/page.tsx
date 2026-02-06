@@ -11,7 +11,6 @@ import AboutFAQ from "@/components/organisms/about/AboutFAQ";
 import AboutHowItWorks from "@/components/organisms/about/AboutHowItWorks";
 import AboutStory from "@/components/organisms/about/AboutStory";
 import AboutContactForm from "@/components/organisms/about/AboutContactForm";
-import AboutFooter from "@/components/organisms/about/AboutFooter";
 
 export default function AboutPage() {
   return (
@@ -33,7 +32,6 @@ export default function AboutPage() {
         <AboutHowItWorks />
         <AboutStory />
         <AboutContactForm />
-        <AboutFooter />
       </main>
     </div>
   );

@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { colors } from "@/lib/constants/colors";
+import { IssuerHeaderSkeleton } from "@/components/atoms";
+import { SocialMediaLinks } from "@/components/atoms";
+import { IssuerLinksDB } from "@/lib/types/issuer-links";
 
 interface IssuerHeaderProps {
   ticker: string;
@@ -10,6 +13,7 @@ interface IssuerHeaderProps {
   headline?: string | null;
   bio?: string | null;
   tags?: string[];
+  issuerLinks?: IssuerLinksDB | null;
   isLoading?: boolean;
 }
 
@@ -24,24 +28,10 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
   headline,
   bio,
   tags,
+  issuerLinks,
   isLoading = false,
 }) => {
   const [imageError, setImageError] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showSeeMore, setShowSeeMore] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // Check if bio needs "See More" button
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (contentRef.current && bio) {
-        const isOverflowing =
-          contentRef.current.scrollHeight > contentRef.current.clientHeight;
-        setShowSeeMore(isOverflowing);
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [bio]);
 
   // Get fallback initial from name
   const getInitial = () => {
@@ -49,26 +39,7 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="animate-pulse">
-        <div className="flex items-center gap-4">
-          <div
-            className="w-20 h-20 rounded-full flex-shrink-0"
-            style={{ backgroundColor: colors.boxLight }}
-          />
-          <div className="flex-1 space-y-2">
-            <div
-              className="h-8 rounded w-3/4"
-              style={{ backgroundColor: colors.boxLight }}
-            />
-            <div
-              className="h-4 rounded w-1/2"
-              style={{ backgroundColor: colors.boxLight }}
-            />
-          </div>
-        </div>
-      </div>
-    );
+    return <IssuerHeaderSkeleton />;
   }
 
   return (
@@ -79,12 +50,12 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
           <img
             src={imageUrl}
             alt={`${name} logo`}
-            className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+            className="w-16 h-16 md:w-[90px] md:h-[90px] rounded-full object-cover flex-shrink-0"
             onError={() => setImageError(true)}
           />
         ) : (
           <span
-            className="w-20 h-20 rounded-full flex items-center justify-center text-xl font-medium flex-shrink-0"
+            className="w-16 h-16 md:w-[90px] md:h-[90px] rounded-full flex items-center justify-center text-lg md:text-2xl font-medium flex-shrink-0"
             style={{
               backgroundColor: colors.boxLight,
               border: `1px solid ${colors.boxOutline}`,
@@ -98,14 +69,14 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
         {/* Name and Headline */}
         <div className="flex-1 min-w-0">
           <h1
-            className="font-mono font-bold truncate text-[2rem] md:text-[2.2rem] leading-none"
+            className="font-mono font-bold truncate text-[2.5rem] md:text-[3rem] leading-none"
             style={{ color: colors.textPrimary }}
           >
             {name || ticker}
           </h1>
           {headline && (
             <div
-              className="text-sm font-light mt-1"
+              className="text-base md:text-lg font-light mt-1"
               style={{ color: colors.textSecondary }}
             >
               {headline}
@@ -132,30 +103,18 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
 
       {/* Bio Section */}
       {bio && (
-        <>
-          <div
-            ref={contentRef}
-            className={`pl-1 mt-3 ${!isExpanded ? "line-clamp-3" : ""}`}
+        <div className="pl-1 mt-3">
+          <p
+            className="text-sm leading-relaxed"
+            style={{ color: colors.textSecondary }}
           >
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: colors.textSecondary }}
-            >
-              {bio}
-            </p>
-          </div>
-
-          {showSeeMore && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="w-full text-sm font-normal underline cursor-pointer transition-colors mt-1 text-left"
-              style={{ color: colors.textPrimary }}
-            >
-              {isExpanded ? "Show Less" : "See More"}
-            </button>
-          )}
-        </>
+            {bio}
+          </p>
+        </div>
       )}
+
+      {/* Social Media Links - right under the bio */}
+      <SocialMediaLinks links={issuerLinks ?? null} className="mt-3" />
     </div>
   );
 };

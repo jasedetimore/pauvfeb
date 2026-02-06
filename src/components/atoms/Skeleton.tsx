@@ -21,16 +21,16 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   rounded = false,
   animate = true,
 }) => {
-  const baseClasses = "bg-white/10";
   const animationClasses = animate ? "animate-pulse" : "";
   const roundedClasses = rounded ? "rounded-full" : "rounded";
 
   return (
     <div
-      className={`${baseClasses} ${animationClasses} ${roundedClasses} ${className}`}
+      className={`${animationClasses} ${roundedClasses} ${className}`}
       style={{
         height: typeof height === "number" ? `${height}px` : height,
         width: typeof width === "number" ? `${width}px` : width,
+        backgroundColor: colors.boxLight,
       }}
     />
   );
@@ -66,7 +66,7 @@ export const SkeletonCard: React.FC<{
 }> = ({ className = "", children }) => {
   return (
     <div
-      className={`rounded-lg ${className}`}
+      className={`rounded-[10px] ${className}`}
       style={{
         backgroundColor: colors.box,
         border: `1px solid ${colors.boxOutline}`,
@@ -77,141 +77,630 @@ export const SkeletonCard: React.FC<{
   );
 };
 
+/* ==========================================================================
+   ISSUER TRADING PAGE — Per-Section Skeletons
+   Each one mirrors the exact layout of the real loaded component.
+   ========================================================================== */
+
 /**
- * IssuerDetailsSkeleton - Skeleton for issuer details header
+ * PriceDisplaySkeleton
+ * Mirrors: PriceDisplay (back-button row + price box)
  */
-export const IssuerDetailsSkeleton: React.FC = () => {
+export const PriceDisplaySkeleton: React.FC = () => {
   return (
-    <div className="space-y-4">
-      {/* Header with image and name */}
-      <div className="flex items-center gap-4">
-        <Skeleton width={80} height={80} rounded />
-        <div className="space-y-2 flex-1">
-          <Skeleton height="2rem" width="60%" />
-          <Skeleton height="1rem" width="40%" />
-        </div>
+    <div>
+      {/* Back button row */}
+      <div className="flex items-center justify-between mb-2 px-1">
+        <Skeleton width="100px" height="1.5rem" />
       </div>
-      {/* Bio/description */}
-      <SkeletonText lines={3} />
+      {/* Price card */}
+      <div
+        className="p-4 pb-2 rounded-[10px]"
+        style={{
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        <Skeleton width="90px" height="0.7rem" className="mb-2" />
+        <Skeleton width="80%" height="1.7rem" />
+      </div>
     </div>
   );
 };
 
 /**
- * PriceDisplaySkeleton - Skeleton for price display
+ * TradingSummarySkeleton
+ * Mirrors: TradingSummarySection (section header + 2×2 metrics grid + 3 price changes)
  */
-export const PriceDisplaySkeleton: React.FC = () => {
+export const TradingSummarySkeleton: React.FC = () => {
   return (
-    <SkeletonCard className="p-4">
-      <Skeleton width="100px" height="0.75rem" className="mb-2" />
-      <Skeleton width="70%" height="2rem" className="mb-2" />
-      <Skeleton width="120px" height="0.75rem" />
-    </SkeletonCard>
+    <div className="space-y-3">
+      {/* Section header row */}
+      <div className="flex items-center justify-between px-1">
+        <Skeleton width="155px" height="1.25rem" />
+        <Skeleton width="58px" height="1.5rem" />
+      </div>
+
+      {/* Metrics card */}
+      <div
+        className="p-4 rounded-[10px]"
+        style={{
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        {/* 2×2 grid — matches the real text-xs label + text-lg value sizing */}
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i}>
+              <Skeleton width="70%" height="0.75rem" className="mb-1.5" />
+              <Skeleton width="60%" height="1.4rem" />
+            </div>
+          ))}
+        </div>
+
+        {/* Price changes row */}
+        <div
+          className="mt-3 pt-3 flex justify-between"
+          style={{ borderTop: `1px solid ${colors.boxOutline}` }}
+        >
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="text-center flex flex-col items-center">
+              <Skeleton width="24px" height="0.75rem" className="mb-1.5" />
+              <Skeleton width="52px" height="1.15rem" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 
 /**
- * TradingFormSkeleton - Skeleton for trading form
+ * HoldersSkeleton
+ * Mirrors: HoldersSection (header row + table with header row + placeholder rows)
+ */
+export const HoldersSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
+  return (
+    <div className="space-y-3">
+      {/* Section header row */}
+      <div className="flex items-center justify-between px-1">
+        <Skeleton width="120px" height="1.25rem" />
+        <Skeleton width="58px" height="1.5rem" />
+      </div>
+
+      {/* Table card */}
+      <div
+        className="p-3 rounded-[10px] overflow-hidden"
+        style={{
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        <table className="min-w-full table-fixed">
+          <thead>
+            <tr>
+              <th className="text-left px-3 py-2">
+                <Skeleton width="32px" height="0.75rem" />
+              </th>
+              <th className="text-right px-3 py-2">
+                <Skeleton width="52px" height="0.75rem" className="ml-auto" />
+              </th>
+              <th className="text-right px-3 py-2">
+                <Skeleton width="40px" height="0.75rem" className="ml-auto" />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: rows }).map((_, i) => (
+              <tr
+                key={i}
+                style={{
+                  backgroundColor: i % 2 === 0 ? "transparent" : colors.boxLight,
+                }}
+              >
+                <td className="px-2 py-2">
+                  <Skeleton width="70%" height="0.75rem" />
+                </td>
+                <td className="px-3 py-2">
+                  <Skeleton width="50%" height="0.75rem" className="ml-auto" />
+                </td>
+                <td className="px-3 py-2">
+                  <Skeleton width="40%" height="0.75rem" className="ml-auto" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * IssuerHeaderSkeleton (formerly IssuerDetailsSkeleton)
+ * Mirrors: IssuerHeader (avatar + name/headline + tag + bio lines)
+ */
+export const IssuerHeaderSkeleton: React.FC = () => {
+  return (
+    <div className="flex flex-col min-w-0">
+      <div className="flex items-center w-full justify-between gap-3">
+        {/* Avatar */}
+        <Skeleton width={80} height={80} rounded />
+        {/* Name + headline */}
+        <div className="flex-1 min-w-0 space-y-2">
+          <Skeleton height="2rem" width="65%" />
+          <Skeleton height="0.85rem" width="40%" />
+        </div>
+        {/* Tag pill */}
+        <Skeleton width={72} height={26} className="rounded-full flex-shrink-0" />
+      </div>
+      {/* Bio lines */}
+      <div className="pl-1 mt-3 space-y-2">
+        <Skeleton height="0.85rem" width="100%" />
+        <Skeleton height="0.85rem" width="92%" />
+        <Skeleton height="0.85rem" width="60%" />
+      </div>
+    </div>
+  );
+};
+
+/** Keep legacy alias */
+export const IssuerDetailsSkeleton = IssuerHeaderSkeleton;
+
+/**
+ * ChartSkeleton
+ * Mirrors: PriceChart (header bar with price + range buttons, then chart area)
+ */
+export const ChartSkeleton: React.FC<{ height?: number }> = ({ height = 420 }) => {
+  return (
+    <div
+      className="rounded-[10px] overflow-hidden"
+      style={{ backgroundColor: "#000000" }}
+    >
+      {/* Header bar */}
+      <div
+        className="flex items-center justify-between p-4 border-b"
+        style={{ borderColor: colors.boxOutline }}
+      >
+        {/* Price + change placeholder */}
+        <div className="flex items-center gap-2">
+          <Skeleton width="110px" height="1.25rem" />
+          <Skeleton width="52px" height="0.85rem" />
+        </div>
+        {/* Range buttons */}
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} width="38px" height="26px" />
+          ))}
+        </div>
+      </div>
+      {/* Chart area */}
+      <div style={{ height }} className="relative">
+        {/* Subtle grid lines to hint at the chart */}
+        <div className="absolute inset-0 flex flex-col justify-between py-6 px-4 opacity-20">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              style={{
+                height: "1px",
+                backgroundColor: colors.boxOutline,
+              }}
+            />
+          ))}
+        </div>
+        {/* Fake line chart shimmer */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Skeleton width="90%" height="60%" className="opacity-30" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * TradingFormSkeleton
+ * Mirrors: TradingFormSimple (header + buy/sell toggle + input + balance rows)
  */
 export const TradingFormSkeleton: React.FC = () => {
   return (
     <div className="space-y-4">
-      <Skeleton width="120px" height="1.5rem" className="mb-2" />
-      <div className="space-y-3">
-        <Skeleton width="80px" height="0.75rem" />
-        <Skeleton width="100%" height="48px" />
+      {/* Section header */}
+      <div className="flex items-center justify-between">
+        <Skeleton width="110px" height="1.25rem" />
       </div>
-      <div className="flex gap-3">
-        <Skeleton width="50%" height="48px" />
-        <Skeleton width="50%" height="48px" />
+
+      {/* Buy/Sell toggle */}
+      <div className="flex gap-1">
+        <div
+          className="flex-1 py-2 rounded-md"
+          style={{
+            border: `1px solid ${colors.boxOutline}`,
+            backgroundColor: "transparent",
+          }}
+        >
+          <Skeleton width="36px" height="1rem" className="mx-auto" />
+        </div>
+        <div
+          className="flex-1 py-2 rounded-md"
+          style={{
+            border: `1px solid ${colors.boxOutline}`,
+            backgroundColor: "transparent",
+          }}
+        >
+          <Skeleton width="32px" height="1rem" className="mx-auto" />
+        </div>
+      </div>
+
+      {/* Amount input placeholder */}
+      <div
+        className="w-full px-4 py-3 rounded-md"
+        style={{
+          backgroundColor: colors.background,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        <Skeleton width="110px" height="0.85rem" />
+      </div>
+
+      {/* Balance rows */}
+      <div className="space-y-1">
+        <div className="flex justify-between items-center">
+          <Skeleton width="90px" height="0.8rem" />
+          <Skeleton width="70px" height="0.8rem" />
+        </div>
+        <div className="flex justify-between items-center">
+          <Skeleton width="130px" height="0.8rem" />
+          <Skeleton width="60px" height="0.8rem" />
+        </div>
       </div>
     </div>
   );
 };
 
 /**
- * ChartSkeleton - Skeleton for chart display
+ * UserHoldingsSkeleton
+ * Mirrors: UserHoldings (divider + header + 3 transaction rows)
  */
-export const ChartSkeleton: React.FC<{ height?: number }> = ({ height = 300 }) => {
+export const UserHoldingsSkeleton: React.FC = () => {
   return (
-    <SkeletonCard className="p-4">
-      {/* Time range buttons */}
-      <div className="flex gap-2 mb-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} width="40px" height="28px" />
-        ))}
-      </div>
-      {/* Chart area */}
-      <Skeleton width="100%" height={height} />
-    </SkeletonCard>
-  );
-};
+    <div>
+      {/* Divider */}
+      <div
+        className="my-3"
+        style={{ height: "1px", backgroundColor: colors.boxOutline }}
+      />
 
-/**
- * TradingSummarySkeleton - Skeleton for trading summary metrics
- */
-export const TradingSummarySkeleton: React.FC = () => {
-  return (
-    <SkeletonCard className="p-4">
-      <div className="grid grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="space-y-2">
-            <Skeleton width="60%" height="0.75rem" />
-            <Skeleton width="80%" height="1.25rem" />
+      <div className="flex items-center justify-between mb-3">
+        <Skeleton width="170px" height="1.25rem" />
+        <Skeleton width="58px" height="1.5rem" />
+      </div>
+
+      <div
+        className="px-4 py-2 rounded-[10px]"
+        style={{
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="py-2 grid items-center justify-center grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)]"
+            style={{
+              borderBottom: i === 3 ? "none" : `1px solid ${colors.boxOutline}`,
+            }}
+          >
+            <Skeleton width="48px" height="1.4rem" className="justify-self-center rounded" />
+            <Skeleton width="60%" height="0.85rem" className="mx-auto" />
+            <Skeleton width="55%" height="0.85rem" className="mx-auto" />
           </div>
         ))}
       </div>
-    </SkeletonCard>
+    </div>
   );
 };
 
 /**
- * HoldersSkeleton - Skeleton for holders table
+ * RecommendedIssuersSkeleton
+ * Mirrors: RecommendedIssuers (divider + title + 3 issuer card rows)
  */
-export const HoldersSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
+export const RecommendedIssuersSkeleton: React.FC = () => {
   return (
-    <SkeletonCard className="p-4">
-      <Skeleton width="120px" height="1.25rem" className="mb-4" />
-      <div className="space-y-3">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex justify-between">
-            <Skeleton width="40%" height="1rem" />
-            <Skeleton width="20%" height="1rem" />
-            <Skeleton width="15%" height="1rem" />
+    <div>
+      {/* Divider */}
+      <div
+        className="my-3"
+        style={{ height: "1px", backgroundColor: colors.boxOutline }}
+      />
+
+      <Skeleton width="190px" height="1.25rem" className="mb-3" />
+
+      <div
+        className="rounded-[10px] overflow-hidden"
+        style={{
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 p-3"
+            style={{
+              borderBottom: i === 3 ? "none" : `1px solid ${colors.boxOutline}`,
+            }}
+          >
+            {/* Issuer avatar */}
+            <Skeleton width={48} height={48} rounded />
+            {/* Info */}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Skeleton width="40%" height="0.7rem" />
+              <Skeleton width="65%" height="0.9rem" />
+            </div>
+            {/* Price area */}
+            <div className="flex-shrink-0 text-right space-y-1.5">
+              <Skeleton width="60px" height="0.85rem" className="ml-auto" />
+              <Skeleton width="44px" height="0.7rem" className="ml-auto" />
+            </div>
           </div>
         ))}
       </div>
-    </SkeletonCard>
+    </div>
   );
 };
 
 /**
- * FullPageSkeleton - Full page skeleton for trading page
+ * FullPageSkeleton
+ * Renders the exact 3-column trading layout with individual section skeletons.
+ * Kept for backwards-compatibility but now uses per-section skeletons.
  */
 export const FullPageSkeleton: React.FC = () => {
   return (
-    <div className="min-h-screen p-4" style={{ backgroundColor: colors.background }}>
-      <div className="max-w-7xl mx-auto">
-        {/* Back button */}
-        <Skeleton width="80px" height="32px" className="mb-4" />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left sidebar */}
-          <div className="lg:col-span-3 space-y-4">
-            <PriceDisplaySkeleton />
-            <TradingSummarySkeleton />
+    <div
+      className="min-h-screen pt-4 pb-16"
+      style={{ backgroundColor: colors.background }}
+    >
+      <div className="flex gap-6 px-4">
+        {/* Left Sidebar */}
+        <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0 space-y-4">
+          <PriceDisplaySkeleton />
+          <TradingSummarySkeleton />
+          <HoldersSkeleton />
+        </aside>
+
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 space-y-4">
+          <IssuerHeaderSkeleton />
+          <ChartSkeleton height={420} />
+        </div>
+
+        {/* Right Sidebar */}
+        <aside className="hidden lg:block lg:w-80 lg:flex-shrink-0">
+          <TradingFormSkeleton />
+          <UserHoldingsSkeleton />
+          <RecommendedIssuersSkeleton />
+        </aside>
+      </div>
+    </div>
+  );
+};
+
+/* ==========================================================================
+   LISTING PAGES — Tag & Home skeletons (kept unchanged)
+   ========================================================================== */
+
+/**
+ * TagPageSkeleton - Full page skeleton for the tag listing page
+ */
+export const TagPageSkeleton: React.FC = () => {
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
+      <div style={{ maxWidth: "1250px", margin: "0 auto", width: "100%" }}>
+        {/* Hero */}
+        <div style={{ margin: "20px", marginBottom: "8px" }}>
+          <SkeletonCard className="p-0">
+            <div
+              style={{
+                minHeight: "177px",
+                padding: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "20px",
+              }}
+            >
+              <div className="space-y-3" style={{ flex: 1 }}>
+                <Skeleton width="220px" height="24px" />
+                <SkeletonText lines={2} lineHeight="14px" />
+                <Skeleton width="140px" height="14px" />
+              </div>
+              <div className="hidden lg:block" style={{ minWidth: "220px" }}>
+                <Skeleton width="120px" height="12px" className="mb-2" />
+                <Skeleton width="200px" height="44px" className="mb-2" />
+                <Skeleton width="80px" height="16px" />
+              </div>
+            </div>
+          </SkeletonCard>
+        </div>
+
+        {/* Tags + Content */}
+        <div className="px-4 md:px-5 mb-5">
+          <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+            <div className="hidden lg:block" style={{ width: "230px" }}>
+              <SkeletonCard className="p-0">
+                <div>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "12px 11px",
+                        borderBottom:
+                          index === 5 ? "none" : `1px solid ${colors.border}`,
+                      }}
+                    >
+                      <Skeleton width="70%" height="20px" className="mb-3" />
+                      <div className="flex justify-between items-center">
+                        <Skeleton width="45%" height="13px" />
+                        <Skeleton width="35%" height="18px" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SkeletonCard>
+            </div>
+
+            <div style={{ flex: "1", minWidth: "0" }}>
+              <div className="mb-4">
+                <Skeleton height="32px" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3 sm:gap-y-0">
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      backgroundColor: colors.background,
+                      height: "132px",
+                      padding: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <Skeleton width="88px" height="88px" />
+                    <div className="flex-1" style={{ height: "88px" }}>
+                      <div className="mb-2">
+                        <Skeleton width="40%" height="14px" className="mb-2" />
+                        <Skeleton width="70%" height="16px" className="mb-2" />
+                        <Skeleton width="30%" height="11px" />
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <Skeleton width="45%" height="16px" />
+                        <Skeleton width="30%" height="13px" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * HomePageSkeleton - Full page skeleton for the home listing page
+ */
+export const HomePageSkeleton: React.FC = () => {
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
+      <div style={{ maxWidth: "1250px", margin: "0 auto", width: "100%" }}>
+        {/* Hero */}
+        <div style={{ display: "flex", gap: "10px", margin: "20px", marginBottom: "8px" }}>
+          <div
+            style={{
+              flex: "3",
+              background: colors.box,
+              border: `1px solid ${colors.border}`,
+              borderRadius: "10px",
+              padding: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "20px",
+              minHeight: "177px",
+            }}
+          >
+            <Skeleton width="50px" height="50px" />
+            <div className="space-y-2">
+              <Skeleton width="160px" height="18px" />
+              <Skeleton width="120px" height="14px" />
+            </div>
           </div>
 
-          {/* Main content */}
-          <div className="lg:col-span-6 space-y-4">
-            <IssuerDetailsSkeleton />
-            <ChartSkeleton height={350} />
+          <div
+            className="hidden lg:flex"
+            style={{
+              flex: "1",
+              background: colors.background,
+              border: `1px solid ${colors.border}`,
+              borderRadius: "10px",
+              padding: "20px",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              minHeight: "177px",
+            }}
+          >
+            <div className="space-y-2" style={{ textAlign: "right" }}>
+              <Skeleton width="100px" height="12px" />
+              <Skeleton width="180px" height="44px" />
+              <Skeleton width="70px" height="16px" />
+            </div>
           </div>
+        </div>
 
-          {/* Right sidebar */}
-          <div className="lg:col-span-3 space-y-4">
-            <TradingFormSkeleton />
-            <HoldersSkeleton />
+        {/* Tags + Content (same as tag page) */}
+        <div className="px-4 md:px-5 mb-5">
+          <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+            <div className="hidden lg:block" style={{ width: "230px" }}>
+              <SkeletonCard className="p-0">
+                <div>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "12px 11px",
+                        borderBottom:
+                          index === 5 ? "none" : `1px solid ${colors.border}`,
+                      }}
+                    >
+                      <Skeleton width="70%" height="20px" className="mb-3" />
+                      <div className="flex justify-between items-center">
+                        <Skeleton width="45%" height="13px" />
+                        <Skeleton width="35%" height="18px" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SkeletonCard>
+            </div>
+
+            <div style={{ flex: "1", minWidth: "0" }}>
+              <div className="mb-4">
+                <Skeleton height="32px" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3 sm:gap-y-0">
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      backgroundColor: colors.background,
+                      height: "132px",
+                      padding: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <Skeleton width="88px" height="88px" />
+                    <div className="flex-1" style={{ height: "88px" }}>
+                      <div className="mb-2">
+                        <Skeleton width="40%" height="14px" className="mb-2" />
+                        <Skeleton width="70%" height="16px" className="mb-2" />
+                        <Skeleton width="30%" height="11px" />
+                      </div>
+                      <div className="flex justify-between items-end">
+                        <Skeleton width="45%" height="16px" />
+                        <Skeleton width="30%" height="13px" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

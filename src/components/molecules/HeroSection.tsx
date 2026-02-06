@@ -64,7 +64,13 @@ export function HeroSection({
   // --- Tag selected: single combined banner ---
   if (selectedTag) {
     return (
-      <div style={{ margin: "20px", marginBottom: "8px" }}>
+      <div
+        style={{
+          margin: "20px",
+          marginBottom: "8px",
+          fontFamily: 'var(--font-fira-code), "Fira Code", monospace',
+        }}
+      >
         <div
           style={{
             position: "relative",
@@ -253,7 +259,15 @@ export function HeroSection({
 
   // --- No tag selected: original two-box layout ---
   return (
-    <div style={{ display: "flex", gap: "10px", margin: "20px", marginBottom: "8px" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: "10px",
+        margin: "20px",
+        marginBottom: "8px",
+        fontFamily: 'var(--font-fira-code), "Fira Code", monospace',
+      }}
+    >
       {/* Left Box - Pauv Logo */}
       <div
         style={{

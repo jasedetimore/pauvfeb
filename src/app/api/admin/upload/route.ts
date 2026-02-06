@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       throw new AdminOperationError(
-        `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max: 5MB`,
+        `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max: 10MB`,
         400,
         "VALIDATION_ERROR"
       );

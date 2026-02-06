@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { colors } from "@/lib/constants/colors";
 import { createClient } from "@/lib/supabase/client";
 import { ImageUpload } from "@/components/atoms/ImageUpload";
+import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 
 interface TagData {
   id: string;
@@ -199,25 +199,33 @@ export default function AdminTagsPage() {
     color: colors.textSecondary,
   };
 
+  // Search / filter state
+  const [filteredTags, setFilteredTags] = useState<TagData[]>([]);
+
+  // Keep filteredTags in sync with tags
+  useEffect(() => {
+    setFilteredTags(tags);
+  }, [tags]);
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      if (!query) {
+        setFilteredTags(tags);
+        return;
+      }
+      const q = query.toLowerCase();
+      setFilteredTags(
+        tags.filter((t) => t.tag.toLowerCase().includes(q))
+      );
+    },
+    [tags]
+  );
+
   return (
     <div>
-      {/* Header with back link */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link
-          href="/admin"
-          className="px-3 py-1 rounded text-sm transition-colors hover:opacity-80"
-          style={{
-            backgroundColor: colors.box,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.boxOutline}`,
-          }}
-        >
-          ← Back to Dashboard
-        </Link>
-        <h1 className="text-3xl font-bold" style={{ color: colors.gold }}>
-          Manage Tags
-        </h1>
-      </div>
+      <h1 className="text-2xl font-bold mb-6" style={{ color: colors.gold }}>
+        Tags
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Create New Tag */}
@@ -371,6 +379,8 @@ export default function AdminTagsPage() {
             </button>
           </div>
 
+          <AdminSearchBar onSearch={handleSearch} placeholder="Search tags…" />
+
           {error && (
             <div
               className="p-3 rounded mb-4"
@@ -389,7 +399,7 @@ export default function AdminTagsPage() {
             <p style={{ color: colors.textSecondary }}>Loading tags...</p>
           ) : (
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {tags.map((tag) => (
+              {filteredTags.map((tag) => (
                 <div
                   key={tag.id}
                   className="p-4 rounded"

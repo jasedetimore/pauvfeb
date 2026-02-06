@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import emailjs from "@emailjs/browser";
-import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { colors } from "@/lib/constants/colors";
 
 const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "service_l36mged";
@@ -152,13 +151,6 @@ export default function ListYourselfPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
-      <AuthHeader
-        navigationLinks={[
-          { href: "/", label: "Issuers" },
-          { href: "/list-yourself", label: "List Yourself", active: true },
-          { href: "/about", label: "About" },
-        ]}
-      />
 
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12">
         <div className="text-center mb-10">
