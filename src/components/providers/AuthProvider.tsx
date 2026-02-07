@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
 interface UserProfile {
@@ -37,14 +37,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Don't use this for initial session - use getUser() instead
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       // Only handle auth changes AFTER initial hydration is complete
       // The INITIAL_SESSION event can fire with null before getUser() validates
       if (!isInitialized && event === "INITIAL_SESSION") {
         // Skip - let checkSession handle initial state
         return;
       }
-      
+
       // Keep this callback synchronous to prevent stale token deadlocks
       if (session?.user) {
         setUser(session.user);
@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .select("username, usdp_balance")
           .eq("user_id", session.user.id)
           .single()
-          .then(({ data }) => {
+          .then(({ data }: { data: UserProfile | null }) => {
             if (data) setProfile(data);
           });
       } else {
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ]);
 
         const { data: { user: authUser }, error } = result;
-        
+
         if (error || !authUser) {
           // No valid session or timeout - clear state
           setUser(null);
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select("username, usdp_balance")
             .eq("user_id", authUser.id)
             .single()
-            .then(({ data }) => {
+            .then(({ data }: { data: UserProfile | null }) => {
               if (data) setProfile(data);
             });
         }
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
     };
-    
+
     checkSession();
 
     return () => {

@@ -46,20 +46,20 @@ export async function POST(req: NextRequest) {
                     // but for now we'll do read-modify-write if no RPC exists.
                     // Ideally: await supabaseAdmin.rpc('increment_balance', { user_id: deposit.user_id, amount: deposit.amount_usdp });
 
-                    // Fetch current profile
-                    const { data: profile } = await supabaseAdmin
-                        .from("profiles") // or whatever the table is named, likely 'profiles' based on existing code
+                    // Fetch current user balance
+                    const { data: userRecord } = await supabaseAdmin
+                        .from("users")
                         .select("usdp_balance")
-                        .eq("id", deposit.user_id)
+                        .eq("user_id", deposit.user_id)
                         .single();
 
-                    const currentBalance = profile?.usdp_balance || 0;
+                    const currentBalance = userRecord?.usdp_balance || 0;
                     const newBalance = currentBalance + deposit.amount_usdp;
 
                     await supabaseAdmin
-                        .from("profiles")
+                        .from("users")
                         .update({ usdp_balance: newBalance })
-                        .eq("id", deposit.user_id);
+                        .eq("user_id", deposit.user_id);
                 }
             }
         }

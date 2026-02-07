@@ -1,12 +1,62 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, Suspense } from "react";
 import { colors } from "@/lib/constants/colors";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { signOut } from "@/app/auth/actions";
+import { useSearchParams, useRouter } from "next/navigation";
 
-export default function AccountPage() {
+function AccountContent() {
   const { user, profile, isLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isProcessing, setIsProcessing] = React.useState(false);
+
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    const depositId = searchParams.get("deposit_id");
+
+    if (payment === "success" && depositId && !isProcessing) {
+      // Check if we've already processed this deposit
+      const processedKey = `deposit_processed_${depositId}`;
+      if (typeof window !== 'undefined' && sessionStorage.getItem(processedKey)) {
+        // Already processed, just clean up URL
+        router.replace("/account");
+        return;
+      }
+
+      setIsProcessing(true);
+
+      // Mark as being processed
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(processedKey, 'true');
+      }
+
+      // Auto-complete the deposit
+      fetch("/api/payments/complete-deposit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ depositId }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            console.log(`Deposit completed! Credited ${data.credited} USDP. New balance: ${data.newBalance}`);
+            // Redirect to clean URL
+            window.location.href = "/account";
+          } else {
+            console.error("Failed to complete deposit:", data.error);
+            setIsProcessing(false);
+          }
+        })
+        .catch((error) => {
+          console.error("Error completing deposit:", error);
+          setIsProcessing(false);
+        });
+    }
+  }, [searchParams, isProcessing, router]);
 
   if (isLoading) {
     return (
@@ -42,6 +92,20 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-6">
+      {/* Processing Indicator */}
+      {isProcessing && (
+        <div
+          className="rounded-lg p-4 text-center"
+          style={{
+            backgroundColor: colors.boxLight,
+          }}
+        >
+          <p style={{ color: colors.gold }}>
+            Processing your payment...
+          </p>
+        </div>
+      )}
+
       {/* Account Info Card */}
       <div
         className="rounded-lg p-6"
@@ -140,5 +204,13 @@ export default function AccountPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountContent />
+    </Suspense>
   );
 }
