@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Logo } from "../atoms/Logo";
 import { colors } from "@/lib/constants/colors";
+import { SoapPaymentButton } from "@/components/payments/SoapPaymentButton";
 
 interface NavLink {
   href: string;
@@ -61,11 +62,10 @@ export function Header({
               {navigationLinks.map((link) => (
                 <Link
                   key={link.href}
-                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
-                    link.active
-                      ? "bg-box border border-box-outline"
-                      : "hover:bg-box/50"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${link.active
+                    ? "bg-box border border-box-outline"
+                    : "hover:bg-box/50"
+                    }`}
                   href={link.href}
                   style={{
                     backgroundColor: link.active ? colors.box : undefined,
@@ -138,19 +138,27 @@ export function Header({
               >
                 Sign Up
               </Link>
+              <div className="hidden sm:block">
+                <SoapPaymentButton />
+              </div>
             </>
           ) : (
-            <Link
-              href="/account"
-              className="px-4 py-2 rounded-lg text-sm font-semibold border whitespace-nowrap hover:opacity-90 transition-opacity"
-              style={{
-                background: colors.gold,
-                color: colors.textDark,
-                borderColor: colors.goldBorder,
-              }}
-            >
-              {username || "Account"}
-            </Link>
+            <>
+              <Link
+                href="/account"
+                className="px-4 py-2 rounded-lg text-sm font-semibold border whitespace-nowrap hover:opacity-90 transition-opacity"
+                style={{
+                  background: colors.gold,
+                  color: colors.textDark,
+                  borderColor: colors.goldBorder,
+                }}
+              >
+                {username || "Account"}
+              </Link>
+              <div className="hidden sm:block">
+                <SoapPaymentButton />
+              </div>
+            </>
           )}
 
           {/* Mobile menu button */}
@@ -194,15 +202,17 @@ export function Header({
             {navigationLinks.map((link) => (
               <Link
                 key={link.href}
-                className={`block px-4 py-3 text-base font-medium border-b last:border-b-0 ${
-                  link.active ? "bg-white/10" : ""
-                }`}
+                className={`block px-4 py-3 text-base font-medium border-b last:border-b-0 ${link.active ? "bg-white/10" : ""
+                  }`}
                 style={{ borderColor: colors.boxOutline }}
                 href={link.href}
               >
                 {link.label}
               </Link>
             ))}
+            <div className="p-4 border-t" style={{ borderColor: colors.boxOutline }}>
+              <SoapPaymentButton />
+            </div>
           </nav>
         </div>
       )}

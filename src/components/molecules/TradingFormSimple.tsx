@@ -37,14 +37,14 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   const usdpBalance = profile?.usdp_balance ?? 0;
 
   const numericAmount = parseFloat(amount) || 0;
-  
+
   // For buy orders: user enters USDP, we calculate PV received
   // For sell orders: user enters PV, we calculate USDP received
-  const usdpAmount = selectedAction === "buy" 
-    ? numericAmount 
+  const usdpAmount = selectedAction === "buy"
+    ? numericAmount
     : (price && price > 0 ? numericAmount * price : 0);
-  const pvAmount = selectedAction === "buy" 
-    ? (price && price > 0 ? numericAmount / price : 0) 
+  const pvAmount = selectedAction === "buy"
+    ? (price && price > 0 ? numericAmount / price : 0)
     : numericAmount;
 
   // Format currency
@@ -99,7 +99,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
       // Success - clear form and show success message
       setSubmitSuccess(true);
       setAmount("");
-      
+
       // Call the callback if provided
       if (selectedAction === "buy" && onBuy) {
         onBuy(pvAmount);
@@ -260,11 +260,11 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
                 className="font-mono font-medium"
                 style={{ color: colors.textPrimary }}
               >
-                {selectedAction === "buy" 
+                {selectedAction === "buy"
                   ? `${pvAmount.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 6,
-                    })} PV`
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 6,
+                  })} PV`
                   : formatCurrency(usdpAmount)
                 }
               </span>
@@ -325,8 +325,8 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
           {isSubmitting
             ? "Placing Order..."
             : isLoading
-            ? "Processing..."
-            : `${selectedAction === "buy" ? "Buy" : "Sell"} ${ticker.toUpperCase()}`}
+              ? "Processing..."
+              : `${selectedAction === "buy" ? "Buy" : "Sell"} ${ticker.toUpperCase()}`}
         </button>
 
         {/* Disclaimer */}

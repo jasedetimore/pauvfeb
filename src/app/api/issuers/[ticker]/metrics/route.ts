@@ -72,6 +72,26 @@ export async function GET(
 
     // Handle errors
     if (tradingData.error) {
+      // If code is PGRST116, it means no rows found (single() returned nothing)
+      // We should return default/empty metrics instead of erroring
+      if (tradingData.error.code === 'PGRST116') {
+        return NextResponse.json({
+          metrics: {
+            ticker: upperTicker,
+            currentPrice: 0,
+            volume24h: 0,
+            circulatingSupply: 0,
+            holders: 0,
+            marketCap: 0,
+            price1hChange: 0,
+            price24hChange: 0,
+            price7dChange: 0,
+            totalUsdp: 0,
+            updatedAt: new Date().toISOString(),
+          }
+        });
+      }
+
       console.error("[Metrics API] Trading data error:", tradingData.error);
       return NextResponse.json(
         { error: "Failed to fetch trading data" },

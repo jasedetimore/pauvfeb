@@ -116,10 +116,10 @@ export default function AccountPage() {
             <p style={{ color: colors.textPrimary }}>
               {user.created_at
                 ? new Date(user.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
                 : "—"}
             </p>
           </div>

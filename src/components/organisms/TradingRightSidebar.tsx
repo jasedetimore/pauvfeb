@@ -3,6 +3,7 @@
 import React from "react";
 import { colors } from "@/lib/constants/colors";
 import { TradingFormSimple } from "@/components/molecules";
+import { SoapPaymentButton } from "../payments/SoapPaymentButton";
 
 interface TradingRightSidebarProps {
   ticker: string;
@@ -46,6 +47,18 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
           border: `1px solid ${colors.boxOutline}`,
         }}
       >
+        <h3
+          className="font-mono text-sm font-medium mb-3"
+          style={{ color: colors.textPrimary }}
+        >
+          Account Balance
+        </h3>
+        <div className="mb-4">
+          <p className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+            Need more credits to trade?
+          </p>
+          <SoapPaymentButton />
+        </div>
         <h3
           className="font-mono text-sm font-medium mb-3"
           style={{ color: colors.textPrimary }}
