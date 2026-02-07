@@ -19,7 +19,7 @@ interface TradingSummarySectionProps {
   isLoading?: boolean;
   /** When false the issuer has no issuer_trading row yet */
   isTradable?: boolean;
-  onRefresh?: () => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 /**
@@ -32,6 +32,7 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
   isTradable = true,
   onRefresh,
 }) => {
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   // Format currency values
   const formatCurrency = (value?: number | null): string => {
     if (value == null) return "—";
@@ -83,9 +84,19 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
     { label: "7d", value: data?.price7dChange },
   ];
 
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return <TradingSummarySkeleton />;
   }
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+    setIsRefreshing(true);
+    await Promise.all([
+      Promise.resolve(onRefresh()),
+      new Promise((r) => setTimeout(r, 600)),
+    ]);
+    setIsRefreshing(false);
+  };
 
   return (
     <div className="space-y-3">
@@ -99,8 +110,9 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
         </h2>
         {onRefresh && (
           <button
-            onClick={onRefresh}
-            className="text-xs px-3 py-1 rounded transition-colors"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="text-xs px-3 py-1 rounded transition-colors hover:opacity-80 disabled:opacity-50"
             style={{
               backgroundColor: colors.background,
               border: `1px solid ${colors.boxOutline}`,

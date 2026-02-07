@@ -304,9 +304,9 @@ export const ChartSkeleton: React.FC<{ height?: number }> = ({ height = 420 }) =
  */
 export const TradingFormSkeleton: React.FC = () => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Section header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-1">
         <Skeleton width="110px" height="1.25rem" />
       </div>
 
@@ -360,18 +360,12 @@ export const TradingFormSkeleton: React.FC = () => {
 
 /**
  * UserHoldingsSkeleton
- * Mirrors: UserHoldings (divider + header + 3 transaction rows)
+ * Mirrors: UserHoldings (header + 3 transaction rows)
  */
 export const UserHoldingsSkeleton: React.FC = () => {
   return (
-    <div>
-      {/* Divider */}
-      <div
-        className="my-3"
-        style={{ height: "1px", backgroundColor: colors.boxOutline }}
-      />
-
-      <div className="flex items-center justify-between mb-3">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
         <Skeleton width="170px" height="1.25rem" />
         <Skeleton width="58px" height="1.5rem" />
       </div>
@@ -403,18 +397,15 @@ export const UserHoldingsSkeleton: React.FC = () => {
 
 /**
  * RecommendedIssuersSkeleton
- * Mirrors: RecommendedIssuers (divider + title + 3 issuer card rows)
+ * Mirrors: RecommendedIssuers (title + refresh + 3 issuer card rows)
  */
 export const RecommendedIssuersSkeleton: React.FC = () => {
   return (
-    <div>
-      {/* Divider */}
-      <div
-        className="my-3"
-        style={{ height: "1px", backgroundColor: colors.boxOutline }}
-      />
-
-      <Skeleton width="190px" height="1.25rem" className="mb-3" />
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <Skeleton width="190px" height="1.25rem" />
+        <Skeleton width="58px" height="1.5rem" />
+      </div>
 
       <div
         className="rounded-[10px] overflow-hidden"

@@ -87,16 +87,17 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
         {/* Tag aligned with name */}
         {tags && tags.length > 0 && (
           <div className="flex-shrink-0">
-            <span
-              className="px-3 py-1 rounded-full text-xs font-medium uppercase"
+            <a
+              href={`/${tags[0].toLowerCase()}`}
+              className="px-3 py-1 rounded-full text-xs font-medium uppercase inline-block cursor-pointer hover:opacity-80 transition-opacity"
               style={{
-                backgroundColor: `${colors.gold}20`,
-                color: colors.gold,
-                border: `1px solid ${colors.gold}40`,
+                backgroundColor: "#FFFFFF",
+                color: "#000000",
+                border: `1px solid ${colors.boxOutline}`,
               }}
             >
               {tags[0]}
-            </span>
+            </a>
           </div>
         )}
       </div>
@@ -114,7 +115,7 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
       )}
 
       {/* Social Media Links - right under the bio */}
-      <SocialMediaLinks links={issuerLinks ?? null} className="mt-3" />
+      <SocialMediaLinks links={issuerLinks ?? null} className="mt-0" />
     </div>
   );
 };

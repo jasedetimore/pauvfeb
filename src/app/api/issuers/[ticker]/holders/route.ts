@@ -5,6 +5,13 @@ import { createClient } from "@supabase/supabase-js";
  * GET /api/issuers/[ticker]/holders
  * Fetches top holders for an issuer from the portfolio table
  * Returns username, quantity held, and percentage of total supply
+ *
+ * SECURITY NOTE: Uses service_role key server-side because the portfolio
+ * table's RLS restricts reads to authenticated users viewing their own rows.
+ * This is intentional — adding a public SELECT policy to portfolio would be
+ * LESS secure as it would expose user_ids via the Supabase REST API.
+ * The response is sanitized: only username, quantity, and supplyPercentage
+ * are returned. No user_ids are ever sent to the client.
  */
 export async function GET(
   request: NextRequest,

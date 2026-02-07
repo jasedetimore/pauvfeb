@@ -30,6 +30,8 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
 }) => {
   const [issuers, setIssuers] = useState<Array<IssuerCardData & { isTradable?: boolean }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,13 +77,14 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
                 i.ticker.toUpperCase() !== currentTicker.toUpperCase() &&
                 !existingTickers.has(i.ticker.toUpperCase())
             );
-            // Shuffle extras for randomness
-            for (let i = extras.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [extras[i], extras[j]] = [extras[j], extras[i]];
-            }
             candidates = [...candidates, ...extras];
           }
+        }
+
+        // Shuffle all candidates for randomness
+        for (let i = candidates.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
         }
 
         // Take up to 3
@@ -115,7 +118,7 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [currentTicker, currentTag]);
+  }, [currentTicker, currentTag, fetchKey]);
 
   useEffect(() => {
     if (onLoadingChange) {
@@ -123,29 +126,47 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
     }
   }, [isLoading, onLoadingChange]);
 
-  const effectiveLoading = forceSkeleton || isLoading;
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setFetchKey((k) => k + 1);
+  };
+
+  // Clear refreshing state when loading finishes
+  useEffect(() => {
+    if (!isLoading && isRefreshing) {
+      setIsRefreshing(false);
+    }
+  }, [isLoading, isRefreshing]);
+
+  const effectiveLoading = forceSkeleton || isLoading || isRefreshing;
 
   if (effectiveLoading) {
     return <RecommendedIssuersSkeleton />;
   }
 
   return (
-    <div>
-      {/* Divider */}
-      <div
-        className="my-3"
-        style={{
-          height: "1px",
-          backgroundColor: colors.boxOutline,
-        }}
-      />
-
-      <h2
-        className="font-mono text-lg font-semibold mb-3"
-        style={{ color: colors.textPrimary }}
-      >
-        Recommended Issuers
-      </h2>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <h2
+          className="font-mono text-lg font-semibold"
+          style={{ color: colors.textPrimary }}
+        >
+          Recommended Issuers
+        </h2>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="text-xs px-3 py-1 rounded transition-colors hover:opacity-80 disabled:opacity-50"
+          style={{
+            backgroundColor: colors.background,
+            border: `1px solid ${colors.boxOutline}`,
+            color: colors.textPrimary,
+          }}
+          title="Refresh recommendations"
+        >
+          Refresh
+        </button>
+      </div>
 
       <div
         className="rounded-[10px] overflow-hidden"

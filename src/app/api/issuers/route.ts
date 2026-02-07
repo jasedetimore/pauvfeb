@@ -38,7 +38,11 @@ export async function GET(request: Request) {
 
     // Apply search filter (matches name or ticker)
     if (search) {
-      query = query.or(`name.ilike.%${search}%,ticker.ilike.%${search}%`);
+      // Sanitize search input to prevent PostgREST filter injection
+      const sanitizedSearch = search.replace(/[%_.,()]/g, "");
+      if (sanitizedSearch) {
+        query = query.or(`name.ilike.%${sanitizedSearch}%,ticker.ilike.%${sanitizedSearch}%`);
+      }
     }
 
     // Apply pagination
@@ -57,7 +61,7 @@ export async function GET(request: Request) {
         { 
           issuers: [], 
           total: 0, 
-          error: error.message 
+          error: "Failed to fetch issuers" 
         } as IssuersApiResponse,
         { status: 500 }
       );
@@ -80,7 +84,7 @@ export async function GET(request: Request) {
       { 
         issuers: [], 
         total: 0, 
-        error: error instanceof Error ? error.message : "Unknown error" 
+        error: "Internal server error" 
       } as IssuersApiResponse,
       { status: 500 }
     );

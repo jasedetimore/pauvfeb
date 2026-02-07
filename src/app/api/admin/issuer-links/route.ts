@@ -66,11 +66,14 @@ export async function GET(request: NextRequest) {
       .limit(10);
 
     if (search && search.trim()) {
-      const searchTerm = search.trim();
-      // Search by ticker (case-insensitive prefix) OR name (case-insensitive contains)
-      query = query.or(
-        `ticker.ilike.${searchTerm.toUpperCase()}%,name.ilike.%${searchTerm}%`
-      );
+      // Sanitize search input to prevent PostgREST filter injection
+      const searchTerm = search.trim().replace(/[%_.,()]/g, "");
+      if (searchTerm) {
+        // Search by ticker (case-insensitive prefix) OR name (case-insensitive contains)
+        query = query.or(
+          `ticker.ilike.${searchTerm.toUpperCase()}%,name.ilike.%${searchTerm}%`
+        );
+      }
     }
 
     const { data: issuers, error: listError } = await query;

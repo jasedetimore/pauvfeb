@@ -5,6 +5,11 @@ import { createClient } from "@supabase/supabase-js";
  * GET /api/issuers/[ticker]/metrics
  * Fetches real-time trading metrics for an issuer
  * Includes: 24h Volume, Circulating Supply, Holders, Market Cap, 1h/24h/7d price changes
+ *
+ * SECURITY NOTE: Uses service_role key server-side because the portfolio
+ * table's RLS restricts reads to authenticated users' own rows, and we need
+ * an aggregate holder count across all users. The key never leaves the server.
+ * Only aggregate/public trading metrics are returned — no user-specific data.
  */
 export async function GET(
   request: NextRequest,

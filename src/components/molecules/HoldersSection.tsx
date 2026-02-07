@@ -13,7 +13,7 @@ interface Holder {
 interface HoldersSectionProps {
   holders: Holder[];
   isLoading?: boolean;
-  onRefresh?: () => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 /**
@@ -25,6 +25,8 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
   isLoading = false,
   onRefresh,
 }) => {
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
   // Format numbers for display
   const formatQuantity = (qty: number): string => {
     if (qty >= 1000000) return `${(qty / 1000000).toFixed(2)}M`;
@@ -32,8 +34,18 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
     return qty.toFixed(2);
   };
 
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+    setIsRefreshing(true);
+    await Promise.all([
+      Promise.resolve(onRefresh()),
+      new Promise((r) => setTimeout(r, 600)),
+    ]);
+    setIsRefreshing(false);
+  };
+
   // Show full section skeleton when loading
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return <HoldersSkeleton />;
   }
 
@@ -49,8 +61,9 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
         </h2>
         {onRefresh && (
           <button
-            onClick={onRefresh}
-            className="text-xs px-3 py-1 rounded transition-colors"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="text-xs px-3 py-1 rounded transition-colors hover:opacity-80 disabled:opacity-50"
             style={{
               backgroundColor: colors.background,
               border: `1px solid ${colors.boxOutline}`,

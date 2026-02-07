@@ -16,11 +16,8 @@ export async function POST(request: NextRequest) {
     const cronSecret = request.headers.get("x-cron-secret");
     const expectedSecret = process.env.CRON_SECRET;
 
-    // For now, allow the refresh if cron secret matches or if it's a local request
-    // In production, you'd want stricter authentication
-    const isAuthorized = 
-      (expectedSecret && cronSecret === expectedSecret) ||
-      process.env.NODE_ENV === "development";
+    // Allow the refresh only if the cron secret matches
+    const isAuthorized = !!(expectedSecret && cronSecret === expectedSecret);
 
     if (!isAuthorized) {
       // Check if user is admin
@@ -75,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[Stats Refresh API] Database error:", error);
       return NextResponse.json(
-        { error: "Failed to refresh cache", details: error.message },
+        { error: "Failed to refresh cache" },
         { status: 500 }
       );
     }

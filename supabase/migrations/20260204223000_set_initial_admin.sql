@@ -1,4 +1,4 @@
--- Set admin claim for user: lacid (7354a8a3-87b3-4895-bcce-6ed92f6da7e5)
+-- Set admin claim for initial admin user (seeded at deployment time)
 UPDATE auth.users 
 SET raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || '{"admin": true}'::jsonb 
 WHERE id = '7354a8a3-87b3-4895-bcce-6ed92f6da7e5';
@@ -19,5 +19,5 @@ INSERT INTO public.security_audit (
     '7354a8a3-87b3-4895-bcce-6ed92f6da7e5',
     '{"admin": false}'::jsonb,
     '{"admin": true}'::jsonb,
-    '{"reason": "Initial admin setup", "username": "lacid"}'::jsonb
+    '{"reason": "Initial admin setup"}'::jsonb
 );

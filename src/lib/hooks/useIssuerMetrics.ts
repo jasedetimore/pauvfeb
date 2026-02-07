@@ -122,23 +122,17 @@ export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult 
           filter: `ticker=eq.${ticker.toUpperCase()}`,
         },
         (payload) => {
-          console.log(`[useIssuerMetrics] Realtime update for ${ticker}:`, payload);
           // Refetch metrics when issuer_trading is updated
           fetchMetrics();
         }
       )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log(`[useIssuerMetrics] Subscribed to realtime updates for ${ticker}`);
-        }
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
     // Cleanup subscription on unmount
     return () => {
       if (channelRef.current) {
-        console.log(`[useIssuerMetrics] Unsubscribing from ${ticker}`);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }

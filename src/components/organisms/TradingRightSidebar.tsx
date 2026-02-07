@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { colors } from "@/lib/constants/colors";
-import { TradingFormSimple, UserHoldings, RecommendedIssuers } from "@/components/molecules";
+import { TradingFormSimple, UserHoldings, HoldersSection } from "@/components/molecules";
 
 interface TradingRightSidebarProps {
   ticker: string;
@@ -15,7 +15,8 @@ interface TradingRightSidebarProps {
   onSell?: (amount: number) => void;
   onOrderComplete?: () => void;
   onTransactionRefetchRef?: (refetch: () => Promise<void>) => void;
-  issuerTag?: string | null;
+  holders?: { username: string; quantity: number; supplyPercentage: number }[];
+  onRefreshHolders?: () => void;
   /** Fires once when all child sections have finished their initial fetch */
   onReady?: () => void;
 }
@@ -38,23 +39,19 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
   onSell,
   onOrderComplete,
   onTransactionRefetchRef,
-  issuerTag,
+  holders = [],
+  onRefreshHolders,
   onReady,
 }) => {
   // Track when each child section finishes its own data fetch.
   const [holdingsLoading, setHoldingsLoading] = useState(true);
-  const [recommendedLoading, setRecommendedLoading] = useState(true);
 
   const handleHoldingsLoadingChange = useCallback((loading: boolean) => {
     setHoldingsLoading(loading);
   }, []);
 
-  const handleRecommendedLoadingChange = useCallback((loading: boolean) => {
-    setRecommendedLoading(loading);
-  }, []);
-
-  // Report readiness to parent once both children finish their initial fetch
-  const childrenReady = !holdingsLoading && !recommendedLoading;
+  // Report readiness to parent once child finishes its initial fetch
+  const childrenReady = !holdingsLoading;
   const reportedRef = React.useRef(false);
   useEffect(() => {
     if (childrenReady && !reportedRef.current) {
@@ -69,7 +66,7 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
 
   return (
     <aside
-      className="space-y-2"
+      className="space-y-4"
       style={{ color: colors.textPrimary }}
     >
       {/* Trading Form */}
@@ -93,12 +90,11 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
         onLoadingChange={handleHoldingsLoadingChange}
       />
 
-      {/* Recommended Issuers */}
-      <RecommendedIssuers
-        currentTicker={ticker}
-        currentTag={issuerTag}
-        forceSkeleton={childrenSkeleton}
-        onLoadingChange={handleRecommendedLoadingChange}
+      {/* Top Holders */}
+      <HoldersSection
+        holders={holders}
+        isLoading={childrenSkeleton}
+        onRefresh={onRefreshHolders}
       />
     </aside>
   );

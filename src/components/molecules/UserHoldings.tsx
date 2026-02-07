@@ -66,8 +66,8 @@ const TransactionRow: React.FC<{ transaction: UserTransaction; isLast: boolean }
       <span
         className="text-xs font-semibold px-2 py-1 rounded text-center w-[52px] justify-self-center"
         style={{
-          backgroundColor: isBuy ? `${colors.green}20` : `${colors.red}20`,
-          color: isBuy ? colors.green : colors.red,
+          backgroundColor: isBuy ? colors.green : colors.red,
+          color: "#000000",
         }}
       >
         {isBuy ? "BUY" : "SELL"}
@@ -76,15 +76,15 @@ const TransactionRow: React.FC<{ transaction: UserTransaction; isLast: boolean }
       {/* USDP Change */}
       <span
         className="text-sm font-medium font-mono text-center truncate"
-        style={{ color: colors.textPrimary }}
+        style={{ color: colors.textSecondary }}
       >
-        {formatCurrency(transaction.amount_usdp)}
+        {isBuy ? "-" : "+"}{formatCurrency(transaction.amount_usdp)}
       </span>
 
       {/* PV Change */}
       <span
         className="text-sm font-medium font-mono text-center truncate"
-        style={{ color: isBuy ? colors.green : colors.red }}
+        style={{ color: colors.textPrimary }}
       >
         {isBuy ? "+" : "-"}{formatPV(transaction.pv_traded)} PV
       </span>
@@ -138,28 +138,22 @@ export const UserHoldings: React.FC<UserHoldingsProps> = ({
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refetch();
+    const [result] = await Promise.all([
+      refetch(),
+      new Promise((r) => setTimeout(r, 600)),
+    ]);
     setIsRefreshing(false);
   };
 
-  const effectiveLoading = forceSkeleton || isLoading;
+  const effectiveLoading = forceSkeleton || isLoading || isRefreshing;
 
   if (effectiveLoading) {
     return <UserHoldingsSkeleton />;
   }
 
   return (
-    <div>
-      {/* Divider */}
-      <div
-        className="my-3"
-        style={{
-          height: "1px",
-          backgroundColor: colors.boxOutline,
-        }}
-      />
-
-      <div className="flex items-center justify-between mb-3">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
         <h2
           className="font-mono text-lg font-semibold"
           style={{ color: colors.textPrimary }}

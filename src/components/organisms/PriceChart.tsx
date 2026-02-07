@@ -315,7 +315,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           filter: `ticker=eq.${ticker.toUpperCase()}`,
         },
         (payload) => {
-          console.log(`[PriceChart] Realtime update for ${ticker}:`, payload);
           
           // Immediately update the chart with the new price point
           const newPrice = payload.new?.current_price;
@@ -345,18 +344,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           fetchChartData(selectedRange);
         }
       )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log(`[PriceChart] Subscribed to realtime updates for ${ticker}`);
-        }
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
     // Cleanup subscription on unmount
     return () => {
       if (channelRef.current) {
-        console.log(`[PriceChart] Unsubscribing from ${ticker}`);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
@@ -463,18 +457,18 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         className="flex items-center justify-between p-4 border-b"
         style={{ borderColor: colors.boxOutline }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 lg:hidden">
           {currentPrice !== null && (
-            <div>
+            <div className="flex flex-col">
               <span
-                className="font-mono text-lg font-bold"
+                className="font-mono text-[2.8rem] leading-tight font-bold"
                 style={{ color: colors.textPrimary }}
               >
                 ${currentPrice.toFixed(6)}
               </span>
               {priceChange && (
                 <span
-                  className="ml-2 font-mono text-sm"
+                  className="font-mono text-xl"
                   style={{
                     color: priceChange.percent >= 0 ? colors.green : colors.red,
                   }}
@@ -488,7 +482,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         </div>
 
         {/* Range Selector */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 ml-auto">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.value}

@@ -68,6 +68,8 @@ export default function AdminCreateIssuerPage() {
     setLoadingIssuers(true);
     try {
       const supabase = createClient();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -120,6 +122,8 @@ export default function AdminCreateIssuerPage() {
 
     try {
       const supabase = createClient();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("Not authenticated");
       const {
         data: { session },
       } = await supabase.auth.getSession();

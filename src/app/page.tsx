@@ -187,8 +187,7 @@ export default function Home() {
 
   // Handle search
   const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
-    // In a real app: navigate to search results
+    // TODO: navigate to search results
   };
 
   // Log error if any

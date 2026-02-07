@@ -18,6 +18,8 @@ interface TradingFormSimpleProps {
   disabled?: boolean;
   /** When false the issuer has no issuer_trading row yet */
   isTradable?: boolean;
+  /** Hide the "Place Order" section header */
+  hideTitle?: boolean;
 }
 
 /**
@@ -34,12 +36,13 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   isLoading = false,
   disabled = false,
   isTradable = true,
+  hideTitle = false,
 }) => {
   const [amount, setAmount] = useState<string>("");
   const [selectedAction, setSelectedAction] = useState<"buy" | "sell">("buy");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitStage, setSubmitStage] = useState<"idle" | "submitting" | "success">("idle");
   const [tickerHoldings, setTickerHoldings] = useState<number>(0);
   const [holdingsLoading, setHoldingsLoading] = useState(false);
   const [sellAllClicked, setSellAllClicked] = useState(false);
@@ -147,7 +150,8 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
 
     setIsSubmitting(true);
     setSubmitError(null);
-    setSubmitSuccess(false);
+    setSubmitStage("submitting");
+    const submitStartTime = Date.now();
 
     try {
       const supabase = createClient();
@@ -170,10 +174,15 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         return;
       }
 
-      // Success - clear form and show success message
-      setSubmitSuccess(true);
-      setAmount("");
-      
+      // Ensure "Submitting..." shows for at least 1.5s even if the request was fast
+      const elapsed = Date.now() - submitStartTime;
+      const remaining = Math.max(0, 1500 - elapsed);
+
+      await new Promise((r) => setTimeout(r, remaining));
+
+      // Transition to success stage
+      setSubmitStage("success");
+
       // Call the callback if provided
       if (selectedAction === "buy" && onBuy) {
         onBuy(pvAmount);
@@ -186,12 +195,14 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
 
       // Notify parent to refresh all sections
       if (onOrderComplete) {
-        // Small delay to allow queue processing to start
         setTimeout(() => onOrderComplete(), 1500);
       }
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSubmitSuccess(false), 3000);
+      // After a short pause, reset the form completely
+      setTimeout(() => {
+        setSubmitStage("idle");
+        setAmount("");
+      }, 1500);
     } catch (err) {
       console.error("Order submission error:", err);
       setSubmitError("An unexpected error occurred");
@@ -214,16 +225,18 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Section Header */}
-      <div className="flex items-center justify-between">
-        <h2
-          className="font-mono text-lg font-semibold"
-          style={{ color: colors.textPrimary }}
-        >
-          Place Order
-        </h2>
-      </div>
+      {!hideTitle && (
+        <div className="flex items-center justify-between px-1">
+          <h2
+            className="font-mono text-lg font-semibold"
+            style={{ color: colors.textPrimary }}
+          >
+            Place Order
+          </h2>
+        </div>
+      )}
 
       {/* Not Logged In Warning */}
       {!user && !authLoading && isTradable && (
@@ -327,12 +340,9 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
 
         {/* Estimated Amount */}
         {numericAmount > 0 && price && (
-          <div
-            className="mb-2 px-3 py-2 rounded-md"
-            style={{ backgroundColor: colors.boxLight }}
-          >
+          <div className="mb-1">
             <div className="flex justify-between text-sm">
-              <span style={{ color: colors.textSecondary }}>
+              <span style={{ color: colors.textPrimary }}>
                 {selectedAction === "buy" ? "Est. PV Received" : "Est. USDP Received"}
               </span>
               <span
@@ -350,7 +360,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
             </div>
             {selectedAction === "buy" && usdpAmount > usdpBalance && (
               <p
-                className="text-xs mt-2"
+                className="text-xs mt-1"
                 style={{ color: colors.red }}
               >
                 Insufficient USDP balance
@@ -358,7 +368,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
             )}
             {selectedAction === "sell" && numericAmount > tickerHoldings && (
               <p
-                className="text-xs mt-2"
+                className="text-xs mt-1"
                 style={{ color: colors.red }}
               >
                 Insufficient {ticker.toUpperCase()} balance
@@ -382,47 +392,45 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
           </div>
         )}
 
-        {/* Success Message */}
-        {submitSuccess && (
-          <div
-            className="mb-2 p-3 rounded-md"
-            style={{ backgroundColor: `${colors.green}15` }}
-          >
-            <p
-              className="text-sm font-mono"
-              style={{ color: colors.green }}
-            >
-              Order placed successfully! 🎉
-            </p>
-          </div>
-        )}
-
-        {/* Submit Button */}
+        {/* Submit Button / Status Box */}
         {numericAmount > 0 && (
           <div className="mb-2">
-            <button
-              onClick={handleSubmit}
-              disabled={disabled || isLoading || isSubmitting || !user}
-              className="w-full py-2 rounded-md font-mono font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor:
-                  selectedAction === "buy" ? colors.green : colors.red,
-                color:
-                  selectedAction === "buy" ? colors.textDark : colors.textPrimary,
-              }}
-            >
-              {isSubmitting
-                ? "Placing Order..."
-                : isLoading
-                ? "Processing..."
-                : `${selectedAction === "buy" ? "Buy" : "Sell"} ${ticker.toUpperCase()}`}
-            </button>
+            {submitStage !== "idle" ? (
+              <div
+                className="w-full py-2 rounded-md font-mono font-medium text-center text-sm"
+                style={{
+                  backgroundColor: submitStage === "success"
+                    ? `${colors.green}20`
+                    : `${colors.gold}20`,
+                  border: `1px solid ${submitStage === "success" ? colors.green : colors.gold}`,
+                  color: submitStage === "success" ? colors.green : colors.gold,
+                }}
+              >
+                {submitStage === "submitting" ? "Submitting..." : "Successful"}
+              </div>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={disabled || isLoading || !user}
+                className="w-full py-2 rounded-md font-mono font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor:
+                    selectedAction === "buy" ? colors.green : colors.red,
+                  color:
+                    selectedAction === "buy" ? colors.textDark : colors.textPrimary,
+                }}
+              >
+                {isLoading
+                  ? "Processing..."
+                  : `${selectedAction === "buy" ? "Buy" : "Sell"} ${ticker.toUpperCase()}`}
+              </button>
+            )}
           </div>
         )}
 
         {/* Account Summary */}
         {user && (
-          <div className="pb-2 space-y-0.5">
+          <div className="pb-2 -space-y-0.5">
             <div className="flex justify-between items-center">
               <span
                 className="text-sm font-mono"

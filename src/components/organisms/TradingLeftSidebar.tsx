@@ -3,13 +3,7 @@
 import React from "react";
 import { colors } from "@/lib/constants/colors";
 import { PriceDisplay } from "@/components/atoms";
-import { TradingSummarySection, HoldersSection } from "@/components/molecules";
-
-interface Holder {
-  username: string;
-  quantity: number;
-  supplyPercentage: number;
-}
+import { TradingSummarySection, RecommendedIssuers } from "@/components/molecules";
 
 interface TradingData {
   volume24h?: number | null;
@@ -25,27 +19,25 @@ interface TradingLeftSidebarProps {
   ticker: string;
   price?: number | null;
   tradingData?: TradingData | null;
-  holders: Holder[];
   isLoading?: boolean;
   /** When false the issuer has no issuer_trading row yet */
   isTradable?: boolean;
   onRefreshMetrics?: () => void;
-  onRefreshHolders?: () => void;
+  issuerTag?: string | null;
 }
 
 /**
  * TradingLeftSidebar - Left sidebar for the trading page
- * Contains price display, social links, trading summary, and holders
+ * Contains price display, trading summary, and recommended issuers
  */
 export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
   ticker,
   price,
   tradingData,
-  holders,
   isLoading = false,
   isTradable = true,
   onRefreshMetrics,
-  onRefreshHolders,
+  issuerTag,
 }) => {
   return (
     <aside
@@ -69,11 +61,11 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
         onRefresh={onRefreshMetrics}
       />
 
-      {/* Top Holders */}
-      <HoldersSection
-        holders={holders}
-        isLoading={isLoading}
-        onRefresh={onRefreshHolders}
+      {/* Recommended Issuers */}
+      <RecommendedIssuers
+        currentTicker={ticker}
+        currentTag={issuerTag}
+        forceSkeleton={isLoading}
       />
     </aside>
   );

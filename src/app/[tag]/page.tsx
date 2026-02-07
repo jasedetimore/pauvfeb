@@ -225,7 +225,7 @@ export default function TagPage({
 
   // Handle search
   const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
+    // TODO: navigate to search results
   };
 
   const combinedLoading = isLoading || statsLoading;

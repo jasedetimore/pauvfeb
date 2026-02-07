@@ -44,9 +44,14 @@ export default function AdminIssuerLinksPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
-  // Get auth token helper
+  // Get auth token helper — getUser() forces server verification / token refresh,
+  // then getSession() retrieves the (now-fresh) access token.
   const getAccessToken = async (): Promise<string> => {
     const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) {
+      throw new Error("Not authenticated");
+    }
     const {
       data: { session },
     } = await supabase.auth.getSession();

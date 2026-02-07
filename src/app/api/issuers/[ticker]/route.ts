@@ -44,7 +44,7 @@ export async function GET(
       }
       console.error("Error fetching issuer:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: "Failed to fetch issuer" },
         { status: 500 }
       );
     }
@@ -55,7 +55,7 @@ export async function GET(
   } catch (error) {
     console.error("Error in issuer API:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

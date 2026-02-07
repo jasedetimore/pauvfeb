@@ -44,9 +44,12 @@ export default function AdminEditIssuerPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
-  // Helper to get token
+  // Helper to get token — getUser() forces server-side verification / token refresh,
+  // then getSession() retrieves the (now-fresh) access token.
   const getToken = async () => {
     const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
     const {
       data: { session },
     } = await supabase.auth.getSession();

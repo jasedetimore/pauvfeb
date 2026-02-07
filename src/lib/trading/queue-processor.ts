@@ -558,7 +558,6 @@ export async function processAllPendingOrders(): Promise<ProcessResult[]> {
   let result = await processNextOrder();
   while (result !== null) {
     results.push(result);
-    console.log(`Processed order ${result.orderId}: ${result.message}`);
     result = await processNextOrder();
   }
 
