@@ -20,6 +20,7 @@ interface UseTopHoldersResult {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  refetchWithLoading: () => Promise<void>;
 }
 
 /**
