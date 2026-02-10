@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const origin = req.nextUrl.origin;
+    const origin = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
 
     // Create the Soap checkout session for withdrawal
     const checkout = await createSoapCheckout({

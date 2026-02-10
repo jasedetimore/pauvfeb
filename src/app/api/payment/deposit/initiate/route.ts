@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Build success/failure redirect URLs
-    const origin = req.nextUrl.origin;
+    const origin = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
 
     // Create the Soap checkout session
     const checkout = await createSoapCheckout({
