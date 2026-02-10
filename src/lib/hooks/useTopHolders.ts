@@ -89,11 +89,18 @@ export function useTopHolders(ticker: string | null, limit: number = 10): UseTop
     fetchHolders();
   }, [fetchHolders]);
 
+  // Refetch with loading skeleton visible (for post-order refresh)
+  const refetchWithLoading = useCallback(async () => {
+    setIsLoading(true);
+    await fetchHolders();
+  }, [fetchHolders]);
+
   return {
     holders,
     totalSupply,
     isLoading,
     error,
     refetch: fetchHolders,
+    refetchWithLoading,
   };
 }

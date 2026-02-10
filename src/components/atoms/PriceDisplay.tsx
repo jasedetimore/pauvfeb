@@ -53,7 +53,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   };
 
   // Show skeleton when loading
-  if (loading && price == null) {
+  if (loading) {
     return (
       <div>
         {showBackButton && (

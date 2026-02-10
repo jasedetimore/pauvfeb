@@ -73,9 +73,9 @@ export const TradingSummarySection: React.FC<TradingSummarySectionProps> = ({
 
   const metrics = [
     { label: "24h Volume", value: isTradable ? formatCurrency(data?.volume24h) : "---" },
-    { label: "Circulating Supply", value: isTradable ? formatSupply(data?.circulatingSupply) : "---" },
+    { label: "Supply", value: isTradable ? formatSupply(data?.circulatingSupply) : "---" },
     { label: "Holders", value: isTradable ? formatNumber(data?.holders) : "---" },
-    { label: "Market Cap", value: isTradable ? formatCurrency(data?.marketCap) : "---" },
+    { label: "Invested", value: isTradable ? formatCurrency(data?.marketCap) : "---" },
   ];
 
   const priceChanges = [

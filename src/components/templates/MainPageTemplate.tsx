@@ -127,7 +127,7 @@ export function MainPageTemplate({
         />
 
         {/* Mobile Tags Strip */}
-        <div className="lg:hidden px-4 md:px-5 mb-4">
+        <div className="lg:hidden px-4 md:px-5 mb-2">
           <div
             className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -140,45 +140,62 @@ export function MainPageTemplate({
                 Loading tags...
               </div>
             ) : (
-              tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => handleTagSelect(tag)}
-                  className={`min-w-[140px] flex-shrink-0 rounded-lg border text-left px-3 py-2 transition-colors ${
-                    selectedTagId === tag.id
-                      ? "border-accent-logo bg-box-light"
-                      : "border-box-outline bg-box"
-                  }`}
-                  style={{
-                    borderColor:
-                      selectedTagId === tag.id ? colors.gold : colors.border,
-                    backgroundColor:
-                      selectedTagId === tag.id ? colors.boxHover : colors.box,
-                  }}
-                >
-                  <div
-                    className="text-sm font-semibold truncate"
-                    style={{ color: colors.textPrimary }}
+              tags.map((tag) => {
+                // Format market cap matching desktop logic
+                const formatMarketCap = (value: number): string => {
+                  if (!isFinite(value)) return "—";
+                  if (value >= 1_000_000_000) {
+                    return `$${(value / 1_000_000_000).toFixed(2)}B`;
+                  }
+                  if (value >= 1_000_000) {
+                    return `$${(value / 1_000_000).toFixed(2)}M`;
+                  }
+                  if (value >= 1_000) {
+                    return `$${(value / 1_000).toFixed(2)}K`;
+                  }
+                  return `$${value.toFixed(0)}`;
+                };
+
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => handleTagSelect(tag)}
+                    className={`min-w-[140px] flex-shrink-0 rounded-lg border text-left px-3 py-2 transition-colors ${
+                      selectedTagId === tag.id
+                        ? "border-accent-logo bg-box-light"
+                        : "border-box-outline bg-box"
+                    }`}
+                    style={{
+                      borderColor:
+                        selectedTagId === tag.id ? colors.textPrimary : colors.border,
+                      backgroundColor:
+                        selectedTagId === tag.id ? colors.boxHover : colors.box,
+                    }}
                   >
-                    {tag.name}
-                  </div>
-                  <div className="flex items-end justify-between gap-3 text-xs pt-1">
-                    <span style={{ color: colors.textMuted }}>
-                      {tag.issuerCount} Issuers
-                    </span>
-                    <span style={{ color: colors.green, fontWeight: 600 }}>
-                      ${(tag.marketCap / 1_000_000_000).toFixed(2)}B
-                    </span>
-                  </div>
-                </button>
-              ))
+                    <div
+                      className="text-sm font-semibold truncate"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {tag.name.charAt(0).toUpperCase() + tag.name.slice(1).toLowerCase()}
+                    </div>
+                    <div className="flex items-end justify-between gap-3 text-xs pt-1">
+                      <span style={{ color: colors.textMuted }}>
+                        {tag.issuerCount} Issuers
+                      </span>
+                      <span style={{ color: colors.green, fontWeight: 600 }}>
+                        {formatMarketCap(tag.marketCap)}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
 
         {/* Tags and Main Content Container */}
         <div className="px-4 md:px-5 mb-5">
-          <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
             {/* Left side - Tags Sidebar (desktop only) */}
             <div className="hidden lg:block">
               <TagSidebar
@@ -192,16 +209,18 @@ export function MainPageTemplate({
             {/* Right side - Controls and Content */}
             <div style={{ flex: "1", minWidth: "0" }}>
               {/* Navigation */}
-              <Navigation
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                sortMode={sortMode}
-                onSortModeChange={setSortMode}
-                showSortButtons={viewMode === "card"}
-              />
+              <div>
+                <Navigation
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  sortMode={sortMode}
+                  onSortModeChange={setSortMode}
+                  showSortButtons={viewMode === "card"}
+                />
+              </div>
 
               {/* Content Area */}
-              <div className="mt-4">
+              <div className="mt-3">
                 {viewMode === "list" ? (
                   <IssuerListView
                     issuers={listViewIssuers}

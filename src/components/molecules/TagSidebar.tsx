@@ -27,8 +27,8 @@ export function TagSidebar({
     <div
       className="font-mono"
       style={{
-        width: "230px",
-        maxWidth: "230px",
+        width: "220px",
+        maxWidth: "220px",
         alignSelf: "flex-start",
       }}
     >

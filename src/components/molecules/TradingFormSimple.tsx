@@ -13,6 +13,8 @@ interface TradingFormSimpleProps {
   priceStep?: number;
   onBuy?: (amount: number) => void;
   onSell?: (amount: number) => void;
+  /** Fires immediately when order succeeds (before success message disappears) */
+  onOrderConfirmed?: () => void;
   onOrderComplete?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
@@ -32,6 +34,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   priceStep,
   onBuy,
   onSell,
+  onOrderConfirmed,
   onOrderComplete,
   isLoading = false,
   disabled = false,
@@ -153,6 +156,11 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
     setSubmitStage("submitting");
     const submitStartTime = Date.now();
 
+    // Immediately notify parent so skeletons appear as soon as user confirms
+    if (onOrderConfirmed) {
+      onOrderConfirmed();
+    }
+
     try {
       const supabase = createClient();
 
@@ -193,7 +201,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
       // Refresh holdings in the form
       fetchHoldings();
 
-      // Notify parent to refresh all sections
+      // Notify parent after success message disappears
       if (onOrderComplete) {
         setTimeout(() => onOrderComplete(), 1500);
       }

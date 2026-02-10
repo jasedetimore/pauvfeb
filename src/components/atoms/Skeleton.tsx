@@ -488,91 +488,116 @@ export const TagPageSkeleton: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
       <div style={{ maxWidth: "1250px", margin: "0 auto", width: "100%" }}>
-        {/* Hero */}
+        {/* Hero - tag selected: single full-width banner */}
         <div style={{ margin: "20px", marginBottom: "8px" }}>
-          <SkeletonCard className="p-0">
-            <div
-              style={{
-                minHeight: "177px",
-                padding: "20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "20px",
-              }}
-            >
-              <div className="space-y-3" style={{ flex: 1 }}>
-                <Skeleton width="220px" height="24px" />
-                <SkeletonText lines={2} lineHeight="14px" />
-                <Skeleton width="140px" height="14px" />
-              </div>
-              <div className="hidden lg:block" style={{ minWidth: "220px" }}>
-                <Skeleton width="120px" height="12px" className="mb-2" />
-                <Skeleton width="200px" height="44px" className="mb-2" />
-                <Skeleton width="80px" height="16px" />
-              </div>
+          <div
+            style={{
+              position: "relative",
+              background: colors.background,
+              border: `1px solid ${colors.border}`,
+              borderRadius: "10px",
+              minHeight: "177px",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              padding: "20px",
+            }}
+          >
+            {/* Back button placeholder */}
+            <div style={{ position: "absolute", top: "8px", left: "10px" }}>
+              <Skeleton width="100px" height="16px" />
             </div>
-          </SkeletonCard>
+            {/* Tag info */}
+            <div style={{ flex: 1 }}>
+              <Skeleton width="220px" height="28px" className="mb-2" />
+              <Skeleton width="60%" height="16px" className="mb-2" />
+              <Skeleton width="100px" height="14px" />
+            </div>
+          </div>
         </div>
 
         {/* Tags + Content */}
         <div className="px-4 md:px-5 mb-5">
-          <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
-            <div className="hidden lg:block" style={{ width: "230px" }}>
-              <SkeletonCard className="p-0">
-                <div>
-                  {Array.from({ length: 6 }).map((_, index) => (
+          <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+            {/* Tag sidebar */}
+            <div className="hidden lg:block" style={{ width: "220px", maxWidth: "220px" }}>
+              <div
+                style={{
+                  backgroundColor: colors.box,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: "10px",
+                  padding: "12px 8px",
+                }}
+              >
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "8px 11px",
+                      borderBottom:
+                        index === 5 ? "none" : `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <Skeleton width="70%" height="16px" className="mb-1.5" />
+                    <div className="flex justify-between items-center">
+                      <Skeleton width="45%" height="12px" />
+                      <Skeleton width="35%" height="14px" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ flex: "1", minWidth: "0" }}>
+              {/* Navigation bar skeleton */}
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    borderRadius: "6px",
+                    padding: "3px 7px",
+                  }}
+                >
+                  <Skeleton width="52px" height="26px" className="hidden md:block" />
+                  <Skeleton width="160px" height="26px" className="hidden md:block" />
+                  <Skeleton width="50px" height="26px" className="hidden md:block" />
+                  <Skeleton width="90px" height="26px" />
+                  <Skeleton width="66px" height="26px" />
+                  <Skeleton width="62px" height="26px" />
+                  <Skeleton width="86px" height="26px" />
+                </div>
+              </div>
+
+              {/* Issuer cards grid */}
+              <div className="mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
+                  {Array.from({ length: 9 }).map((_, index) => (
                     <div
                       key={index}
                       style={{
-                        padding: "12px 11px",
-                        borderBottom:
-                          index === 5 ? "none" : `1px solid ${colors.border}`,
+                        backgroundColor: colors.background,
+                        height: "112px",
+                        padding: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
                       }}
                     >
-                      <Skeleton width="70%" height="20px" className="mb-3" />
-                      <div className="flex justify-between items-center">
-                        <Skeleton width="45%" height="13px" />
-                        <Skeleton width="35%" height="18px" />
+                      <Skeleton width="88px" height="88px" />
+                      <div className="flex-1" style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px" }}>
+                        <Skeleton width="40%" height="14px" />
+                        <Skeleton width="70%" height="16px" />
+                        <Skeleton width="30%" height="11px" />
+                        <div className="flex justify-between items-end" style={{ marginTop: "4px" }}>
+                          <Skeleton width="45%" height="16px" />
+                          <Skeleton width="30%" height="13px" />
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </SkeletonCard>
-            </div>
-
-            <div style={{ flex: "1", minWidth: "0" }}>
-              <div className="mb-4">
-                <Skeleton height="32px" />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3 sm:gap-y-0">
-                {Array.from({ length: 9 }).map((_, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      backgroundColor: colors.background,
-                      height: "132px",
-                      padding: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <Skeleton width="88px" height="88px" />
-                    <div className="flex-1" style={{ height: "88px" }}>
-                      <div className="mb-2">
-                        <Skeleton width="40%" height="14px" className="mb-2" />
-                        <Skeleton width="70%" height="16px" className="mb-2" />
-                        <Skeleton width="30%" height="11px" />
-                      </div>
-                      <div className="flex justify-between items-end">
-                        <Skeleton width="45%" height="16px" />
-                        <Skeleton width="30%" height="13px" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -589,7 +614,7 @@ export const HomePageSkeleton: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
       <div style={{ maxWidth: "1250px", margin: "0 auto", width: "100%" }}>
-        {/* Hero */}
+        {/* Hero - single box (no market cap box) */}
         <div style={{ display: "flex", gap: "10px", margin: "20px", marginBottom: "8px" }}>
           <div
             style={{
@@ -604,92 +629,97 @@ export const HomePageSkeleton: React.FC = () => {
               minHeight: "177px",
             }}
           >
-            <Skeleton width="50px" height="50px" />
+            {/* Logo placeholder (150×50 matches Logo height={50} with 3:1 aspect ratio) */}
+            <Skeleton width="150px" height="50px" />
             <div className="space-y-2">
-              <Skeleton width="160px" height="18px" />
-              <Skeleton width="120px" height="14px" />
-            </div>
-          </div>
-
-          <div
-            className="hidden lg:flex"
-            style={{
-              flex: "1",
-              background: colors.background,
-              border: `1px solid ${colors.border}`,
-              borderRadius: "10px",
-              padding: "20px",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              minHeight: "177px",
-            }}
-          >
-            <div className="space-y-2" style={{ textAlign: "right" }}>
-              <Skeleton width="100px" height="12px" />
-              <Skeleton width="180px" height="44px" />
-              <Skeleton width="70px" height="16px" />
+              <Skeleton width="180px" height="20px" />
+              <Skeleton width="100px" height="14px" />
             </div>
           </div>
         </div>
 
-        {/* Tags + Content (same as tag page) */}
+        {/* Tags + Content */}
         <div className="px-4 md:px-5 mb-5">
-          <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
-            <div className="hidden lg:block" style={{ width: "230px" }}>
-              <SkeletonCard className="p-0">
-                <div>
-                  {Array.from({ length: 6 }).map((_, index) => (
+          <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+            {/* Tag sidebar */}
+            <div className="hidden lg:block" style={{ width: "220px", maxWidth: "220px" }}>
+              <div
+                style={{
+                  backgroundColor: colors.box,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: "10px",
+                  padding: "12px 8px",
+                }}
+              >
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "8px 11px",
+                      borderBottom:
+                        index === 5 ? "none" : `1px solid ${colors.border}`,
+                    }}
+                  >
+                    <Skeleton width="70%" height="16px" className="mb-1.5" />
+                    <div className="flex justify-between items-center">
+                      <Skeleton width="45%" height="12px" />
+                      <Skeleton width="35%" height="14px" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ flex: "1", minWidth: "0" }}>
+              {/* Navigation bar skeleton */}
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    borderRadius: "6px",
+                    padding: "3px 7px",
+                  }}
+                >
+                  <Skeleton width="52px" height="26px" className="hidden md:block" />
+                  <Skeleton width="160px" height="26px" className="hidden md:block" />
+                  <Skeleton width="50px" height="26px" className="hidden md:block" />
+                  <Skeleton width="90px" height="26px" />
+                  <Skeleton width="66px" height="26px" />
+                  <Skeleton width="62px" height="26px" />
+                  <Skeleton width="86px" height="26px" />
+                </div>
+              </div>
+
+              {/* Issuer cards grid */}
+              <div className="mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
+                  {Array.from({ length: 9 }).map((_, index) => (
                     <div
                       key={index}
                       style={{
-                        padding: "12px 11px",
-                        borderBottom:
-                          index === 5 ? "none" : `1px solid ${colors.border}`,
+                        backgroundColor: colors.background,
+                        height: "112px",
+                        padding: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
                       }}
                     >
-                      <Skeleton width="70%" height="20px" className="mb-3" />
-                      <div className="flex justify-between items-center">
-                        <Skeleton width="45%" height="13px" />
-                        <Skeleton width="35%" height="18px" />
+                      <Skeleton width="88px" height="88px" />
+                      <div className="flex-1" style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "2px" }}>
+                        <Skeleton width="40%" height="14px" />
+                        <Skeleton width="70%" height="16px" />
+                        <Skeleton width="30%" height="11px" />
+                        <div className="flex justify-between items-end" style={{ marginTop: "4px" }}>
+                          <Skeleton width="45%" height="16px" />
+                          <Skeleton width="30%" height="13px" />
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </SkeletonCard>
-            </div>
-
-            <div style={{ flex: "1", minWidth: "0" }}>
-              <div className="mb-4">
-                <Skeleton height="32px" />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3 sm:gap-y-0">
-                {Array.from({ length: 9 }).map((_, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      backgroundColor: colors.background,
-                      height: "132px",
-                      padding: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <Skeleton width="88px" height="88px" />
-                    <div className="flex-1" style={{ height: "88px" }}>
-                      <div className="mb-2">
-                        <Skeleton width="40%" height="14px" className="mb-2" />
-                        <Skeleton width="70%" height="16px" className="mb-2" />
-                        <Skeleton width="30%" height="11px" />
-                      </div>
-                      <div className="flex justify-between items-end">
-                        <Skeleton width="45%" height="16px" />
-                        <Skeleton width="30%" height="13px" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

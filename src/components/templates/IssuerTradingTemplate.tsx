@@ -54,6 +54,9 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   // Chart refresh trigger (incremented after each order)
   const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
 
+  // Post-order refreshing state — drives skeleton loaders across all sections
+  const [postOrderRefreshing, setPostOrderRefreshing] = useState(false);
+
   // Ref to hold transaction history refetch function
   const transactionRefetchRef = useRef<(() => Promise<void>) | null>(null);
 
@@ -62,15 +65,30 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     transactionRefetchRef.current = refetch;
   }, []);
 
-  // Called after an order is successfully placed — refreshes all data silently
-  const handleOrderComplete = useCallback(() => {
-    refetchMetrics();
-    refetchHolders();
+  // Ref to hold the background refetch promise so onOrderComplete can await it
+  const refetchPromiseRef = useRef<Promise<void> | null>(null);
+
+  // Called IMMEDIATELY when user presses confirm — triggers skeletons + starts background refetch
+  const handleOrderConfirmed = useCallback(() => {
+    setPostOrderRefreshing(true);
     setChartRefreshTrigger((prev) => prev + 1);
-    if (transactionRefetchRef.current) {
-      transactionRefetchRef.current();
-    }
+    // Start refetching in background, store the promise
+    refetchPromiseRef.current = Promise.all([
+      refetchMetrics(),
+      refetchHolders(),
+      transactionRefetchRef.current ? transactionRefetchRef.current() : Promise.resolve(),
+    ]).then(() => {});
   }, [refetchMetrics, refetchHolders]);
+
+  // Called AFTER the "Successful" message disappears (~1.5s) — resolves skeletons
+  const handleOrderComplete = useCallback(async () => {
+    // Wait for any in-flight refetch to finish
+    if (refetchPromiseRef.current) {
+      await refetchPromiseRef.current;
+      refetchPromiseRef.current = null;
+    }
+    setPostOrderRefreshing(false);
+  }, []);
 
   // Track whether the right sidebar's children (UserHoldings, RecommendedIssuers)
   // have finished their initial fetch so we can gate the whole page on it.
@@ -89,15 +107,28 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   const handleMobileTransactionRefetchRef = useCallback((refetch: () => Promise<void>) => {
     mobileTransactionRefetchRef.current = refetch;
   }, []);
-  // Mobile order complete handler
-  const handleMobileOrderComplete = useCallback(() => {
-    refetchMetrics();
-    refetchHolders();
+  // Ref to hold the mobile background refetch promise
+  const mobileRefetchPromiseRef = useRef<Promise<void> | null>(null);
+
+  // Mobile: called IMMEDIATELY when user presses confirm
+  const handleMobileOrderConfirmed = useCallback(() => {
+    setPostOrderRefreshing(true);
     setChartRefreshTrigger((prev) => prev + 1);
-    if (mobileTransactionRefetchRef.current) {
-      mobileTransactionRefetchRef.current();
-    }
+    mobileRefetchPromiseRef.current = Promise.all([
+      refetchMetrics(),
+      refetchHolders(),
+      mobileTransactionRefetchRef.current ? mobileTransactionRefetchRef.current() : Promise.resolve(),
+    ]).then(() => {});
   }, [refetchMetrics, refetchHolders]);
+
+  // Mobile: called AFTER the "Successful" message disappears
+  const handleMobileOrderComplete = useCallback(async () => {
+    if (mobileRefetchPromiseRef.current) {
+      await mobileRefetchPromiseRef.current;
+      mobileRefetchPromiseRef.current = null;
+    }
+    setPostOrderRefreshing(false);
+  }, []);
 
 
 
@@ -325,7 +356,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             {initialLoading ? (
               <ChartSkeleton height={420} />
             ) : (
-              <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+              <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
             )}
           </div>
 
@@ -337,6 +368,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               priceStep={priceStep}
               onBuy={handleBuy}
               onSell={handleSell}
+              onOrderConfirmed={handleMobileOrderConfirmed}
               onOrderComplete={handleMobileOrderComplete}
               isLoading={initialLoading || mobileHoldingsLoading}
               disabled={!currentPrice || !isTradable}
@@ -349,7 +381,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
           <div className="mt-4">
             <TradingSummarySection
               data={initialLoading ? null : tradingData}
-              isLoading={initialLoading}
+              isLoading={initialLoading || postOrderRefreshing}
               isTradable={isTradable}
               onRefresh={refetchMetrics}
             />
@@ -360,7 +392,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             <UserHoldings
               ticker={ticker}
               onRefetchRef={handleMobileTransactionRefetchRef}
-              forceSkeleton={initialLoading || mobileHoldingsLoading}
+              forceSkeleton={initialLoading || mobileHoldingsLoading || postOrderRefreshing}
               onLoadingChange={handleMobileHoldingsLoading}
             />
           </div>
@@ -378,7 +410,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
           <div className="mt-4">
             <HoldersSection
               holders={initialLoading ? [] : holders}
-              isLoading={initialLoading}
+              isLoading={initialLoading || postOrderRefreshing}
               onRefresh={refetchHolders}
             />
           </div>
@@ -396,6 +428,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               isTradable={isTradable}
               onRefreshMetrics={refetchMetrics}
               issuerTag={issuerData?.tag}
+              postOrderRefreshing={postOrderRefreshing}
             />
           </aside>
 
@@ -414,7 +447,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                 issuerLinks={issuerLinks}
                 isLoading={false}
               >
-                <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+                <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
               </TradingMainContent>
             )}
           </div>
@@ -429,11 +462,13 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               isTradable={isTradable}
               onBuy={handleBuy}
               onSell={handleSell}
+              onOrderConfirmed={handleOrderConfirmed}
               onOrderComplete={handleOrderComplete}
               onTransactionRefetchRef={handleTransactionRefetchRef}
               holders={initialLoading ? [] : holders}
               onRefreshHolders={refetchHolders}
               onReady={handleRightSidebarReady}
+              postOrderRefreshing={postOrderRefreshing}
             />
           </aside>
         </div>

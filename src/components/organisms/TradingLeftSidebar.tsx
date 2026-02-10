@@ -24,6 +24,8 @@ interface TradingLeftSidebarProps {
   isTradable?: boolean;
   onRefreshMetrics?: () => void;
   issuerTag?: string | null;
+  /** Drives skeleton loaders for price + summary only (not recommended issuers) */
+  postOrderRefreshing?: boolean;
 }
 
 /**
@@ -38,6 +40,7 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
   isTradable = true,
   onRefreshMetrics,
   issuerTag,
+  postOrderRefreshing = false,
 }) => {
   return (
     <aside
@@ -48,7 +51,7 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
       <PriceDisplay
         ticker={ticker}
         price={price}
-        loading={isLoading}
+        loading={isLoading || postOrderRefreshing}
         showBackButton={true}
         isTradable={isTradable}
       />
@@ -56,7 +59,7 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
       {/* Trading Summary */}
       <TradingSummarySection
         data={tradingData}
-        isLoading={isLoading}
+        isLoading={isLoading || postOrderRefreshing}
         isTradable={isTradable}
         onRefresh={onRefreshMetrics}
       />

@@ -73,7 +73,7 @@ export function IssuerCard({
         overflow: "hidden",
         display: "flex",
         alignItems: "center",
-        height: "132px",
+        height: "112px",
         cursor: "pointer",
         transition: "all 0.2s",
         gap: "12px",
@@ -82,11 +82,12 @@ export function IssuerCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      <div style={{ display: "flex", gap: "12px", flex: 1, alignItems: "stretch" }}>
       {/* Left side - Square image */}
       <div
         style={{
           width: "88px",
-          height: "88px",
+          aspectRatio: "1",
           backgroundColor: colors.textPrimary,
           flexShrink: 0,
           borderRadius: "5px",
@@ -127,7 +128,6 @@ export function IssuerCard({
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          height: "88px",
           gap: "2px",
           paddingTop: "1px",
           paddingBottom: "1px",
@@ -247,6 +247,7 @@ export function IssuerCard({
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

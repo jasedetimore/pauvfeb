@@ -13,12 +13,16 @@ interface TradingRightSidebarProps {
   isTradable?: boolean;
   onBuy?: (amount: number) => void;
   onSell?: (amount: number) => void;
+  /** Fires immediately when order succeeds (before success message disappears) */
+  onOrderConfirmed?: () => void;
   onOrderComplete?: () => void;
   onTransactionRefetchRef?: (refetch: () => Promise<void>) => void;
   holders?: { username: string; quantity: number; supplyPercentage: number }[];
   onRefreshHolders?: () => void;
   /** Fires once when all child sections have finished their initial fetch */
   onReady?: () => void;
+  /** Drives skeleton loaders for tx history + holders only (not trading form) */
+  postOrderRefreshing?: boolean;
 }
 
 /**
@@ -37,11 +41,13 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
   isTradable = true,
   onBuy,
   onSell,
+  onOrderConfirmed,
   onOrderComplete,
   onTransactionRefetchRef,
   holders = [],
   onRefreshHolders,
   onReady,
+  postOrderRefreshing = false,
 }) => {
   // Track when each child section finishes its own data fetch.
   const [holdingsLoading, setHoldingsLoading] = useState(true);
@@ -76,6 +82,7 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
         priceStep={priceStep}
         onBuy={onBuy}
         onSell={onSell}
+        onOrderConfirmed={onOrderConfirmed}
         onOrderComplete={onOrderComplete}
         isLoading={childrenSkeleton}
         disabled={!price || !isTradable}
@@ -86,14 +93,14 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
       <UserHoldings
         ticker={ticker}
         onRefetchRef={onTransactionRefetchRef}
-        forceSkeleton={childrenSkeleton}
+        forceSkeleton={childrenSkeleton || postOrderRefreshing}
         onLoadingChange={handleHoldingsLoadingChange}
       />
 
       {/* Top Holders */}
       <HoldersSection
         holders={holders}
-        isLoading={childrenSkeleton}
+        isLoading={childrenSkeleton || postOrderRefreshing}
         onRefresh={onRefreshHolders}
       />
     </aside>

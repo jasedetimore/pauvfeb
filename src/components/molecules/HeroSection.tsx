@@ -209,49 +209,7 @@ export function HeroSection({
             </div>
           </div>
 
-          {/* Right side — market cap */}
-          <div
-            className="font-mono hidden lg:block"
-            style={{
-              position: "relative",
-              zIndex: 3,
-              padding: "20px",
-              textAlign: "right",
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                color: "rgba(255, 255, 255, 0.9)",
-                fontSize: "14px",
-                marginBottom: "3px",
-                fontWeight: "400",
-              }}
-            >
-              {capitalize(selectedTag.name)} Market Cap
-            </div>
-            <div
-              style={{
-                color: colors.textPrimary,
-                fontSize: "47px",
-                fontWeight: "700",
-                marginBottom: "8px",
-                lineHeight: "1",
-              }}
-            >
-              {formatMarketCap(displayMarketCap)}
-            </div>
-            <div
-              style={{
-                color: isPositiveChange ? colors.green : colors.red,
-                fontSize: "18px",
-                fontWeight: "700",
-              }}
-            >
-              {isPositiveChange ? "+" : ""}
-              {marketCapChange.toFixed(2)}%
-            </div>
-          </div>
+
         </div>
       </div>
     );
@@ -319,54 +277,7 @@ export function HeroSection({
         </div>
       </div>
 
-      {/* Right Box - Market Cap (desktop only) */}
-      <div
-        className="hidden lg:flex"
-        style={{
-          flex: "1",
-          background: colors.background,
-          border: `1px solid ${colors.border}`,
-          borderRadius: "10px",
-          padding: "20px",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          minHeight: "177px",
-        }}
-      >
-        <div className="font-mono" style={{ textAlign: "right" }}>
-          <div
-            style={{
-              color: "rgba(255, 255, 255, 0.9)",
-              fontSize: "14px",
-              marginBottom: "3px",
-              fontWeight: "400",
-            }}
-          >
-            Market Cap
-          </div>
-          <div
-            style={{
-              color: colors.textPrimary,
-              fontSize: "47px",
-              fontWeight: "700",
-              marginBottom: "8px",
-              lineHeight: "1",
-            }}
-          >
-            {formatMarketCap(displayMarketCap)}
-          </div>
-          <div
-            style={{
-              color: isPositiveChange ? colors.green : colors.red,
-              fontSize: "18px",
-              fontWeight: "700",
-            }}
-          >
-            {isPositiveChange ? "+" : ""}
-            {marketCapChange.toFixed(2)}%
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }

@@ -32,6 +32,8 @@ export interface PriceChartProps {
   refreshTrigger?: number;
   /** When false the issuer has no issuer_trading row yet */
   isTradable?: boolean;
+  /** Force the loading overlay (e.g. after placing an order) */
+  forceLoading?: boolean;
 }
 
 const RANGE_OPTIONS = [
@@ -52,6 +54,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   initialRange = "24h",
   refreshTrigger,
   isTradable = true,
+  forceLoading = false,
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -512,7 +515,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
 
       {/* Chart Area */}
       <div className="relative" style={{ height, maxWidth: "100%" }}>
-        {loading && (
+        {(loading || forceLoading) && (
           <div
             className="absolute inset-0 z-10"
             style={{ backgroundColor: "#000000" }}

@@ -115,7 +115,7 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
       )}
 
       {/* Social Media Links - right under the bio */}
-      <SocialMediaLinks links={issuerLinks ?? null} className="mt-0" />
+      <SocialMediaLinks links={issuerLinks ?? null} className="mt-3" />
     </div>
   );
 };

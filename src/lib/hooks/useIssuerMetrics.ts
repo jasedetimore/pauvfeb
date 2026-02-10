@@ -139,11 +139,18 @@ export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult 
     };
   }, [ticker, fetchMetrics]);
 
+  // Refetch with loading skeleton visible (for post-order refresh)
+  const refetchWithLoading = useCallback(async () => {
+    setIsLoading(true);
+    await fetchMetrics();
+  }, [fetchMetrics]);
+
   return {
     metrics,
     isLoading,
     error,
     isTradable,
     refetch: fetchMetrics,
+    refetchWithLoading,
   };
 }
