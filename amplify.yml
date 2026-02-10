@@ -6,7 +6,7 @@ frontend:
         - npm ci
     build:
       commands:
-        - env | grep -E '^(NEXT_PUBLIC_|SUPABASE_SERVICE_ROLE_KEY|CRON_SECRET)' >> .env.production
+        - env | grep -E '^(NEXT_PUBLIC_|SUPABASE_SERVICE_ROLE_KEY|CRON_SECRET|SOAP_API_KEY|SOAP_WEBHOOK_SECRET|QUEUE_PROCESSOR_API_KEY)' >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next
