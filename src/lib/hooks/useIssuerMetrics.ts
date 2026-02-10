@@ -26,6 +26,7 @@ interface UseIssuerMetricsResult {
   /** false when the issuer exists in issuer_details but has no issuer_trading row */
   isTradable: boolean;
   refetch: () => Promise<void>;
+  refetchWithLoading: () => Promise<void>;
 }
 
 /**
