@@ -18,6 +18,11 @@ module.exports = {
           logo: "#E5C68D",
           green: "#6EE7B7",
         },
+        // Semantic tokens for payment components
+        "canvas-background": "var(--canvas-background)",
+        "canvas-foreground": "var(--canvas-foreground)",
+        "box-bg": "var(--box-bg)",
+        "box-border": "var(--box-border)",
       },
       fontFamily: {
         sans: ["var(--font-fira-code)", "Fira Code", "monospace"],

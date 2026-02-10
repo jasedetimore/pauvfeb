@@ -698,3 +698,54 @@ export const HomePageSkeleton: React.FC = () => {
     </div>
   );
 };
+
+/**
+ * WalletDepositsWithdrawalsSkeleton - Skeleton for the deposits/withdrawals section
+ */
+export const WalletDepositsWithdrawalsSkeleton: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <Skeleton height="2rem" width="16rem" className="mb-2" />
+          <Skeleton height="1rem" width="12rem" />
+        </div>
+        <Skeleton height="2.5rem" width="6rem" rounded />
+      </div>
+      <div className="rounded-lg p-6" style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}>
+        <Skeleton height="0.75rem" width="6rem" className="mb-2" />
+        <Skeleton height="2.5rem" width="10rem" />
+      </div>
+      <div className="rounded-lg p-6" style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}>
+        <Skeleton height="1.25rem" width="8rem" className="mb-4" />
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Skeleton height="2.5rem" width="50%" rounded />
+              <Skeleton height="2.5rem" width="50%" rounded />
+            </div>
+            <Skeleton height="2.5rem" width="100%" rounded />
+            <Skeleton height="2.5rem" width="100%" rounded />
+          </div>
+        </div>
+      </div>
+      <div className="rounded-lg overflow-hidden" style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}>
+        <div className="p-6" style={{ borderBottom: `1px solid ${colors.boxOutline}` }}>
+          <Skeleton height="1.25rem" width="10rem" />
+        </div>
+        <div className="p-4 space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton height="1rem" width="6rem" />
+              <Skeleton height="1.5rem" width="4rem" rounded />
+              <Skeleton height="1rem" width="5rem" />
+              <Skeleton height="1rem" width="5rem" />
+              <Skeleton height="1.5rem" width="1.5rem" rounded />
+              <Skeleton height="1rem" width="8rem" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

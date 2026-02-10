@@ -20,3 +20,6 @@ export {
   AboutContactForm,
   AboutFooter,
 } from "./about";
+
+// Payment organisms
+export { default as WalletDepositsWithdrawalsSection } from "./WalletDepositsWithdrawalsSection";

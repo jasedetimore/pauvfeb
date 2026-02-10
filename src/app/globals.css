@@ -19,6 +19,12 @@ html {
   --accent-red: #EF4444;
   --accent-logo: #E5C68D;
   --accent-green: #6EE7B7;
+
+  /* Semantic tokens used by payment components */
+  --canvas-background: #000000;
+  --canvas-foreground: #FFFFFF;
+  --box-bg: #171717;
+  --box-border: #404040;
 }
 
 body {

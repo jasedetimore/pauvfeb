@@ -38,6 +38,8 @@
   "exclude": [
     "node_modules",
     "reference_imports",
-    "supabase/functions"
+    "supabase/functions",
+    "IMPORTS",
+    "IMPORTS2"
   ]
 }
