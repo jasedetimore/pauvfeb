@@ -5,3 +5,18 @@ export { TradingLeftSidebar } from "./TradingLeftSidebar";
 export { TradingMainContent } from "./TradingMainContent";
 export { TradingRightSidebar } from "./TradingRightSidebar";
 export { PriceChart } from "./PriceChart";
+export { Footer } from "./Footer";
+
+// About page sections
+export {
+  AboutHero,
+  AboutVideo,
+  AboutBenefits,
+  AboutProblem,
+  AboutFAQ,
+  AboutHowItWorks,
+  AboutStory,
+  AboutCTA,
+  AboutContactForm,
+  AboutFooter,
+} from "./about";

@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MainPageTemplate } from "@/components/templates";
-import { mockMarketSummary } from "@/lib/mock-data";
 import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
 import { IssuerListData } from "@/components/molecules/IssuerListView";
 import { TagItemData } from "@/components/atoms/TagItem";
+import { HomePageSkeleton, TagPageSkeleton } from "@/components/atoms";
 
 /**
  * Generate fallback mock market data for an issuer
@@ -60,14 +60,19 @@ export default function Home() {
   });
 
   // Fetch cached issuer stats (price, volume, etc.)
-  const { statsMap, isLoading: statsLoading } = useIssuerStats();
+  const { stats, statsMap, isLoading: statsLoading } = useIssuerStats();
 
-  // Transform DB issuers to include market data from cache (or fallback)
+  // Compute total market cap from cached stats (sum of total_usdp per issuer)
+  const totalMarketCap = useMemo(() => {
+    return stats.reduce((sum, s) => sum + (s.marketCap || 0), 0);
+  }, [stats]);
+
+  // Transform DB issuers to include market data from cache (or mark as not tradable)
   const issuersWithMarketData: IssuerData[] = useMemo(() => {
     return dbIssuers.map((issuer) => {
       const cachedStats = statsMap.get(issuer.ticker);
       
-      // Use cached stats if available, otherwise fallback to mock data
+      // Use cached stats if available — issuer is on issuer_trading
       if (cachedStats && cachedStats.currentPrice > 0) {
         return {
           ticker: issuer.ticker,
@@ -76,18 +81,19 @@ export default function Home() {
           currentPrice: cachedStats.currentPrice,
           priceChange: cachedStats.price24hChange ?? 0,
           primaryTag: issuer.primaryTag,
+          isTradable: true,
         };
       }
       
-      // Fallback to generated data if cache is empty
-      const fallbackData = generateFallbackMarketData(issuer.ticker);
+      // No cached stats — issuer is on issuer_details but not issuer_trading
       return {
         ticker: issuer.ticker,
         fullName: issuer.fullName,
         imageUrl: issuer.imageUrl,
-        currentPrice: fallbackData.currentPrice,
-        priceChange: fallbackData.priceChange,
+        currentPrice: 0,
+        priceChange: 0,
         primaryTag: issuer.primaryTag,
+        isTradable: false,
       };
     });
   }, [dbIssuers, statsMap]);
@@ -110,22 +116,23 @@ export default function Home() {
           volume24h: cachedStats.volume24h,
           holders: cachedStats.holders,
           marketCap: cachedStats.marketCap,
+          isTradable: true,
         };
       }
       
-      // Fallback to generated data if cache is empty
-      const fallbackData = generateFallbackMarketData(issuer.ticker);
+      // Not on issuer_trading yet
       return {
         ticker: issuer.ticker,
         fullName: issuer.fullName,
         primaryTag: issuer.primaryTag,
-        currentPrice: fallbackData.currentPrice,
-        price1hChange: fallbackData.price1hChange,
-        price24hChange: fallbackData.priceChange,
-        price7dChange: fallbackData.price7dChange,
-        volume24h: fallbackData.volume24h,
-        holders: fallbackData.holders,
-        marketCap: fallbackData.marketCap,
+        currentPrice: 0,
+        price1hChange: 0,
+        price24hChange: 0,
+        price7dChange: 0,
+        volume24h: 0,
+        holders: 0,
+        marketCap: 0,
+        isTradable: false,
       };
     });
   }, [dbIssuers, statsMap]);
@@ -166,15 +173,21 @@ export default function Home() {
     router.push(`/issuer/${issuer.ticker.toLowerCase()}`);
   };
 
-  // Handle tag selection
+  // Handle tag selection - navigate to /{tagname}
   const handleTagSelect = (tag: TagItemData) => {
-    setSelectedTagId((prev) => (prev === tag.id ? null : tag.id));
+    // If the same tag is already selected, deselect and go home
+    if (selectedTagId === tag.id) {
+      setSelectedTagId(null);
+      router.push("/");
+    } else {
+      setSelectedTagId(tag.id);
+      router.push(`/${tag.name.toLowerCase()}`);
+    }
   };
 
   // Handle search
   const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
-    // In a real app: navigate to search results
+    // TODO: navigate to search results
   };
 
   // Log error if any
@@ -188,13 +201,18 @@ export default function Home() {
 
   // Combined loading state - show loading while fetching issuers or stats
   const combinedLoading = isLoading || statsLoading;
+  const showSkeleton = tagsLoading || combinedLoading;
+
+  if (showSkeleton) {
+    return selectedTagId ? <TagPageSkeleton /> : <HomePageSkeleton />;
+  }
 
   return (
     <MainPageTemplate
       // Market summary data
-      issuerCount={mockMarketSummary.totalIssuers}
-      marketCap={mockMarketSummary.totalMarketCap}
-      marketCapChange={mockMarketSummary.marketCapChange}
+      issuerCount={dbIssuers.length}
+      marketCap={totalMarketCap}
+      marketCapChange={0}
       tags={tags}
       tagsLoading={tagsLoading}
       // Issuers for card view (by sort mode) - from Supabase with cached stats

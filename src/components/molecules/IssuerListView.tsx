@@ -14,6 +14,8 @@ export interface IssuerListData {
   volume24h?: number;
   holders?: number;
   marketCap?: number;
+  /** false when issuer has no issuer_trading row yet */
+  isTradable?: boolean;
 }
 
 type SortColumn = 
@@ -48,6 +50,12 @@ export function IssuerListView({
 }: IssuerListViewProps) {
   const [sortBy, setSortBy] = useState<SortColumn>("current_price");
   const [sortOrder, setSortOrder] = useState<SortOrder>("DESC");
+
+  // Helper function to capitalize first letter
+  const capitalizeFirstLetter = (str: string): string => {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
 
   // Handle column sort with three states: DESC -> ASC -> Default (price DESC)
   const handleColumnSort = (column: SortColumn) => {
@@ -191,88 +199,106 @@ export function IssuerListView({
             whiteSpace: "nowrap",
           }}
         >
-          {issuer.primaryTag || "—"}
+          {issuer.primaryTag ? capitalizeFirstLetter(issuer.primaryTag) : "—"}
         </div>
 
-        {/* Price */}
-        <div
-          style={{
-            color: colors.textPrimary,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          ${issuer.currentPrice.toFixed(2)}
-        </div>
+        {issuer.isTradable === false ? (
+          /* Non-tradable: single "Launching soon..." spanning all stat columns */
+          <div
+            style={{
+              gridColumn: "4 / -1",
+              color: colors.textPrimary,
+              fontSize: "12px",
+              fontStyle: "italic",
+              textAlign: "center",
+              lineHeight: "1",
+            }}
+          >
+            Launching soon...
+          </div>
+        ) : (
+          <>
+            {/* Price */}
+            <div
+              style={{
+                color: colors.textPrimary,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              ${issuer.currentPrice.toFixed(2)}
+            </div>
 
-        {/* 1h Change */}
-        <div
-          style={{
-            color: (issuer.price1hChange || 0) >= 0 ? colors.green : colors.red,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          {(issuer.price1hChange || 0) >= 0 ? "+" : ""}
-          {(issuer.price1hChange || 0).toFixed(1)}%
-        </div>
+            {/* 1h Change */}
+            <div
+              style={{
+                color: (issuer.price1hChange || 0) >= 0 ? colors.green : colors.red,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              {(issuer.price1hChange || 0) >= 0 ? "+" : ""}
+              {(issuer.price1hChange || 0).toFixed(1)}%
+            </div>
 
-        {/* 24h Change */}
-        <div
-          style={{
-            color: issuer.price24hChange >= 0 ? colors.green : colors.red,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          {issuer.price24hChange >= 0 ? "+" : ""}
-          {issuer.price24hChange.toFixed(1)}%
-        </div>
+            {/* 24h Change */}
+            <div
+              style={{
+                color: issuer.price24hChange >= 0 ? colors.green : colors.red,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              {issuer.price24hChange >= 0 ? "+" : ""}
+              {issuer.price24hChange.toFixed(1)}%
+            </div>
 
-        {/* 7d Change */}
-        <div
-          style={{
-            color: (issuer.price7dChange || 0) >= 0 ? colors.green : colors.red,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          {(issuer.price7dChange || 0) >= 0 ? "+" : ""}
-          {(issuer.price7dChange || 0).toFixed(1)}%
-        </div>
+            {/* 7d Change */}
+            <div
+              style={{
+                color: (issuer.price7dChange || 0) >= 0 ? colors.green : colors.red,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              {(issuer.price7dChange || 0) >= 0 ? "+" : ""}
+              {(issuer.price7dChange || 0).toFixed(1)}%
+            </div>
 
-        {/* Volume */}
-        <div
-          style={{
-            color: colors.textPrimary,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          {formatValue(issuer.volume24h || 0)}
-        </div>
+            {/* Volume */}
+            <div
+              style={{
+                color: colors.textPrimary,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              {formatValue(issuer.volume24h || 0)}
+            </div>
 
-        {/* Holders */}
-        <div
-          style={{
-            color: colors.textPrimary,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          {(issuer.holders || 0).toLocaleString()}
-        </div>
+            {/* Holders */}
+            <div
+              style={{
+                color: colors.textPrimary,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              {(issuer.holders || 0).toLocaleString()}
+            </div>
 
-        {/* Market Cap */}
-        <div
-          style={{
-            color: colors.textPrimary,
-            fontSize: "12px",
-            textAlign: "right",
-          }}
-        >
-          {formatValue(issuer.marketCap || 0)}
-        </div>
+            {/* Market Cap */}
+            <div
+              style={{
+                color: colors.textPrimary,
+                fontSize: "12px",
+                textAlign: "right",
+              }}
+            >
+              {formatValue(issuer.marketCap || 0)}
+            </div>
+          </>
+        )}
       </div>
     );
   };

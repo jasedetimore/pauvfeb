@@ -39,5 +39,6 @@
     "node_modules",
     "reference_imports",
     "supabase"
+    "supabase/functions"
   ]
 }

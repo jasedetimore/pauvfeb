@@ -1,37 +1,31 @@
 "use client";
 
 import React from "react";
-import { colors } from "@/lib/constants/colors";
+import Image from "next/image";
 
 interface LogoProps {
   height?: number;
-  color?: string;
   variant?: "default" | "dark";
 }
 
 /**
  * Logo component for Pauv branding
- * Displays the PAUV text logo with optional customization
+ * Displays the gold or dark PAUV logo image based on variant
  */
 export function Logo({ 
-  height = 30, 
-  color,
+  height = 30,
   variant = "default" 
 }: LogoProps) {
-  const logoColor = color || (variant === "dark" ? colors.textDark : colors.gold);
-  
+  const src = variant === "dark" ? "/pauv_logo_black.png" : "/pauv_logo_gold.png";
+
   return (
-    <div 
-      style={{ 
-        fontFamily: "monospace",
-        fontWeight: 700,
-        fontSize: `${height * 0.8}px`,
-        color: logoColor,
-        letterSpacing: "2px",
-        lineHeight: 1,
-      }}
-    >
-      PAUV
-    </div>
+    <Image
+      src={src}
+      alt="PAUV"
+      width={height * 3}
+      height={height}
+      style={{ width: "auto", height: `${height}px` }}
+      priority
+    />
   );
 }

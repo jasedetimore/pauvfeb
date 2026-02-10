@@ -29,6 +29,9 @@ export interface PriceChartProps {
   ticker: string;
   height?: number;
   initialRange?: string;
+  refreshTrigger?: number;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
 }
 
 const RANGE_OPTIONS = [
@@ -47,12 +50,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   ticker,
   height = 350,
   initialRange = "24h",
+  refreshTrigger,
+  isTradable = true,
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const lineSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const firstPriceRef = useRef<number | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const [chartData, setChartData] = useState<LineData<Time>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +88,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   // Fetch OHLC data from Supabase
   const fetchChartData = useCallback(
     async (range: string) => {
-      setLoading(true);
+      // Only show loading on initial fetch, not on silent refetches
+      if (!hasFetchedRef.current) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -142,6 +151,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
             setPriceChange({ change, percent });
           }
         }
+        hasFetchedRef.current = true;
       } catch (err) {
         console.error("[PriceChart] Error:", err);
         setError(err instanceof Error ? err.message : "Failed to load chart data");
@@ -185,12 +195,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     // Create chart
     const chart = createChart(chartContainerRef.current, {
       layout: {
-        background: { type: ColorType.Solid, color: colors.box },
+        background: { type: ColorType.Solid, color: "#000000" },
         textColor: colors.textSecondary,
       },
       grid: {
-        vertLines: { color: colors.boxOutline, style: LineStyle.Dotted },
-        horzLines: { color: colors.boxOutline, style: LineStyle.Dotted },
+        vertLines: { color: "#2a2a2a", style: LineStyle.Dotted },
+        horzLines: { color: "#2a2a2a", style: LineStyle.Dotted },
       },
       width: chartContainerRef.current.clientWidth,
       height: height,
@@ -208,23 +218,23 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       },
       crosshair: {
         vertLine: {
-          color: colors.gold,
+          color: "#555555",
           width: 1,
           style: LineStyle.Dashed,
-          labelBackgroundColor: colors.gold,
+          labelBackgroundColor: "#333333",
         },
         horzLine: {
-          color: colors.gold,
+          color: "#555555",
           width: 1,
           style: LineStyle.Dashed,
-          labelBackgroundColor: colors.gold,
+          labelBackgroundColor: "#333333",
         },
       },
     });
 
-    // Create line series
+    // Create line series (color will be updated dynamically based on price direction)
     const lineSeries = chart.addSeries(LineSeries, {
-      color: colors.gold,
+      color: colors.green,
       lineWidth: 2,
       priceFormat: {
         type: "price",
@@ -255,11 +265,19 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     };
   }, [height]);
 
-  // Update chart data when it changes
+  // Update chart data and line color when data changes
   useEffect(() => {
     if (lineSeriesRef.current && chartData.length > 0) {
       lineSeriesRef.current.setData(chartData);
       chartRef.current?.timeScale().fitContent();
+
+      // Set line color based on price direction
+      const firstVal = chartData[0].value;
+      const lastVal = chartData[chartData.length - 1].value;
+      const isUp = lastVal >= firstVal;
+      lineSeriesRef.current.applyOptions({
+        color: isUp ? colors.green : colors.red,
+      });
     }
   }, [chartData]);
 
@@ -267,6 +285,14 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   useEffect(() => {
     fetchChartData(selectedRange);
   }, [selectedRange, fetchChartData]);
+
+  // Refetch when refreshTrigger changes (after an order)
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchChartData(selectedRange);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   // Subscribe to Realtime updates to refresh chart when trades happen
   useEffect(() => {
@@ -289,7 +315,6 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           filter: `ticker=eq.${ticker.toUpperCase()}`,
         },
         (payload) => {
-          console.log(`[PriceChart] Realtime update for ${ticker}:`, payload);
           
           // Immediately update the chart with the new price point
           const newPrice = payload.new?.current_price;
@@ -319,35 +344,112 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           fetchChartData(selectedRange);
         }
       )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log(`[PriceChart] Subscribed to realtime updates for ${ticker}`);
-        }
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
     // Cleanup subscription on unmount
     return () => {
       if (channelRef.current) {
-        console.log(`[PriceChart] Unsubscribing from ${ticker}`);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
   }, [ticker, selectedRange, fetchChartData]);
 
-  // Handle range change
+  // Handle range change - show loading when switching ranges
   const handleRangeChange = (range: string) => {
+    hasFetchedRef.current = false;
     setSelectedRange(range);
   };
+
+  // If issuer is not tradable, show a big "Launching soon..." placeholder with email signup
+  const [launchEmail, setLaunchEmail] = React.useState("");
+  const [emailSubmitted, setEmailSubmitted] = React.useState(false);
+
+  const handleEmailSubmit = async () => {
+    if (!launchEmail || !launchEmail.includes("@")) return;
+    try {
+      const res = await fetch("/api/launch-notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: launchEmail, ticker }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("[PriceChart] Email signup failed:", data.error);
+        return;
+      }
+      setEmailSubmitted(true);
+    } catch (err) {
+      console.error("[PriceChart] Email signup error:", err);
+    }
+  };
+
+  if (!isTradable) {
+    return (
+      <div
+        className="rounded-[10px] overflow-hidden"
+        style={{ backgroundColor: "#000000" }}
+      >
+        <div
+          className="flex flex-col items-center justify-start gap-4 pt-16"
+          style={{ height }}
+        >
+          <span
+            className="font-mono text-2xl font-bold"
+            style={{ color: colors.textPrimary }}
+          >
+            Launching soon...
+          </span>
+
+          {emailSubmitted ? (
+            <p className="font-mono text-sm" style={{ color: colors.green }}>
+              You&apos;ll be notified when ${ticker.toUpperCase()} launches!
+            </p>
+          ) : (
+            <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4">
+              <p className="font-mono text-base" style={{ color: colors.textSecondary }}>
+                Get notified when trading goes live
+              </p>
+              <div className="flex w-full gap-2">
+                <input
+                  type="email"
+                  value={launchEmail}
+                  onChange={(e) => setLaunchEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
+                  placeholder="Your email"
+                  className="flex-1 min-w-0 px-3 py-2 rounded-md font-mono text-sm focus:outline-none"
+                  style={{
+                    backgroundColor: colors.background,
+                    border: `1px solid ${colors.boxOutline}`,
+                    color: colors.textPrimary,
+                  }}
+                />
+                <button
+                  onClick={handleEmailSubmit}
+                  className="px-4 py-2 rounded-md font-mono text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+                  style={{
+                    backgroundColor: colors.gold,
+                    cursor: "pointer",
+                    color: colors.textDark,
+                  }}
+                >
+                  Notify Me
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       className="rounded-[10px] overflow-hidden"
       style={{
-        backgroundColor: colors.box,
-        border: `1px solid ${colors.boxOutline}`,
+        backgroundColor: "#000000",
       }}
     >
       {/* Header with price info and range selector */}
@@ -355,18 +457,18 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         className="flex items-center justify-between p-4 border-b"
         style={{ borderColor: colors.boxOutline }}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 lg:hidden">
           {currentPrice !== null && (
-            <div>
+            <div className="flex flex-col">
               <span
-                className="font-mono text-lg font-bold"
+                className="font-mono text-[2.8rem] leading-tight font-bold"
                 style={{ color: colors.textPrimary }}
               >
                 ${currentPrice.toFixed(6)}
               </span>
               {priceChange && (
                 <span
-                  className="ml-2 font-mono text-sm"
+                  className="font-mono text-xl"
                   style={{
                     color: priceChange.percent >= 0 ? colors.green : colors.red,
                   }}
@@ -380,7 +482,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         </div>
 
         {/* Range Selector */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 ml-auto">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -389,7 +491,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               style={{
                 backgroundColor:
                   selectedRange === option.value
-                    ? colors.gold
+                    ? colors.green
                     : "transparent",
                 color:
                   selectedRange === option.value
@@ -397,7 +499,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                     : colors.textSecondary,
                 border: `1px solid ${
                   selectedRange === option.value
-                    ? colors.gold
+                    ? colors.green
                     : colors.boxOutline
                 }`,
               }}
@@ -409,26 +511,20 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       </div>
 
       {/* Chart Area */}
-      <div className="relative" style={{ height }}>
+      <div className="relative" style={{ height, maxWidth: "100%" }}>
         {loading && (
           <div
-            className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: `${colors.box}cc` }}
+            className="absolute inset-0 z-10"
+            style={{ backgroundColor: "#000000" }}
           >
-            <div className="flex flex-col items-center gap-2">
-              <div
-                className="w-8 h-8 border-2 rounded-full animate-spin"
-                style={{
-                  borderColor: colors.boxOutline,
-                  borderTopColor: colors.gold,
-                }}
-              />
-              <span
-                className="font-mono text-sm"
-                style={{ color: colors.textSecondary }}
-              >
-                Loading chart...
-              </span>
+            {/* Subtle shimmer lines hinting at chart grid */}
+            <div className="absolute inset-0 flex flex-col justify-between py-6 px-4 opacity-20 animate-pulse">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  style={{ height: "1px", backgroundColor: colors.boxOutline }}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -436,7 +532,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {error && (
           <div
             className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: colors.box }}
+            style={{ backgroundColor: "#000000" }}
           >
             <div className="text-center">
               <span
@@ -449,7 +545,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 onClick={() => fetchChartData(selectedRange)}
                 className="mt-2 px-4 py-1 rounded font-mono text-xs"
                 style={{
-                  backgroundColor: colors.gold,
+                  backgroundColor: colors.green,
                   color: colors.textDark,
                 }}
               >
@@ -462,7 +558,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         {!loading && !error && chartData.length === 0 && (
           <div
             className="absolute inset-0 flex items-center justify-center z-10"
-            style={{ backgroundColor: colors.box }}
+            style={{ backgroundColor: "#000000" }}
           >
             <div className="text-center">
               <span
@@ -481,7 +577,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           </div>
         )}
 
-        <div ref={chartContainerRef} style={{ height: "100%" }} />
+        <div ref={chartContainerRef} style={{ height: "100%", width: "100%" }} />
       </div>
     </div>
   );

@@ -19,6 +19,12 @@ interface TagItemProps {
   onClick?: () => void;
 }
 
+// Helper function to capitalize first letter
+const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 /**
  * TagItem - A single tag in the sidebar navigation
  * Shows tag name, issuer count, and market cap
@@ -51,8 +57,8 @@ export function TagItem({
       onClick={onClick}
       style={{
         backgroundColor: isSelected || isHovered ? colors.boxHover : "transparent",
-        border: isSelected ? `1px solid ${colors.gold}` : "none",
-        borderBottom: !isLast && !isSelected ? `1px solid ${colors.border}` : (isSelected ? `1px solid ${colors.gold}` : "none"),
+        border: isSelected ? `1px solid ${colors.textPrimary}` : "none",
+        borderBottom: !isLast && !isSelected ? `1px solid ${colors.border}` : (isSelected ? `1px solid ${colors.textPrimary}` : "none"),
         borderRadius: isSelected ? "5px" : "0",
         padding: "8px 11px",
         cursor: "pointer",
@@ -70,7 +76,7 @@ export function TagItem({
           marginBottom: "6px",
         }}
       >
-        {tag.name}
+        {capitalizeFirstLetter(tag.name)}
       </div>
 
       {/* Bottom row: Issuers on left, Mkt Cap on right */}

@@ -5,6 +5,11 @@ import { createClient } from "@supabase/supabase-js";
  * GET /api/issuers/[ticker]/metrics
  * Fetches real-time trading metrics for an issuer
  * Includes: 24h Volume, Circulating Supply, Holders, Market Cap, 1h/24h/7d price changes
+ *
+ * SECURITY NOTE: Uses service_role key server-side because the portfolio
+ * table's RLS restricts reads to authenticated users' own rows, and we need
+ * an aggregate holder count across all users. The key never leaves the server.
+ * Only aggregate/public trading metrics are returned — no user-specific data.
  */
 export async function GET(
   request: NextRequest,
@@ -14,11 +19,19 @@ export async function GET(
     const { ticker } = await params;
     const upperTicker = ticker.toUpperCase();
 
+    // Validate required env vars
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error("[Metrics API] Missing env vars: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
     // Create Supabase client with service role for full access
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Fetch all metrics in parallel
     const [
@@ -32,7 +45,7 @@ export async function GET(
       // Get issuer trading data (current price, supply)
       supabase
         .from("issuer_trading")
-        .select("current_price, current_supply, total_usdp")
+        .select("current_price, current_supply, total_usdp, price_step")
         .eq("ticker", upperTicker)
         .single(),
 
@@ -70,7 +83,8 @@ export async function GET(
       }),
     ]);
 
-    // Handle errors
+    // Handle missing trading data — issuer exists in issuer_details but
+    // has not been added to issuer_trading yet ("Launching soon" state).
     if (tradingData.error) {
       // If code is PGRST116, it means no rows found (single() returned nothing)
       // We should return default/empty metrics instead of erroring
@@ -92,6 +106,10 @@ export async function GET(
         });
       }
 
+      // PGRST116 = "no rows returned" from .single()
+      if (tradingData.error.code === "PGRST116") {
+        return NextResponse.json({ metrics: null, tradable: false });
+      }
       console.error("[Metrics API] Trading data error:", tradingData.error);
       return NextResponse.json(
         { error: "Failed to fetch trading data" },
@@ -105,10 +123,11 @@ export async function GET(
       0
     ) || 0;
 
-    // Calculate market cap
+    // Market cap = total USDP invested (from issuer_trading)
     const currentPrice = parseFloat(tradingData.data?.current_price || "0");
     const circulatingSupply = parseFloat(tradingData.data?.current_supply || "0");
-    const marketCap = currentPrice * circulatingSupply;
+    const totalUsdp = parseFloat(tradingData.data?.total_usdp || "0");
+    const marketCap = totalUsdp;
 
     // Extract price changes
     const extractPriceChange = (result: { data: unknown; error: unknown }) => {
@@ -118,6 +137,8 @@ export async function GET(
         ? parseFloat(data.price_change_percent)
         : null;
     };
+
+    const priceStep = parseFloat(tradingData.data?.price_step || "0.01");
 
     const metrics = {
       ticker: upperTicker,
@@ -129,11 +150,12 @@ export async function GET(
       price1hChange: extractPriceChange(priceChange1h),
       price24hChange: extractPriceChange(priceChange24h),
       price7dChange: extractPriceChange(priceChange7d),
-      totalUsdp: parseFloat(tradingData.data?.total_usdp || "0"),
+      totalUsdp,
+      priceStep,
       updatedAt: new Date().toISOString(),
     };
 
-    return NextResponse.json({ metrics });
+    return NextResponse.json({ metrics, tradable: true });
   } catch (error) {
     console.error("[Metrics API] Unexpected error:", error);
     return NextResponse.json(

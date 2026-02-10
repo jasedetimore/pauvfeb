@@ -2,9 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
-import { AuthHeader } from "@/components/molecules/AuthHeader";
+import { createClient } from "@/lib/supabase/client";
 
 interface AccountLayoutProps {
   children: React.ReactNode;
@@ -43,18 +43,24 @@ function SidebarIcon({ icon }: { icon: string }) {
 
 export default function AccountLayout({ children }: AccountLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-3.5rem)] flex flex-col"
       style={{ backgroundColor: colors.backgroundDark }}
     >
-      <AuthHeader />
-      
       <div className="flex flex-1">
         {/* Sidebar */}
         <aside
-          className="w-64 shrink-0 flex flex-col p-6"
+          className="w-64 shrink-0 flex flex-col p-6 sticky top-12 lg:top-14 h-[calc(100vh-3rem)] lg:h-[calc(100vh-3.5rem)]"
           style={{
             backgroundColor: colors.background,
           }}
@@ -66,9 +72,9 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-md transition-colors"
                   style={{
-                    backgroundColor: isActive ? colors.boxLight : "transparent",
+                    backgroundColor: isActive ? colors.box : "transparent",
                     color: colors.textPrimary,
                   }}
                 >
@@ -78,6 +84,20 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
               );
             })}
           </nav>
+
+          <div className="mt-auto pt-6">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="w-full px-4 py-3 rounded-lg font-semibold transition-colors hover:opacity-90"
+              style={{
+                backgroundColor: colors.red,
+                color: colors.textPrimary,
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
         </aside>
 
         {/* Divider */}

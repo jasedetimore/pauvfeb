@@ -2,14 +2,8 @@
 
 import React from "react";
 import { colors } from "@/lib/constants/colors";
-import { PriceDisplay, SocialMediaLinks } from "@/components/atoms";
-import { TradingSummarySection, HoldersSection } from "@/components/molecules";
-
-interface Holder {
-  username: string;
-  quantity: number;
-  supplyPercentage: number;
-}
+import { PriceDisplay } from "@/components/atoms";
+import { TradingSummarySection, RecommendedIssuers } from "@/components/molecules";
 
 interface TradingData {
   volume24h?: number | null;
@@ -25,30 +19,25 @@ interface TradingLeftSidebarProps {
   ticker: string;
   price?: number | null;
   tradingData?: TradingData | null;
-  holders: Holder[];
-  twitterUrl?: string | null;
-  instagramUrl?: string | null;
-  tiktokUrl?: string | null;
   isLoading?: boolean;
+  /** When false the issuer has no issuer_trading row yet */
+  isTradable?: boolean;
   onRefreshMetrics?: () => void;
-  onRefreshHolders?: () => void;
+  issuerTag?: string | null;
 }
 
 /**
  * TradingLeftSidebar - Left sidebar for the trading page
- * Contains price display, social links, trading summary, and holders
+ * Contains price display, trading summary, and recommended issuers
  */
 export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
   ticker,
   price,
   tradingData,
-  holders,
-  twitterUrl,
-  instagramUrl,
-  tiktokUrl,
   isLoading = false,
+  isTradable = true,
   onRefreshMetrics,
-  onRefreshHolders,
+  issuerTag,
 }) => {
   return (
     <aside
@@ -61,27 +50,22 @@ export const TradingLeftSidebar: React.FC<TradingLeftSidebarProps> = ({
         price={price}
         loading={isLoading}
         showBackButton={true}
-      />
-
-      {/* Social Media Links */}
-      <SocialMediaLinks
-        twitterUrl={twitterUrl}
-        instagramUrl={instagramUrl}
-        tiktokUrl={tiktokUrl}
+        isTradable={isTradable}
       />
 
       {/* Trading Summary */}
       <TradingSummarySection
         data={tradingData}
         isLoading={isLoading}
+        isTradable={isTradable}
         onRefresh={onRefreshMetrics}
       />
 
-      {/* Top Holders */}
-      <HoldersSection
-        holders={holders}
-        isLoading={isLoading}
-        onRefresh={onRefreshHolders}
+      {/* Recommended Issuers */}
+      <RecommendedIssuers
+        currentTicker={ticker}
+        currentTag={issuerTag}
+        forceSkeleton={isLoading}
       />
     </aside>
   );

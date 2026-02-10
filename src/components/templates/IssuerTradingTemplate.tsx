@@ -1,46 +1,37 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { colors } from "@/lib/constants/colors";
-import { FullPageSkeleton } from "@/components/atoms";
-import { AuthHeader } from "@/components/molecules";
+import {
+  IssuerHeaderSkeleton,
+  ChartSkeleton,
+  PriceDisplay,
+} from "@/components/atoms";
+
 import {
   TradingLeftSidebar,
   TradingMainContent,
   TradingRightSidebar,
   PriceChart,
 } from "@/components/organisms";
+import {
+  TradingFormSimple,
+  TradingSummarySection,
+  UserHoldings,
+  RecommendedIssuers,
+  HoldersSection,
+  IssuerHeader,
+} from "@/components/molecules";
 import { createBrowserClient } from "@supabase/ssr";
 import { IssuerDetailsDB } from "@/lib/types/issuer";
-import { useIssuerMetrics } from "@/lib/hooks";
+import { IssuerLinksDB } from "@/lib/types/issuer-links";
+import { useIssuerMetrics, useTopHolders } from "@/lib/hooks";
 
 interface IssuerTradingTemplateProps {
   ticker: string;
 }
 
-/**
- * Generate mock holders data (until we have real holder fetching)
- */
-function generateMockHolders(count: number = 10) {
-  const usernames = [
-    "whale_trader",
-    "crypto_king",
-    "diamond_hands",
-    "moon_shot",
-    "hodl_master",
-    "early_adopter",
-    "degen_investor",
-    "alpha_seeker",
-    "market_maker",
-    "smart_money",
-  ];
 
-  return usernames.slice(0, count).map((username, i) => ({
-    username,
-    quantity: Math.floor(Math.random() * 100000) / (i + 1),
-    supplyPercentage: Math.random() * 15 / (i + 1),
-  }));
-}
 
 /**
  * IssuerTradingTemplate - Full page template for issuer trading
@@ -50,11 +41,65 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   ticker,
 }) => {
   const [issuerData, setIssuerData] = useState<IssuerDetailsDB | null>(null);
+  const [issuerLinks, setIssuerLinks] = useState<IssuerLinksDB | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Fetch real metrics from the API
-  const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useIssuerMetrics(ticker);
+  const { metrics, isLoading: metricsLoading, isTradable, refetch: refetchMetrics } = useIssuerMetrics(ticker);
+  
+  // Fetch real top holders data
+  const { holders, isLoading: holdersLoading, refetch: refetchHolders } = useTopHolders(ticker, 10);
+
+  // Chart refresh trigger (incremented after each order)
+  const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
+
+  // Ref to hold transaction history refetch function
+  const transactionRefetchRef = useRef<(() => Promise<void>) | null>(null);
+
+  // Called when a transaction refetch function is available from UserHoldings
+  const handleTransactionRefetchRef = useCallback((refetch: () => Promise<void>) => {
+    transactionRefetchRef.current = refetch;
+  }, []);
+
+  // Called after an order is successfully placed — refreshes all data silently
+  const handleOrderComplete = useCallback(() => {
+    refetchMetrics();
+    refetchHolders();
+    setChartRefreshTrigger((prev) => prev + 1);
+    if (transactionRefetchRef.current) {
+      transactionRefetchRef.current();
+    }
+  }, [refetchMetrics, refetchHolders]);
+
+  // Track whether the right sidebar's children (UserHoldings, RecommendedIssuers)
+  // have finished their initial fetch so we can gate the whole page on it.
+  const [rightSidebarReady, setRightSidebarReady] = useState(false);
+  const handleRightSidebarReady = useCallback(() => {
+    setRightSidebarReady(true);
+  }, []);
+
+  // Mobile-specific: track UserHoldings loading for coordinated skeletons
+  const [mobileHoldingsLoading, setMobileHoldingsLoading] = useState(true);
+  const handleMobileHoldingsLoading = useCallback((loading: boolean) => {
+    setMobileHoldingsLoading(loading);
+  }, []);
+  // Ref to hold mobile transaction history refetch function
+  const mobileTransactionRefetchRef = useRef<(() => Promise<void>) | null>(null);
+  const handleMobileTransactionRefetchRef = useCallback((refetch: () => Promise<void>) => {
+    mobileTransactionRefetchRef.current = refetch;
+  }, []);
+  // Mobile order complete handler
+  const handleMobileOrderComplete = useCallback(() => {
+    refetchMetrics();
+    refetchHolders();
+    setChartRefreshTrigger((prev) => prev + 1);
+    if (mobileTransactionRefetchRef.current) {
+      mobileTransactionRefetchRef.current();
+    }
+  }, [refetchMetrics, refetchHolders]);
+
+
 
   // Fetch issuer data from Supabase
   useEffect(() => {
@@ -106,6 +151,17 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         }
 
         setIssuerData(data);
+
+        // Fetch social links (non-blocking, optional data)
+        const { data: linksData } = await supabase
+          .from("issuer_links")
+          .select("*")
+          .eq("ticker", ticker.toUpperCase())
+          .single();
+
+        if (!isCancelled && linksData) {
+          setIssuerLinks(linksData);
+        }
       } catch (err) {
         if (!isCancelled) {
           console.error("[IssuerTradingTemplate] Error fetching issuer:", err);
@@ -130,56 +186,31 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     };
   }, [ticker]);
 
-  // Generate mock holders (temporary until we have real holder data)
-  const holders = useMemo(() => {
-    return generateMockHolders(10);
-  }, []);
 
-  // Derive buy/sell data from metrics
-  const buySellData = useMemo(() => {
-    // Generate mock buy/sell ratios for now
-    const buyPercentage = 55;
-    const sellPercentage = 45;
-    const volume = metrics?.volume24h || 0;
-    return {
-      buyPercentage,
-      sellPercentage,
-      buyVolume: Math.floor(volume * 0.55),
-      sellVolume: Math.floor(volume * 0.45),
-      buyOrders: Math.floor(Math.random() * 500),
-      sellOrders: Math.floor(Math.random() * 400),
-    };
-  }, [metrics]);
 
   // Handler for buy action
   const handleBuy = (amount: number) => {
-    console.log(`Buying ${amount} of ${ticker}`);
     // Order is placed via the trading form component
     // Realtime subscription will auto-update the UI when processed
   };
 
   // Handler for sell action
   const handleSell = (amount: number) => {
-    console.log(`Selling ${amount} of ${ticker}`);
     // Order is placed via the trading form component
     // Realtime subscription will auto-update the UI when processed
   };
 
-  // Show loading skeleton
-  if (isLoading) {
-    return (
-      <>
-        <AuthHeader />
-        <FullPageSkeleton />
-      </>
-    );
-  }
+  // Gate on template-level data being ready AND the right sidebar's children
+  // having completed their initial fetch, so everything transitions together.
+  // When the issuer is not tradable, we skip waiting for metrics/holders.
+  const initialLoading = isTradable
+    ? (isLoading || metricsLoading || holdersLoading || !rightSidebarReady)
+    : (isLoading || !rightSidebarReady);
 
-  // Show error state
-  if (error || !issuerData) {
+  // Show error state (only after issuer fetch itself has completed)
+  if (!isLoading && (error || !issuerData)) {
     return (
       <>
-        <AuthHeader />
         <div
           className="min-h-screen flex items-center justify-center"
           style={{ backgroundColor: colors.background }}
@@ -231,15 +262,24 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     );
   }
 
-  // Prepare issuer data for components
-  const issuer = {
-    ticker: issuerData.ticker,
-    name: issuerData.name,
-    imageUrl: issuerData.photo,
-    headline: issuerData.headline,
-    bio: issuerData.bio,
-    tags: issuerData.tag ? [issuerData.tag] : [],
-  };
+  // Prepare issuer data for components (safe defaults when still loading)
+  const issuer = issuerData
+    ? {
+        ticker: issuerData.ticker,
+        name: issuerData.name,
+        imageUrl: issuerData.photo,
+        headline: issuerData.headline,
+        bio: issuerData.bio,
+        tags: issuerData.tag ? [issuerData.tag] : [],
+      }
+    : {
+        ticker,
+        name: "",
+        imageUrl: null as string | null,
+        headline: null as string | null,
+        bio: null as string | null,
+        tags: [] as string[],
+      };
 
   // Use real metrics data from the API
   const tradingData = {
@@ -254,55 +294,148 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
 
   // Get current price from metrics
   const currentPrice = metrics?.currentPrice ?? 0;
+  const priceStep = metrics?.priceStep ?? 0.01;
 
   return (
     <>
-      <AuthHeader />
       <div
         className="min-h-screen pt-4 pb-16"
         style={{ backgroundColor: colors.background }}
       >
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Three column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Sidebar - Price, Summary, Holders */}
-            <div className="lg:col-span-3 order-2 lg:order-1">
-              <TradingLeftSidebar
-                ticker={ticker}
-                price={currentPrice}
-                tradingData={tradingData}
-                holders={holders}
-                twitterUrl={null}
-                instagramUrl={null}
-                tiktokUrl={null}
-                isLoading={metricsLoading}
-                onRefreshMetrics={refetchMetrics}
-                onRefreshHolders={() => console.log("Refresh holders")}
-              />
-            </div>
+        {/* ── Mobile Layout ── */}
+        <div className="lg:hidden px-4">
+          {/* 1. Big heading (name, bio, links) — price is shown on the chart */}
+          {initialLoading ? (
+            <IssuerHeaderSkeleton />
+          ) : (
+            <IssuerHeader
+              ticker={issuer.ticker}
+              name={issuer.name}
+              imageUrl={issuer.imageUrl}
+              headline={issuer.headline}
+              bio={issuer.bio}
+              tags={issuer.tags}
+              issuerLinks={issuerLinks}
+              isLoading={false}
+            />
+          )}
 
-            {/* Main Content - Header, Chart, Tags */}
-            <div className="lg:col-span-6 order-1 lg:order-2">
+          {/* 3. Chart — tight gap from social links */}
+          <div className="mt-1">
+            {initialLoading ? (
+              <ChartSkeleton height={420} />
+            ) : (
+              <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+            )}
+          </div>
+
+          {/* 4. Place order */}
+          <div className="mt-4">
+            <TradingFormSimple
+              ticker={ticker}
+              price={currentPrice}
+              priceStep={priceStep}
+              onBuy={handleBuy}
+              onSell={handleSell}
+              onOrderComplete={handleMobileOrderComplete}
+              isLoading={initialLoading || mobileHoldingsLoading}
+              disabled={!currentPrice || !isTradable}
+              isTradable={isTradable}
+              hideTitle={true}
+            />
+          </div>
+
+          {/* 5. Trading summary */}
+          <div className="mt-4">
+            <TradingSummarySection
+              data={initialLoading ? null : tradingData}
+              isLoading={initialLoading}
+              isTradable={isTradable}
+              onRefresh={refetchMetrics}
+            />
+          </div>
+
+          {/* 6. Transaction history */}
+          <div className="mt-4">
+            <UserHoldings
+              ticker={ticker}
+              onRefetchRef={handleMobileTransactionRefetchRef}
+              forceSkeleton={initialLoading || mobileHoldingsLoading}
+              onLoadingChange={handleMobileHoldingsLoading}
+            />
+          </div>
+
+          {/* 7. Recommended */}
+          <div className="mt-4">
+            <RecommendedIssuers
+              currentTicker={ticker}
+              currentTag={issuerData?.tag}
+              forceSkeleton={initialLoading}
+            />
+          </div>
+
+          {/* 8. Top holders */}
+          <div className="mt-4">
+            <HoldersSection
+              holders={initialLoading ? [] : holders}
+              isLoading={initialLoading}
+              onRefresh={refetchHolders}
+            />
+          </div>
+        </div>
+
+        {/* ── Desktop Layout ── 3-column with sidebars */}
+        <div className="hidden lg:flex gap-6 px-4">
+          {/* Left Sidebar - Pinned to left */}
+          <aside className="w-80 flex-shrink-0">
+            <TradingLeftSidebar
+              ticker={ticker}
+              price={initialLoading ? null : currentPrice}
+              tradingData={initialLoading ? null : tradingData}
+              isLoading={initialLoading}
+              isTradable={isTradable}
+              onRefreshMetrics={refetchMetrics}
+              issuerTag={issuerData?.tag}
+            />
+          </aside>
+
+          {/* Main Content - Center, flexible width */}
+          <div className="flex-1 min-w-0">
+            {initialLoading ? (
+              <>
+                <IssuerHeaderSkeleton />
+                <div className="mt-4">
+                  <ChartSkeleton height={420} />
+                </div>
+              </>
+            ) : (
               <TradingMainContent
                 issuer={issuer}
-                buySellData={buySellData}
+                issuerLinks={issuerLinks}
                 isLoading={false}
               >
-                <PriceChart ticker={ticker} height={350} initialRange="24h" />
+                <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
               </TradingMainContent>
-            </div>
-
-            {/* Right Sidebar - Trading Form */}
-            <div className="lg:col-span-3 order-3">
-              <TradingRightSidebar
-                ticker={ticker}
-                price={currentPrice}
-                isLoading={metricsLoading}
-                onBuy={handleBuy}
-                onSell={handleSell}
-              />
-            </div>
+            )}
           </div>
+
+          {/* Right Sidebar - Pinned to right */}
+          <aside className="w-80 flex-shrink-0">
+            <TradingRightSidebar
+              ticker={ticker}
+              price={currentPrice}
+              priceStep={priceStep}
+              isLoading={initialLoading}
+              isTradable={isTradable}
+              onBuy={handleBuy}
+              onSell={handleSell}
+              onOrderComplete={handleOrderComplete}
+              onTransactionRefetchRef={handleTransactionRefetchRef}
+              holders={initialLoading ? [] : holders}
+              onRefreshHolders={refetchHolders}
+              onReady={handleRightSidebarReady}
+            />
+          </aside>
         </div>
       </div>
     </>

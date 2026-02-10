@@ -15,9 +15,17 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
-    
-    // For initial setup, we check if any admin exists
-    // If no admin exists, allow the first user to become admin
+
+    // Always require admin authentication — no bootstrap bypass.
+    // Initial admin is seeded via migration (20260204223000_set_initial_admin.sql).
+    const admin = await verifyAdminFromJWT(authHeader).catch(() => {
+      throw new AdminOperationError(
+        "Admin authentication required",
+        403,
+        "FORBIDDEN"
+      );
+    });
+
     const adminClient = createAdminClient();
     
     const body = await request.json();
@@ -68,25 +76,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if there are any existing admins
-    const { data: { users: allUsers } } = await adminClient.auth.admin.listUsers();
-    const existingAdmins = allUsers?.filter(
-      (u) => u.app_metadata?.admin === true
-    ) || [];
-
-    // If admins exist, verify the requester is an admin
-    if (existingAdmins.length > 0) {
-      try {
-        await verifyAdminFromJWT(authHeader);
-      } catch {
-        throw new AdminOperationError(
-          "Only existing admins can modify admin status",
-          403,
-          "FORBIDDEN"
-        );
-      }
-    }
-
     // Get the current user data
     const { data: { user: targetUser }, error: getUserError } = 
       await adminClient.auth.admin.getUserById(targetUserId);
@@ -117,9 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the action
-    const requesterId = existingAdmins.length > 0 
-      ? (await verifyAdminFromJWT(authHeader)).userId 
-      : targetUserId;
+    const requesterId = admin.userId;
 
     await logAuditEntry({
       adminId: requesterId,
@@ -130,7 +117,6 @@ export async function POST(request: NextRequest) {
       newValue: { admin: make_admin },
       metadata: { 
         targetEmail: targetUser.email,
-        isInitialSetup: existingAdmins.length === 0,
       },
       ipAddress: getClientIP(request),
       userAgent: request.headers.get("user-agent"),

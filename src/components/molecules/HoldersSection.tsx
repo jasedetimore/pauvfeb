@@ -2,6 +2,7 @@
 
 import React from "react";
 import { colors } from "@/lib/constants/colors";
+import { HoldersSkeleton } from "@/components/atoms";
 
 interface Holder {
   username: string;
@@ -12,7 +13,7 @@ interface Holder {
 interface HoldersSectionProps {
   holders: Holder[];
   isLoading?: boolean;
-  onRefresh?: () => void;
+  onRefresh?: () => Promise<void> | void;
 }
 
 /**
@@ -24,6 +25,8 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
   isLoading = false,
   onRefresh,
 }) => {
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
   // Format numbers for display
   const formatQuantity = (qty: number): string => {
     if (qty >= 1000000) return `${(qty / 1000000).toFixed(2)}M`;
@@ -31,28 +34,20 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
     return qty.toFixed(2);
   };
 
-  const HolderSkeleton = () => (
-    <tr className="animate-pulse">
-      <td className="px-3 py-2">
-        <div
-          className="h-3 rounded w-20"
-          style={{ backgroundColor: colors.boxLight }}
-        />
-      </td>
-      <td className="px-3 py-2">
-        <div
-          className="h-3 rounded w-14"
-          style={{ backgroundColor: colors.boxLight }}
-        />
-      </td>
-      <td className="px-3 py-2">
-        <div
-          className="h-3 rounded w-12"
-          style={{ backgroundColor: colors.boxLight }}
-        />
-      </td>
-    </tr>
-  );
+  const handleRefresh = async () => {
+    if (!onRefresh) return;
+    setIsRefreshing(true);
+    await Promise.all([
+      Promise.resolve(onRefresh()),
+      new Promise((r) => setTimeout(r, 600)),
+    ]);
+    setIsRefreshing(false);
+  };
+
+  // Show full section skeleton when loading
+  if (isLoading || isRefreshing) {
+    return <HoldersSkeleton />;
+  }
 
   return (
     <div className="space-y-3">
@@ -66,8 +61,9 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
         </h2>
         {onRefresh && (
           <button
-            onClick={onRefresh}
-            className="text-xs px-3 py-1 rounded transition-colors"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="text-xs px-3 py-1 rounded transition-colors hover:opacity-80 disabled:opacity-50"
             style={{
               backgroundColor: colors.background,
               border: `1px solid ${colors.boxOutline}`,
@@ -87,9 +83,9 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
           border: `1px solid ${colors.boxOutline}`,
         }}
       >
-        <div className="overflow-x-auto overflow-y-auto max-h-72">
-          <table className="min-w-full text-xs font-mono">
-            <thead style={{ color: colors.textSecondary }}>
+        <div>
+          <table className="min-w-full text-xs font-mono table-fixed">
+            <thead className="text-sm" style={{ color: colors.textPrimary }}>
               <tr>
                 <th className="text-left px-3 py-2 font-medium">User</th>
                 <th className="text-right px-3 py-2 font-medium">Quantity</th>
@@ -97,12 +93,7 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                // Show skeletons when loading
-                Array.from({ length: 5 }).map((_, i) => (
-                  <HolderSkeleton key={i} />
-                ))
-              ) : holders.length === 0 ? (
+              {holders.length === 0 ? (
                 // No holders message
                 <tr>
                   <td
@@ -115,7 +106,7 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
                 </tr>
               ) : (
                 // Render holders
-                holders.map((holder, i) => (
+                holders.slice(0, 10).map((holder, i) => (
                   <tr
                     key={i}
                     className="transition-colors"
@@ -124,7 +115,7 @@ export const HoldersSection: React.FC<HoldersSectionProps> = ({
                     }}
                   >
                     <td
-                      className="px-3 py-2 truncate max-w-[140px]"
+                      className="px-2 py-2 truncate max-w-[110px]"
                       style={{ color: colors.textPrimary }}
                     >
                       {holder.username}

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+html {
+  /* Scale everything down ~10% by reducing the base rem unit.
+     Default browser font-size is 16px; 90% of that = 14.4px.
+     All rem-based sizing (Tailwind spacing, typography, etc.) shrinks proportionally. */
+  font-size: 90%;
+  /* Always reserve space for the scrollbar so content doesn't jump on navigation */
+  overflow-y: scroll;
+}
+
 :root {
   /* Pauv Brand Colors */
   --background: #000000;

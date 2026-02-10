@@ -2,9 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "../atoms/Logo";
+import { SearchDropdown } from "./SearchDropdown";
 import { colors } from "@/lib/constants/colors";
 import { SoapPaymentButton } from "@/components/payments/SoapPaymentButton";
+import { CachedIssuerStats } from "@/lib/hooks/useIssuerStats";
 
 interface NavLink {
   href: string;
@@ -17,6 +20,7 @@ interface HeaderProps {
   isAuthenticated?: boolean;
   username?: string;
   onSearch?: (query: string) => void;
+  statsMap?: Map<string, CachedIssuerStats>;
 }
 
 /**
@@ -25,24 +29,27 @@ interface HeaderProps {
 export function Header({
   navigationLinks = [
     { href: "/", label: "Issuers", active: true },
-    { href: "/indexes", label: "Indexes" },
+    { href: "/list-yourself", label: "List Yourself" },
+    { href: "/about", label: "About" },
   ],
   isAuthenticated = false,
   username,
   onSearch,
+  statsMap,
 }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim() && onSearch) {
-      onSearch(searchQuery.trim());
+  // Determine active link based on current pathname
+  const isLinkActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
     }
+    return pathname?.startsWith(href) || false;
   };
 
   return (
-    <header role="banner" className="relative z-50">
+    <header role="banner" className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: colors.background, borderBottom: `1px solid ${colors.boxOutline}` }}>
       <div className="relative flex items-center justify-between px-4 sm:px-6 lg:px-9 py-2 lg:py-3">
         {/* Left Section: Logo and Navigation */}
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -54,10 +61,7 @@ export function Header({
           </div>
 
           {/* Desktop Navigation */}
-          <div
-            className="hidden lg:flex p-1 rounded-xl gap-2 xl:gap-5 shrink-0"
-            style={{ backgroundColor: colors.navbarBg }}
-          >
+          <div className="hidden lg:flex gap-2 xl:gap-5 shrink-0">
             <nav className="flex items-center text-sm gap-2 xl:gap-5 text-center">
               {navigationLinks.map((link) => (
                 <Link
@@ -75,6 +79,22 @@ export function Header({
                   {link.label}
                 </Link>
               ))}
+              {navigationLinks.map((link) => {
+                const isActive = isLinkActive(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    className="px-4 py-2 font-medium whitespace-nowrap transition-colors"
+                    href={link.href}
+                    style={{
+                      backgroundColor: isActive ? colors.box : "transparent",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
         </div>
@@ -82,35 +102,8 @@ export function Header({
         {/* Right Section: Search and Auth */}
         <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-2 sm:ml-4">
           {/* Search Bar - Desktop */}
-          <div className="hidden lg:block relative">
-            <form onSubmit={handleSearchSubmit} className="flex items-center relative">
-              <svg
-                className="absolute left-3 w-4 h-4"
-                style={{ color: colors.textMuted }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search tickers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-3 py-2 rounded-lg text-sm border w-[280px] focus:outline-none focus:ring-1"
-                style={{
-                  background: colors.navbarBg,
-                  color: colors.textPrimary,
-                  borderColor: colors.border,
-                }}
-              />
-            </form>
+          <div className="hidden lg:block">
+            <SearchDropdown statsMap={statsMap} />
           </div>
 
           {/* Auth Buttons */}
@@ -213,6 +206,22 @@ export function Header({
             <div className="p-4 border-t" style={{ borderColor: colors.boxOutline }}>
               <SoapPaymentButton />
             </div>
+            {navigationLinks.map((link) => {
+              const isActive = isLinkActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  className="block px-4 py-3 text-base font-medium border-b last:border-b-0"
+                  style={{
+                    borderColor: colors.boxOutline,
+                    backgroundColor: isActive ? colors.box : "transparent",
+                  }}
+                  href={link.href}
+              >
+                {link.label}
+              </Link>
+              );
+            })}
           </nav>
         </div>
       )}

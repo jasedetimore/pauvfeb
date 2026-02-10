@@ -11,6 +11,8 @@ export interface IssuerData {
   currentPrice: number;
   priceChange: number;
   primaryTag?: string;
+  /** false when issuer has no issuer_trading row yet */
+  isTradable?: boolean;
 }
 
 interface IssuerGridProps {
@@ -61,6 +63,7 @@ export function IssuerGrid({
           currentPrice={issuer.currentPrice}
           priceChange={issuer.priceChange}
           primaryTag={issuer.primaryTag}
+          isTradable={issuer.isTradable}
           onClick={() => onIssuerClick?.(issuer)}
         />
       ))}

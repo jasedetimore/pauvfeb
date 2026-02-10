@@ -30,12 +30,13 @@ export function ViewToggle({ viewMode, onViewModeChange }: ViewToggleProps) {
           backgroundColor: viewMode === "card" ? colors.textPrimary : "transparent",
           color: viewMode === "card" ? colors.textDark : colors.textMuted,
           border: "none",
-          padding: "8px 20px",
+          padding: "4px 14px",
           cursor: "pointer",
           transition: "all 0.2s",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          height: "26px",
         }}
         title="Card View"
       >
@@ -64,12 +65,13 @@ export function ViewToggle({ viewMode, onViewModeChange }: ViewToggleProps) {
           color: viewMode === "list" ? colors.textDark : colors.textMuted,
           border: "none",
           borderLeft: `1px solid ${colors.border}`,
-          padding: "8px 20px",
+          padding: "4px 14px",
           cursor: "pointer",
           transition: "all 0.2s",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          height: "26px",
         }}
         title="List View"
       >

@@ -44,20 +44,10 @@ export async function updateSession(request: NextRequest) {
   // Do NOT add any logic between createServerClient and getUser().
   const { data: { user }, error } = await supabase.auth.getUser();
 
-  // DEBUG: Log admin route access attempts
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    console.log(`[Middleware DEBUG] /admin access attempt:`);
-    console.log(`  - user: ${user?.email || "null"}`);
-    console.log(`  - error: ${error?.message || "none"}`);
-    console.log(`  - app_metadata: ${JSON.stringify(user?.app_metadata || {})}`);
-    console.log(`  - cookies: ${request.cookies.getAll().map(c => c.name).join(", ")}`);
-  }
-
   // Protect /admin routes - must be logged in AND be an admin
   if (request.nextUrl.pathname.startsWith("/admin")) {
     // Not logged in - redirect to login
     if (!user) {
-      console.log(`[Middleware] Redirecting to login - no user found`);
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("redirectTo", request.nextUrl.pathname);
@@ -67,13 +57,10 @@ export async function updateSession(request: NextRequest) {
     // Logged in but not an admin - redirect to home
     const isAdmin = user.app_metadata?.admin === true;
     if (!isAdmin) {
-      console.log(`[Middleware] Redirecting to home - user is not admin`);
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
-    
-    console.log(`[Middleware] Admin access granted for ${user.email}`);
   }
   
   // Log for debugging (can be removed in production)

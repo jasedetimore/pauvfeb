@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { ViewToggle, ViewMode, SortButton, SortMode } from "../atoms";
 import { colors } from "@/lib/constants/colors";
 
@@ -35,7 +36,7 @@ export function ControlsBar({
         display: "flex",
         justifyContent: "space-between",
         gap: "8px",
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
         alignItems: "center",
       }}
     >
@@ -47,7 +48,8 @@ export function ControlsBar({
         </div>
 
         {/* Request Button (desktop only) */}
-        <button
+        <Link
+          href="/list-yourself"
           className="hidden md:flex font-mono"
           style={{
             backgroundColor: colors.background,
@@ -58,14 +60,15 @@ export function ControlsBar({
             borderRadius: "8px",
             cursor: "pointer",
             whiteSpace: "nowrap",
-            padding: "8px 16px",
+            padding: "4px 14px",
             alignItems: "center",
             justifyContent: "center",
             transition: "all 0.2s",
+            height: "26px",
           }}
         >
           Request to be an Issuer
-        </button>
+        </Link>
 
         {/* Sort Label */}
         {showSortButtons && viewMode === "card" && (
@@ -76,6 +79,7 @@ export function ControlsBar({
               fontSize: "12px",
               fontWeight: "500",
               alignItems: "center",
+              height: "26px",
             }}
           >
             Sort by:

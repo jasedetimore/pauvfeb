@@ -8,6 +8,8 @@ export { IssuerGrid, type IssuerData } from "./IssuerGrid";
 export { IssuerListView, type IssuerListData } from "./IssuerListView";
 export { HeroSection } from "./HeroSection";
 export { ControlsBar } from "./ControlsBar";
+export { Navigation } from "./Navigation";
+export { SearchDropdown } from "./SearchDropdown";
 
 // Trading page molecules
 export { IssuerHeader } from "./IssuerHeader";
@@ -16,3 +18,5 @@ export { BuySellSpread } from "./BuySellSpread";
 export { TradingSummarySection } from "./TradingSummarySection";
 export { TradingFormSimple } from "./TradingFormSimple";
 export { HoldersSection } from "./HoldersSection";
+export { UserHoldings } from "./UserHoldings";
+export { RecommendedIssuers } from "./RecommendedIssuers";

@@ -16,11 +16,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient, verifyAdminFromJWT } from "@/lib/supabase/admin";
+import { timingSafeEqual } from "crypto";
 import {
   processNextOrder,
   processAllPendingOrders,
   getPendingOrderCount,
 } from "@/lib/trading";
+
+/** Constant-time string comparison to prevent timing attacks */
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 // GET - Get queue status
 export async function GET(request: NextRequest) {
@@ -29,8 +36,10 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
     const apiKey = request.headers.get("x-api-key");
 
-    // Validate authentication
-    if (apiKey !== process.env.QUEUE_PROCESSOR_API_KEY) {
+    // Validate authentication (constant-time comparison to prevent timing attacks)
+    const expectedKey = process.env.QUEUE_PROCESSOR_API_KEY;
+    const isValidApiKey = !!(apiKey && expectedKey && safeCompare(apiKey, expectedKey));
+    if (!isValidApiKey) {
       try {
         await verifyAdminFromJWT(authHeader);
       } catch {
@@ -53,7 +62,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Failed to get queue status",
-        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -67,8 +75,10 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
     const apiKey = request.headers.get("x-api-key");
 
-    // Validate authentication
-    if (apiKey !== process.env.QUEUE_PROCESSOR_API_KEY) {
+    // Validate authentication (constant-time comparison to prevent timing attacks)
+    const expectedKeyPost = process.env.QUEUE_PROCESSOR_API_KEY;
+    const isValidApiKeyPost = !!(apiKey && expectedKeyPost && safeCompare(apiKey, expectedKeyPost));
+    if (!isValidApiKeyPost) {
       try {
         await verifyAdminFromJWT(authHeader);
       } catch {
@@ -125,7 +135,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Failed to process queue",
-        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

@@ -1,12 +1,33 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
-import { Logo } from "@/components/atoms/Logo";
+import { GoogleSignInButton } from "@/components/atoms/GoogleSignInButton";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/hooks/useAuth";
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ backgroundColor: colors.backgroundDark }}
+        >
+          <div
+            className="animate-spin rounded-full h-8 w-8 border-b-2"
+            style={{ borderColor: colors.gold }}
+          />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  );
+}
 
 function LoginContent() {
   const router = useRouter();
@@ -78,61 +99,57 @@ function LoginContent() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4"
+      className="min-h-screen flex flex-col"
       style={{ backgroundColor: colors.backgroundDark }}
     >
-      <div
-        className="w-full max-w-md p-8 rounded-2xl border"
-        style={{
-          backgroundColor: colors.box,
-          borderColor: colors.boxOutline,
-        }}
-      >
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <Link href="/">
-            <Logo height={40} />
-          </Link>
-        </div>
+      <div className="flex-1 flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          {/* Title - OUTSIDE BOX */}
+          <h1
+            className="text-2xl font-bold text-center mb-1"
+            style={{ color: colors.textPrimary }}
+          >
+            Welcome Back
+          </h1>
+          <p
+            className="text-center mb-4"
+            style={{ color: colors.textSecondary }}
+          >
+            Sign in to your account
+          </p>
 
-        {/* Title */}
-        <h1
-          className="text-2xl font-bold text-center mb-2"
-          style={{ color: colors.textPrimary }}
-        >
-          Welcome Back
-        </h1>
-        <p
-          className="text-center mb-8"
-          style={{ color: colors.textSecondary }}
-        >
-          Sign in to your account
-        </p>
-
-        {/* Error Message */}
-        {error && (
+          {/* Box - containing only form */}
           <div
-            className="mb-6 p-4 rounded-lg border"
+            className="p-8 rounded-lg border"
             style={{
-              backgroundColor: `${colors.red}20`,
-              borderColor: colors.red,
-              color: colors.red,
+              backgroundColor: colors.box,
+              borderColor: colors.boxOutline,
             }}
           >
-            {error}
-          </div>
-        )}
+            {/* Error Message */}
+            {error && (
+              <div
+                className="mb-6 p-4 rounded-lg border"
+                style={{
+                  backgroundColor: `${colors.red}20`,
+                  borderColor: colors.red,
+                  color: colors.red,
+                }}
+              >
+                {error}
+              </div>
+            )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div>
             <label
               htmlFor="email"
               className="block text-sm font-medium mb-2"
-              style={{ color: colors.textSecondary }}
+              style={{ color: colors.textPrimary }}
             >
-              Email
+              Email<span style={{ color: colors.red }}> *</span>
             </label>
             <input
               type="email"
@@ -141,7 +158,7 @@ function LoginContent() {
               required
               className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
               style={{
-                backgroundColor: colors.boxLight,
+                backgroundColor: colors.box,
                 borderColor: colors.boxOutline,
                 color: colors.textPrimary,
               }}
@@ -154,9 +171,9 @@ function LoginContent() {
             <label
               htmlFor="password"
               className="block text-sm font-medium mb-2"
-              style={{ color: colors.textSecondary }}
+              style={{ color: colors.textPrimary }}
             >
-              Password
+              Password<span style={{ color: colors.red }}> *</span>
             </label>
             <input
               type="password"
@@ -165,7 +182,7 @@ function LoginContent() {
               required
               className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
               style={{
-                backgroundColor: colors.boxLight,
+                backgroundColor: colors.box,
                 borderColor: colors.boxOutline,
                 color: colors.textPrimary,
               }}
@@ -185,40 +202,47 @@ function LoginContent() {
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </button>
-        </form>
+            </form>
+          </div>
 
-        {/* Divider */}
-        <div className="my-8 flex items-center">
-          <div
-            className="flex-1 h-px"
-            style={{ backgroundColor: colors.boxOutline }}
-          />
-          <span
-            className="px-4 text-sm"
-            style={{ color: colors.textMuted }}
+          {/* Divider - OUTSIDE BOX */}
+          <div className="my-0 mt-2.5 flex items-center">
+            <div
+              className="flex-1 h-px"
+              style={{ backgroundColor: colors.boxOutline }}
+            />
+            <span
+              className="px-4 text-sm"
+              style={{ color: colors.textMuted }}
+            >
+              or
+            </span>
+            <div
+              className="flex-1 h-px"
+              style={{ backgroundColor: colors.boxOutline }}
+            />
+          </div>
+
+          {/* Google Sign In - OUTSIDE BOX */}
+          <div className="mt-2.5">
+            <GoogleSignInButton redirectTo={redirectTo} />
+          </div>
+
+          {/* Sign Up Link - OUTSIDE BOX */}
+          <p
+            className="text-center mt-2.5"
+            style={{ color: colors.textSecondary }}
           >
-            or
-          </span>
-          <div
-            className="flex-1 h-px"
-            style={{ backgroundColor: colors.boxOutline }}
-          />
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold hover:underline"
+              style={{ color: colors.gold }}
+            >
+              Sign Up
+            </Link>
+          </p>
         </div>
-
-        {/* Sign Up Link */}
-        <p
-          className="text-center"
-          style={{ color: colors.textSecondary }}
-        >
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-semibold hover:underline"
-            style={{ color: colors.gold }}
-          >
-            Sign Up
-          </Link>
-        </p>
       </div>
     </div>
   );

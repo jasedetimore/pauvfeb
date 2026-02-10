@@ -63,7 +63,7 @@ function AccountContent() {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
         }}
       >
         <div className="animate-pulse space-y-4">
@@ -80,7 +80,7 @@ function AccountContent() {
       <div
         className="rounded-lg p-6 text-center"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
         }}
       >
         <p style={{ color: colors.textSecondary }}>
@@ -110,7 +110,7 @@ function AccountContent() {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
         }}
       >
         <h1
@@ -163,7 +163,7 @@ function AccountContent() {
             </label>
             <p
               className="text-lg font-semibold"
-              style={{ color: colors.gold }}
+              style={{ color: colors.textPrimary }}
             >
               ${profile?.usdp_balance?.toLocaleString() || "0.00"} USDP
             </p>
@@ -190,19 +190,6 @@ function AccountContent() {
         </div>
       </div>
 
-      {/* Sign Out Button */}
-      <form action={signOut}>
-        <button
-          type="submit"
-          className="px-6 py-3 rounded-lg font-semibold transition-colors hover:opacity-90"
-          style={{
-            backgroundColor: "transparent",
-            color: colors.red,
-          }}
-        >
-          Sign Out
-        </button>
-      </form>
     </div>
   );
 }

@@ -15,6 +15,7 @@ export interface IssuerMetrics {
   price24hChange: number | null;
   price7dChange: number | null;
   totalUsdp: number;
+  priceStep: number;
   updatedAt: string;
 }
 
@@ -22,6 +23,8 @@ interface UseIssuerMetricsResult {
   metrics: IssuerMetrics | null;
   isLoading: boolean;
   error: string | null;
+  /** false when the issuer exists in issuer_details but has no issuer_trading row */
+  isTradable: boolean;
   refetch: () => Promise<void>;
 }
 
@@ -36,9 +39,11 @@ interface UseIssuerMetricsResult {
  */
 export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult {
   const [metrics, setMetrics] = useState<IssuerMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!ticker);
   const [error, setError] = useState<string | null>(null);
+  const [isTradable, setIsTradable] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const fetchMetrics = useCallback(async () => {
     if (!ticker) {
@@ -46,7 +51,10 @@ export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult 
       return;
     }
 
-    setIsLoading(true);
+    // Only show loading skeleton on initial fetch, not on refetches
+    if (!hasFetchedRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -67,7 +75,17 @@ export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult 
         throw new Error(data.error);
       }
 
+      // API returns { tradable: false } when issuer has no issuer_trading row
+      if (data.tradable === false) {
+        setIsTradable(false);
+        setMetrics(null);
+        hasFetchedRef.current = true;
+        return;
+      }
+
+      setIsTradable(true);
       setMetrics(data.metrics);
+      hasFetchedRef.current = true;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to fetch metrics";
@@ -104,23 +122,17 @@ export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult 
           filter: `ticker=eq.${ticker.toUpperCase()}`,
         },
         (payload) => {
-          console.log(`[useIssuerMetrics] Realtime update for ${ticker}:`, payload);
           // Refetch metrics when issuer_trading is updated
           fetchMetrics();
         }
       )
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log(`[useIssuerMetrics] Subscribed to realtime updates for ${ticker}`);
-        }
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
     // Cleanup subscription on unmount
     return () => {
       if (channelRef.current) {
-        console.log(`[useIssuerMetrics] Unsubscribing from ${ticker}`);
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
@@ -131,6 +143,7 @@ export function useIssuerMetrics(ticker: string | null): UseIssuerMetricsResult 
     metrics,
     isLoading,
     error,
+    isTradable,
     refetch: fetchMetrics,
   };
 }

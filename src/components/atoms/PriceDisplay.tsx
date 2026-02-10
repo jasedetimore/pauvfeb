@@ -26,6 +26,8 @@ interface PriceDisplayProps {
   ticker?: string;
   loading?: boolean;
   showBackButton?: boolean;
+  /** When false the issuer is not on issuer_trading yet */
+  isTradable?: boolean;
 }
 
 /**
@@ -37,6 +39,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   ticker,
   loading,
   showBackButton = true,
+  isTradable = true,
 }) => {
   const router = useRouter();
 
@@ -61,8 +64,8 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
         <div
           className="p-4 rounded-[10px]"
           style={{
-            backgroundColor: colors.navbarBg,
-            border: `1px solid ${colors.border}`,
+            backgroundColor: colors.box,
+            border: `1px solid ${colors.boxOutline}`,
           }}
         >
           <div
@@ -83,7 +86,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
         <div className="flex items-center justify-between mb-2 px-1">
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-lg font-mono font-medium hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-lg font-mono font-medium hover:opacity-80 transition-opacity uppercase"
             style={{ color: colors.gold }}
           >
             <ChevronLeftIcon size={18} />
@@ -95,8 +98,8 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
       <div
         className="p-4 pb-2 rounded-[10px] transition-colors hover:opacity-90"
         style={{
-          backgroundColor: colors.navbarBg,
-          border: `1px solid ${colors.border}`,
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
         }}
       >
         <div
@@ -109,7 +112,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
           className="font-mono font-bold truncate text-[1.5rem] md:text-[1.7rem]"
           style={{ color: colors.textPrimary }}
         >
-          {price != null ? formatPrice(price) : "—"}
+          {!isTradable ? "---" : price != null ? formatPrice(price) : "\u2014"}
         </div>
       </div>
     </div>

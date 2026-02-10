@@ -11,9 +11,10 @@ export default function DepositPage() {
   if (isLoading) {
     return (
       <div
-        className="rounded-lg p-6"
+        className="rounded-lg p-6 border"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
+          borderColor: colors.boxOutline,
         }}
       >
         <div className="animate-pulse space-y-4">
@@ -27,9 +28,10 @@ export default function DepositPage() {
   if (!user) {
     return (
       <div
-        className="rounded-lg p-6 text-center"
+        className="rounded-lg p-6 text-center border"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
+          borderColor: colors.boxOutline,
         }}
       >
         <p style={{ color: colors.textSecondary }}>
@@ -49,9 +51,10 @@ export default function DepositPage() {
   return (
     <div className="space-y-6">
       <div
-        className="rounded-lg p-6"
+        className="rounded-lg p-6 border"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: colors.background,
+          borderColor: colors.boxOutline,
         }}
       >
         <h1
@@ -60,22 +63,6 @@ export default function DepositPage() {
         >
           Deposit
         </h1>
-
-        {/* Info Banner */}
-        <div
-          className="p-4 rounded-lg mb-6 border"
-          style={{
-            backgroundColor: `${colors.gold}10`,
-            borderColor: colors.gold,
-          }}
-        >
-          <p
-            className="text-sm"
-            style={{ color: colors.gold }}
-          >
-            💡 Deposits are currently simulated. In the future, you&apos;ll be able to deposit real funds.
-          </p>
-        </div>
 
         {/* Deposit Form */}
         <form onSubmit={handleDeposit} className="space-y-6">
@@ -136,43 +123,17 @@ export default function DepositPage() {
           <button
             type="submit"
             disabled={!amount || parseFloat(amount) <= 0}
-            className="w-full py-3 rounded-lg font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full py-3 rounded-lg font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 border"
             style={{
-              backgroundColor: colors.gold,
-              color: colors.textDark,
+              backgroundColor: colors.boxLight,
+              color: colors.textPrimary,
+              borderColor: colors.boxOutline,
             }}
           >
             Deposit USDP
           </button>
         </form>
 
-        {/* Payment Methods - Coming Soon */}
-        <div className="mt-8 pt-6 border-t" style={{ borderColor: colors.boxOutline }}>
-          <h2
-            className="text-lg font-semibold mb-4"
-            style={{ color: colors.textPrimary }}
-          >
-            Payment Methods
-          </h2>
-          
-          <div
-            className="p-6 rounded-lg border text-center"
-            style={{
-              backgroundColor: colors.boxLight,
-              borderColor: colors.boxOutline,
-            }}
-          >
-            <p style={{ color: colors.textSecondary }}>
-              Payment integrations coming soon.
-            </p>
-            <p
-              className="text-sm mt-2"
-              style={{ color: colors.textMuted }}
-            >
-              Credit/Debit Cards, Bank Transfer, Crypto
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
