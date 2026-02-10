@@ -50,6 +50,7 @@ const nextConfig: NextConfig = {
   // Environment variables exposed to the browser (NEXT_PUBLIC_ prefix)
   env: {
     NEXT_PUBLIC_APP_NAME: "Pauv",
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   },
 
   // Security headers

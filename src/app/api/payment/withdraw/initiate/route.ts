@@ -72,7 +72,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const origin = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    // Behind Amplify/CloudFront, req.nextUrl.origin returns localhost.
+    // Use forwarded headers to get the real origin.
+    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+    const origin = process.env.NEXT_PUBLIC_APP_URL || (forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin);
 
     // Create the Soap checkout session for withdrawal
     const checkout = await createSoapCheckout({
