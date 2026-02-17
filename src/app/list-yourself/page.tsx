@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import emailjs from "@emailjs/browser";
 import { colors } from "@/lib/constants/colors";
+import { createClient } from "@/lib/supabase/client";
 
 const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "service_l36mged";
 const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "template_f9cpm9n";
@@ -44,6 +45,23 @@ export default function ListYourselfPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
+
+  // Detect if the user is already logged in
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setAuthUserId(user.id);
+        setAuthEmail(user.email || null);
+        setForm((prev) => ({
+          ...prev,
+          email: user.email || prev.email,
+        }));
+      }
+    });
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -94,6 +112,7 @@ export default function ListYourselfPage() {
           social_media_handle: `@${form.socialHandle.trim()}`,
           desired_ticker: form.desiredTicker.trim().toUpperCase(),
           message: form.message.trim() || null,
+          ...(authUserId ? { user_id: authUserId } : {}),
         }),
       });
 
@@ -199,6 +218,19 @@ export default function ListYourselfPage() {
               borderColor: colors.boxOutline,
             }}
           >
+            {/* Logged-in user notice */}
+            {authUserId && (
+              <div
+                className="px-4 py-3 rounded-lg text-sm"
+                style={{
+                  color: colors.green,
+                  backgroundColor: `${colors.green}10`,
+                  border: `1px solid ${colors.green}30`,
+                }}
+              >
+                You&apos;re signed in. If approved, your existing account will automatically get issuer access — no new password needed.
+              </div>
+            )}
             {/* Name */}
             <div>
               <label
@@ -240,9 +272,18 @@ export default function ListYourselfPage() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
+                readOnly={!!authEmail}
                 className="w-full px-4 py-3 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-colors"
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  ...(authEmail ? { opacity: 0.7, cursor: "default" } : {}),
+                }}
               />
+              {authEmail && (
+                <p className="text-xs mt-1" style={{ color: colors.green }}>
+                  Auto-filled from your logged-in account
+                </p>
+              )}
             </div>
 
             {/* Phone */}

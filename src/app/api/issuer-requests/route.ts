@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       social_media_handle,
       desired_ticker,
       message,
+      user_id,
     } = body;
 
     // Server-side validation
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
         social_media_handle,
         desired_ticker: desired_ticker.toUpperCase(),
         message: message || null,
+        ...(user_id ? { user_id } : {}),
       });
 
     if (dbError) {

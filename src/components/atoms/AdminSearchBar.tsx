@@ -23,18 +23,23 @@ export function AdminSearchBar({
 }: AdminSearchBarProps) {
   const [value, setValue] = useState("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      onSearch(value.trim());
+      onSearchRef.current(value.trim());
     }, debounceMs);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [value, debounceMs, onSearch]);
+  }, [value, debounceMs]);
 
   return (
     <div className="relative mb-4">

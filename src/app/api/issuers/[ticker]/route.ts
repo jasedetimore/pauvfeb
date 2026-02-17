@@ -33,6 +33,7 @@ export async function GET(
       .from("issuer_details")
       .select("*")
       .ilike("ticker", ticker)
+      .eq("is_hidden", false)
       .single();
 
     if (error) {

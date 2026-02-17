@@ -11,6 +11,7 @@ export interface IssuerDetailsDB {
   headline: string | null;
   tag: string | null;
   photo: string | null;
+  is_hidden: boolean;
   created_at: string;
   updated_at: string;
 }

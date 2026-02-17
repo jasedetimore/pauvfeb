@@ -34,7 +34,8 @@ export async function GET() {
     const { data: issuerStats, error: issuerStatsError } = await supabase
       .from("issuer_details")
       .select("tag, ticker, issuer_stats_cache(market_cap)")
-      .not("tag", "is", null);
+      .not("tag", "is", null)
+      .eq("is_hidden", false);
 
     // Build a map of tag → { count, totalMarketCap }
     const tagStatsMap = new Map<string, { count: number; totalMarketCap: number }>();

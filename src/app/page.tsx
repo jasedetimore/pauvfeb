@@ -10,29 +10,6 @@ import { TagItemData } from "@/components/atoms/TagItem";
 import { HomePageSkeleton, TagPageSkeleton } from "@/components/atoms";
 
 /**
- * Generate fallback mock market data for an issuer
- * Used when cached stats are not available yet
- */
-function generateFallbackMarketData(ticker: string) {
-  // Use ticker to seed random but consistent values
-  const seed = ticker.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const random = (min: number, max: number) => {
-    const x = Math.sin(seed) * 10000;
-    return min + (x - Math.floor(x)) * (max - min);
-  };
-  
-  return {
-    currentPrice: random(50, 500),
-    priceChange: random(-15, 25),
-    price1hChange: random(-5, 5),
-    price7dChange: random(-20, 30),
-    volume24h: Math.floor(random(1000000, 25000000)),
-    holders: Math.floor(random(10000, 100000)),
-    marketCap: Math.floor(random(100000000, 1200000000)),
-  };
-}
-
-/**
  * Home Page - Main landing page for Pauv
  * Displays the issuer marketplace with filtering and sorting
  * Uses cached stats (refreshed every 5 minutes) for price/volume data
@@ -142,8 +119,8 @@ export default function Home() {
     return [...issuersWithMarketData].sort((a, b) => {
       const aStats = statsMap.get(a.ticker);
       const bStats = statsMap.get(b.ticker);
-      const aMarket = aStats?.marketCap ?? generateFallbackMarketData(a.ticker).marketCap;
-      const bMarket = bStats?.marketCap ?? generateFallbackMarketData(b.ticker).marketCap;
+      const aMarket = aStats?.marketCap ?? 0;
+      const bMarket = bStats?.marketCap ?? 0;
       return bMarket - aMarket;
     });
   }, [issuersWithMarketData, statsMap]);

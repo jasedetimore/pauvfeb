@@ -20,7 +20,7 @@ interface RecommendedIssuersProps {
 /**
  * RecommendedIssuers - Shows 3 recommended issuer cards
  * Prioritizes issuers sharing the same tag as the current issuer.
- * Falls back to random issuers if none share the tag.
+ * Falls back to additional issuers if fewer than 3 share the tag.
  */
 export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
   currentTicker,
@@ -81,13 +81,7 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
           }
         }
 
-        // Shuffle all candidates for randomness
-        for (let i = candidates.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-        }
-
-        // Take up to 3
+        // Take up to 3 in deterministic API order
         const selected = candidates.slice(0, 3);
 
         // Enrich with price data from stats

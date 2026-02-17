@@ -10,30 +10,6 @@ import { TagItemData } from "@/components/atoms/TagItem";
 import { TagPageSkeleton } from "@/components/atoms";
 
 /**
- * Generate fallback mock market data for an issuer
- * Used when cached stats are not available yet
- */
-function generateFallbackMarketData(ticker: string) {
-  const seed = ticker
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const random = (min: number, max: number) => {
-    const x = Math.sin(seed) * 10000;
-    return min + (x - Math.floor(x)) * (max - min);
-  };
-
-  return {
-    currentPrice: random(50, 500),
-    priceChange: random(-15, 25),
-    price1hChange: random(-5, 5),
-    price7dChange: random(-20, 30),
-    volume24h: Math.floor(random(1000000, 25000000)),
-    holders: Math.floor(random(10000, 100000)),
-    marketCap: Math.floor(random(100000000, 1200000000)),
-  };
-}
-
-/**
  * Tag Page - Shows issuers filtered by a specific tag
  * URL: /{tagname} (e.g. /athlete, /musician)
  * Displays the tag name, description, filtered issuers, and tag-specific market cap
@@ -80,7 +56,7 @@ export default function TagPage({
       if (cachedStats) {
         return sum + (cachedStats.marketCap || 0);
       }
-      return sum + generateFallbackMarketData(issuer.ticker).marketCap;
+      return sum;
     }, 0);
   }, [dbIssuers, statsMap]);
 
@@ -123,14 +99,14 @@ export default function TagPage({
         };
       }
 
-      const fallbackData = generateFallbackMarketData(issuer.ticker);
       return {
         ticker: issuer.ticker,
         fullName: issuer.fullName,
         imageUrl: issuer.imageUrl,
-        currentPrice: fallbackData.currentPrice,
-        priceChange: fallbackData.priceChange,
+        currentPrice: 0,
+        priceChange: 0,
         primaryTag: issuer.primaryTag,
+        isTradable: false,
       };
     });
   }, [dbIssuers, statsMap]);
@@ -155,18 +131,18 @@ export default function TagPage({
         };
       }
 
-      const fallbackData = generateFallbackMarketData(issuer.ticker);
       return {
         ticker: issuer.ticker,
         fullName: issuer.fullName,
         primaryTag: issuer.primaryTag,
-        currentPrice: fallbackData.currentPrice,
-        price1hChange: fallbackData.price1hChange,
-        price24hChange: fallbackData.priceChange,
-        price7dChange: fallbackData.price7dChange,
-        volume24h: fallbackData.volume24h,
-        holders: fallbackData.holders,
-        marketCap: fallbackData.marketCap,
+        currentPrice: 0,
+        price1hChange: 0,
+        price24hChange: 0,
+        price7dChange: 0,
+        volume24h: 0,
+        holders: 0,
+        marketCap: 0,
+        isTradable: false,
       };
     });
   }, [dbIssuers, statsMap]);
@@ -176,10 +152,8 @@ export default function TagPage({
     return [...issuersWithMarketData].sort((a, b) => {
       const aStats = statsMap.get(a.ticker);
       const bStats = statsMap.get(b.ticker);
-      const aMarket =
-        aStats?.marketCap ?? generateFallbackMarketData(a.ticker).marketCap;
-      const bMarket =
-        bStats?.marketCap ?? generateFallbackMarketData(b.ticker).marketCap;
+      const aMarket = aStats?.marketCap ?? 0;
+      const bMarket = bStats?.marketCap ?? 0;
       return bMarket - aMarket;
     });
   }, [issuersWithMarketData, statsMap]);

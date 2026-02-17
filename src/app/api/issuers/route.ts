@@ -29,7 +29,8 @@ export async function GET(request: Request) {
     // Build query
     let query = supabase
       .from("issuer_details")
-      .select("*", { count: "exact" });
+      .select("*", { count: "exact" })
+      .eq("is_hidden", false);
 
     // Apply tag filter if provided
     if (tag) {

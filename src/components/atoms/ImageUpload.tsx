@@ -64,6 +64,8 @@ export interface ImageUploadProps {
   disabled?: boolean;
   /** Aspect ratio for cropping (width / height). e.g. 1 for square, 4 for 10:2.5 banner */
   aspectRatio?: number;
+  /** API endpoint used for file upload */
+  uploadEndpoint?: string;
 }
 
 // ── Component ───────────────────────────────────────────────────
@@ -74,6 +76,7 @@ export function ImageUpload({
   label = "Photo",
   disabled = false,
   aspectRatio,
+  uploadEndpoint = "/api/admin/upload",
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -124,7 +127,7 @@ export function ImageUpload({
         formData.append("file", file);
         formData.append("folder", folder);
 
-        const res = await fetch("/api/admin/upload", {
+        const res = await fetch(uploadEndpoint, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -147,7 +150,7 @@ export function ImageUpload({
         setUploading(false);
       }
     },
-    [folder, onChange]
+    [folder, onChange, uploadEndpoint]
   );
 
   // Handle a selected file — either open cropper or upload directly

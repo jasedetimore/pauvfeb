@@ -14,6 +14,8 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isIssuer: boolean;
+  issuerId: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +23,8 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   isLoading: true,
   isAdmin: false,
+  isIssuer: false,
+  issuerId: null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -28,6 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isIssuer, setIsIssuer] = useState(false);
+  const [issuerId, setIssuerId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const supabase = createClient();
@@ -49,6 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setUser(session.user);
         setIsAdmin(session.user.app_metadata?.admin === true);
+        setIsIssuer(session.user.app_metadata?.issuer === true);
+        setIssuerId(session.user.app_metadata?.issuer_id || null);
         // Fetch profile in background (non-blocking)
         supabase
           .from("users")
@@ -62,6 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
         setIsAdmin(false);
+        setIsIssuer(false);
+        setIssuerId(null);
       }
       setIsLoading(false);
     });
@@ -92,6 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // User exists - set state directly
           setUser(authUser);
           setIsAdmin(authUser.app_metadata?.admin === true);
+          setIsIssuer(authUser.app_metadata?.issuer === true);
+          setIssuerId(authUser.app_metadata?.issuer_id || null);
           // Fetch profile in background (non-blocking)
           supabase
             .from("users")
@@ -107,6 +119,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
         setIsAdmin(false);
+        setIsIssuer(false);
+        setIssuerId(null);
       } finally {
         // Always mark as initialized and done loading after checkSession
         setIsInitialized(true);
@@ -122,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, isLoading, isAdmin }}>
+    <AuthContext.Provider value={{ user, profile, isLoading, isAdmin, isIssuer, issuerId }}>
       {children}
     </AuthContext.Provider>
   );

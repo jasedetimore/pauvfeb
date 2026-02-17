@@ -20,3 +20,7 @@ export { TradingFormSimple } from "./TradingFormSimple";
 export { HoldersSection } from "./HoldersSection";
 export { UserHoldings } from "./UserHoldings";
 export { RecommendedIssuers } from "./RecommendedIssuers";
+
+// Issuer onboarding molecules
+export { ClaimForm } from "./ClaimForm";
+export { SetPasswordForm } from "./SetPasswordForm";

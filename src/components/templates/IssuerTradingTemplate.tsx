@@ -65,30 +65,27 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     transactionRefetchRef.current = refetch;
   }, []);
 
-  // Ref to hold the background refetch promise so onOrderComplete can await it
-  const refetchPromiseRef = useRef<Promise<void> | null>(null);
-
-  // Called IMMEDIATELY when user presses confirm — triggers skeletons + starts background refetch
+  // Called IMMEDIATELY when user presses confirm — triggers skeletons only.
+  // We do NOT refetch here because the order hasn't been processed yet.
   const handleOrderConfirmed = useCallback(() => {
     setPostOrderRefreshing(true);
     setChartRefreshTrigger((prev) => prev + 1);
-    // Start refetching in background, store the promise
-    refetchPromiseRef.current = Promise.all([
+  }, []);
+
+  // Called AFTER the "Successful" message disappears (~3s after insert).
+  // By now the Supabase Edge Function should have processed the order,
+  // so refetching will return fresh data.
+  const handleOrderComplete = useCallback(async () => {
+    // Small grace period to ensure the edge function has finished processing
+    await new Promise((r) => setTimeout(r, 500));
+    // Refetch all data now that the order has been processed
+    await Promise.all([
       refetchMetrics(),
       refetchHolders(),
       transactionRefetchRef.current ? transactionRefetchRef.current() : Promise.resolve(),
-    ]).then(() => {});
-  }, [refetchMetrics, refetchHolders]);
-
-  // Called AFTER the "Successful" message disappears (~1.5s) — resolves skeletons
-  const handleOrderComplete = useCallback(async () => {
-    // Wait for any in-flight refetch to finish
-    if (refetchPromiseRef.current) {
-      await refetchPromiseRef.current;
-      refetchPromiseRef.current = null;
-    }
+    ]);
     setPostOrderRefreshing(false);
-  }, []);
+  }, [refetchMetrics, refetchHolders]);
 
   // Track whether the right sidebar's children (UserHoldings, RecommendedIssuers)
   // have finished their initial fetch so we can gate the whole page on it.
@@ -107,28 +104,22 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   const handleMobileTransactionRefetchRef = useCallback((refetch: () => Promise<void>) => {
     mobileTransactionRefetchRef.current = refetch;
   }, []);
-  // Ref to hold the mobile background refetch promise
-  const mobileRefetchPromiseRef = useRef<Promise<void> | null>(null);
-
-  // Mobile: called IMMEDIATELY when user presses confirm
+  // Mobile: called IMMEDIATELY when user presses confirm — skeletons only
   const handleMobileOrderConfirmed = useCallback(() => {
     setPostOrderRefreshing(true);
     setChartRefreshTrigger((prev) => prev + 1);
-    mobileRefetchPromiseRef.current = Promise.all([
-      refetchMetrics(),
-      refetchHolders(),
-      mobileTransactionRefetchRef.current ? mobileTransactionRefetchRef.current() : Promise.resolve(),
-    ]).then(() => {});
-  }, [refetchMetrics, refetchHolders]);
+  }, []);
 
   // Mobile: called AFTER the "Successful" message disappears
   const handleMobileOrderComplete = useCallback(async () => {
-    if (mobileRefetchPromiseRef.current) {
-      await mobileRefetchPromiseRef.current;
-      mobileRefetchPromiseRef.current = null;
-    }
+    await new Promise((r) => setTimeout(r, 500));
+    await Promise.all([
+      refetchMetrics(),
+      refetchHolders(),
+      mobileTransactionRefetchRef.current ? mobileTransactionRefetchRef.current() : Promise.resolve(),
+    ]);
     setPostOrderRefreshing(false);
-  }, []);
+  }, [refetchMetrics, refetchHolders]);
 
 
 

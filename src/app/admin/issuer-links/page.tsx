@@ -5,6 +5,12 @@ import { colors } from "@/lib/constants/colors";
 import { createClient } from "@/lib/supabase/client";
 import { IssuerLinksDB, SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/types/issuer-links";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
+import {
+  buildSocialLinkFromHandle,
+  extractHandleFromLinkValue,
+  getSocialLinkPreview,
+  sanitizeHandleInput,
+} from "@/lib/utils/social-links";
 
 interface IssuerListItem {
   ticker: string;
@@ -140,7 +146,7 @@ export default function AdminIssuerLinksPage() {
         linktree: "",
       };
       for (const platform of SOCIAL_PLATFORMS) {
-        formValues[platform.key] = data[platform.key] || "";
+        formValues[platform.key] = extractHandleFromLinkValue(platform.key, data[platform.key]);
       }
       setLinkForm(formValues);
     } catch (err) {
@@ -152,7 +158,7 @@ export default function AdminIssuerLinksPage() {
 
   // Update a single platform value in the form
   const updatePlatform = (key: SocialPlatform, value: string) => {
-    setLinkForm((prev) => ({ ...prev, [key]: value }));
+    setLinkForm((prev) => ({ ...prev, [key]: sanitizeHandleInput(value) }));
   };
 
   // Save all links
@@ -175,7 +181,12 @@ export default function AdminIssuerLinksPage() {
         },
         body: JSON.stringify({
           ticker: issuerLinks.ticker,
-          links: linkForm,
+          links: Object.fromEntries(
+            SOCIAL_PLATFORMS.map((platform) => [
+              platform.key,
+              buildSocialLinkFromHandle(platform.key, linkForm[platform.key]),
+            ])
+          ),
         }),
       });
 
@@ -377,16 +388,27 @@ export default function AdminIssuerLinksPage() {
                   >
                     {platform.label}
                   </label>
-                  <input
-                    type="url"
-                    value={linkForm[platform.key]}
-                    onChange={(e) =>
-                      updatePlatform(platform.key, e.target.value)
-                    }
-                    placeholder={platform.placeholder}
-                    className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                    style={inputStyle}
-                  />
+                  <div className="relative">
+                    <span
+                      className="absolute inset-y-0 left-0 flex items-center pl-3 text-sm"
+                      style={{ color: colors.textMuted }}
+                    >
+                      @
+                    </span>
+                    <input
+                      type="text"
+                      value={linkForm[platform.key]}
+                      onChange={(e) =>
+                        updatePlatform(platform.key, e.target.value)
+                      }
+                      placeholder="username"
+                      className="w-full pl-8 pr-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs" style={{ color: colors.textMuted }}>
+                    {getSocialLinkPreview(platform.key, linkForm[platform.key]) || " "}
+                  </p>
                 </div>
               ))}
             </div>

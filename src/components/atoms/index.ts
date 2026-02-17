@@ -38,3 +38,6 @@ export { Input } from "./Input";
 export { LoadingSpinner } from "./LoadingSpinner";
 export { PaymentNotification } from "./PaymentNotification";
 export { WalletDepositsWithdrawalsSkeleton } from "./Skeleton";
+
+// Issuer onboarding atoms
+export { PrimaryButton } from "./PrimaryButton";
