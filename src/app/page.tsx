@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { sendGAEvent } from "@next/third-parties/google";
 import { MainPageTemplate } from "@/components/templates";
 import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
@@ -141,12 +142,30 @@ export default function Home() {
   }, [issuersWithMarketData]);
 
   // Handle issuer click (card view) - navigate to issuer trading page
+  // Fires GA4 event with issuer_id, issuer_name, tag_name, current_price, market_cap
   const handleIssuerClick = (issuer: IssuerData) => {
+    const cachedStats = statsMap.get(issuer.ticker);
+    sendGAEvent('event', 'issuer_card_click', {
+      issuer_id: issuer.ticker,
+      issuer_name: issuer.fullName,
+      tag_name: issuer.primaryTag || 'none',
+      source: 'home_grid',
+      current_price: issuer.currentPrice ?? 0,
+      market_cap: cachedStats?.marketCap ?? 0,
+    });
     router.push(`/issuer/${issuer.ticker.toLowerCase()}`);
   };
 
   // Handle issuer click (list view)
   const handleListIssuerClick = (issuer: IssuerListData) => {
+    sendGAEvent('event', 'issuer_card_click', {
+      issuer_id: issuer.ticker,
+      issuer_name: issuer.fullName,
+      tag_name: issuer.primaryTag || 'none',
+      source: 'home_list',
+      current_price: issuer.currentPrice ?? 0,
+      market_cap: issuer.marketCap ?? 0,
+    });
     router.push(`/issuer/${issuer.ticker.toLowerCase()}`);
   };
 

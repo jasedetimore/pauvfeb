@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
+import { sendGAEvent } from "@next/third-parties/google";
 import { colors } from "@/lib/constants/colors";
 import { TradingFormSkeleton } from "@/components/atoms";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -49,6 +50,25 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   const [tickerHoldings, setTickerHoldings] = useState<number>(0);
   const [holdingsLoading, setHoldingsLoading] = useState(false);
   const [sellAllClicked, setSellAllClicked] = useState(false);
+
+  // Track whether trade intent has been fired this session to avoid duplicate events
+  const tradeIntentFiredRef = useRef<Record<string, boolean>>({});
+
+  // Fire issuer_trade_intent when user switches buy/sell tab
+  // Uses GA4 custom dimensions: issuer_id; custom metric: current_price
+  const handleTabSwitch = (action: "buy" | "sell") => {
+    if (disabled) return;
+    setSelectedAction(action);
+    const key = `${ticker}_${action}`;
+    if (!tradeIntentFiredRef.current[key]) {
+      tradeIntentFiredRef.current[key] = true;
+      sendGAEvent('event', 'issuer_trade_intent', {
+        issuer_id: ticker,
+        trade_side: action,
+        current_price: price ?? 0,
+      });
+    }
+  };
 
   // Get user auth context for USDP balance
   const { user, profile, isLoading: authLoading } = useAuth();
@@ -273,7 +293,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         {/* Buy/Sell Toggle */}
         <div className="flex gap-1 mb-2">
           <button
-            onClick={() => !disabled && setSelectedAction("buy")}
+            onClick={() => handleTabSwitch("buy")}
             className="flex-1 py-2 px-4 rounded-md font-mono font-medium transition-all"
             style={{
               backgroundColor:
@@ -292,7 +312,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
             Buy
           </button>
           <button
-            onClick={() => !disabled && setSelectedAction("sell")}
+            onClick={() => handleTabSwitch("sell")}
             className="flex-1 py-2 px-4 rounded-md font-mono font-medium transition-all"
             style={{
               backgroundColor:

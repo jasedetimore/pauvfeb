@@ -6,8 +6,16 @@ import { colors } from '@/lib/constants/colors';
 
 export interface AnalyticsLinkProps {
   href: string;
+  /** Human-readable label (used as fallback issuer_name) */
   label: string;
-  profileId?: string;
+  /** Issuer ticker — maps to GA4 dimension issuer_id */
+  issuerId?: string;
+  /** Issuer display name — maps to GA4 dimension issuer_name */
+  issuerName?: string;
+  /** Category/tag — maps to GA4 dimension tag_name */
+  tagName?: string;
+  /** Where the link is rendered, e.g. "home_grid", "tag_page", "recommended" */
+  source?: string;
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -15,22 +23,27 @@ export interface AnalyticsLinkProps {
 
 /**
  * AnalyticsLink - A wrapper around Next.js Link that fires a GA event on click.
- * Tracks which issuers / PVs are being clicked by users.
+ * Parameters map directly to GA4 custom dimensions (issuer_id, issuer_name, tag_name)
+ * and are safe to use with 1000+ issuers — GA4 stores values, not event names.
  */
 export const AnalyticsLink = ({
   href,
   label,
-  profileId,
+  issuerId,
+  issuerName,
+  tagName,
+  source,
   children,
   className,
   style,
 }: AnalyticsLinkProps) => {
   const handleClick = () => {
-    sendGAEvent('event', 'issuer_click', {
+    sendGAEvent('event', 'issuer_card_click', {
+      issuer_id: issuerId || 'none',
+      issuer_name: issuerName || label,
+      tag_name: tagName || 'none',
+      source: source || 'unknown',
       destination: href,
-      label,
-      target_issuer_id: profileId || 'none',
-      currency: 'USDP',
     });
   };
 

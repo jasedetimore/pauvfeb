@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { sendGAEvent } from "@next/third-parties/google";
 import { colors } from "@/lib/constants/colors";
 import { IssuerCardData, IssuersApiResponse } from "@/lib/types";
 import { CachedIssuerStats } from "@/lib/hooks/useIssuerStats";
@@ -87,11 +88,18 @@ export function SearchDropdown({ statsMap }: SearchDropdownProps) {
     };
   }, []);
 
-  // Navigate to issuer page
-  const handleSelect = (ticker: string) => {
+  // Navigate to issuer page and fire GA event
+  // Uses GA4 custom dimensions: issuer_id, issuer_name, tag_name
+  const handleSelect = (issuer: IssuerCardData) => {
     setIsOpen(false);
+    sendGAEvent('event', 'search_issuer_select', {
+      issuer_id: issuer.ticker,
+      issuer_name: issuer.fullName,
+      tag_name: issuer.primaryTag || 'none',
+      search_query: query.trim() || '(recent)',
+    });
     setQuery("");
-    router.push(`/issuer/${encodeURIComponent(ticker.toLowerCase())}`);
+    router.push(`/issuer/${encodeURIComponent(issuer.ticker.toLowerCase())}`);
   };
 
   // Keyboard navigation
@@ -210,7 +218,7 @@ export function SearchDropdown({ statsMap }: SearchDropdownProps) {
                   isTradable={Boolean(stat)}
                   formatPrice={formatPrice}
                   capitalizeFirstLetter={capitalizeFirstLetter}
-                  onClick={() => handleSelect(issuer.ticker)}
+                  onClick={() => handleSelect(issuer)}
                 />
                   );
                 })()

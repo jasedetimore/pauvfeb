@@ -2,6 +2,7 @@
 
 import { useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
+import { sendGAEvent } from "@next/third-parties/google";
 import { MainPageTemplate } from "@/components/templates";
 import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
@@ -176,11 +177,29 @@ export default function TagPage({
 
   // Handle issuer click (card view)
   const handleIssuerClick = (issuer: IssuerData) => {
+    const cachedStats = statsMap.get(issuer.ticker);
+    sendGAEvent('event', 'issuer_card_click', {
+      issuer_id: issuer.ticker,
+      issuer_name: issuer.fullName,
+      tag_name: issuer.primaryTag || currentTag?.name || tagSlug,
+      source: 'tag_page',
+      current_price: issuer.currentPrice ?? 0,
+      market_cap: cachedStats?.marketCap ?? 0,
+    });
     router.push(`/issuer/${issuer.ticker.toLowerCase()}`);
   };
 
   // Handle issuer click (list view)
   const handleListIssuerClick = (issuer: IssuerListData) => {
+    const cachedStats = statsMap.get(issuer.ticker);
+    sendGAEvent('event', 'issuer_card_click', {
+      issuer_id: issuer.ticker,
+      issuer_name: issuer.fullName,
+      tag_name: issuer.primaryTag || currentTag?.name || tagSlug,
+      source: 'tag_list',
+      current_price: issuer.currentPrice ?? 0,
+      market_cap: cachedStats?.marketCap ?? 0,
+    });
     router.push(`/issuer/${issuer.ticker.toLowerCase()}`);
   };
 

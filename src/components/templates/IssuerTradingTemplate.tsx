@@ -209,18 +209,46 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     };
   }, [ticker]);
 
-  // Fire a GA event when issuer profile data is available
+  // Track mount time so we can compute seconds_on_page on unmount
+  const mountTimeRef = useRef<number>(0);
+  const gaPageViewFiredRef = useRef(false);
   useEffect(() => {
-    if (issuerData) {
-      sendGAEvent('event', 'view_issuer', {
-        issuer_ticker: issuerData.ticker,
+    mountTimeRef.current = Date.now();
+    gaPageViewFiredRef.current = false;
+  }, [ticker]);
+
+  // Fire issuer_page_view once when issuer data is ready (fires once per ticker)
+  // Uses GA4 custom dimensions: issuer_id, issuer_name, tag_name
+  // Uses GA4 custom metrics: current_price, market_cap
+  useEffect(() => {
+    if (issuerData && !gaPageViewFiredRef.current) {
+      gaPageViewFiredRef.current = true;
+      sendGAEvent('event', 'issuer_page_view', {
+        issuer_id: issuerData.ticker,
         issuer_name: issuerData.name,
-        issuer_tag: issuerData.tag || 'none',
-        content_type: 'issuer_profile',
-        currency: 'USDP',
+        tag_name: issuerData.tag || 'none',
+        current_price: metrics?.currentPrice ?? 0,
+        market_cap: metrics?.marketCap ?? 0,
       });
     }
-  }, [issuerData]);
+  }, [issuerData, metrics]);
+
+  // Fire issuer_time_on_page when the user navigates away
+  // Uses GA4 custom metric: seconds_on_page
+  useEffect(() => {
+    const capturedTicker = ticker;
+    const capturedMountRef = mountTimeRef;
+    return () => {
+      const secondsOnPage = Math.round((Date.now() - capturedMountRef.current) / 1000);
+      if (secondsOnPage > 0) {
+        sendGAEvent('event', 'issuer_time_on_page', {
+          issuer_id: capturedTicker,
+          seconds_on_page: secondsOnPage,
+        });
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker]);
 
   // Handler for buy action
   const handleBuy = (amount: number) => {
