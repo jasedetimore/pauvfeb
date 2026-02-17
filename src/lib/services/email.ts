@@ -104,3 +104,54 @@ export function buildClaimEmailHtml(claimUrl: string, issuerName: string): strin
     </div>
   `;
 }
+
+/**
+ * Build the issuer approval email HTML for existing users.
+ * Uses the magic-link confirmation URL so the user gets logged in
+ * and redirected straight to their Issuer Dashboard.
+ */
+export function buildIssuerApprovalEmailHtml(confirmationUrl: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f7; color: #1a1a1a; margin: 0; padding: 0; width: 100%; }
+    .email-wrapper { width: 100%; background-color: #f4f4f7; padding: 60px 0; }
+    .email-content { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+    .email-body { padding: 50px; text-align: left; }
+    .logo-img { max-width: 130px; margin-bottom: 30px; }
+    h1 { color: #000000; font-size: 24px; font-weight: 700; margin-top: 0; letter-spacing: -0.5px; line-height: 1.2; }
+    p { font-size: 16px; line-height: 1.6; color: #444444; margin-bottom: 20px; }
+    .button { background-color: #000000; color: #ffffff !important; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600; font-size: 16px; margin-top: 10px; }
+    .highlight-box { background-color: #f9f9f9; border-radius: 8px; padding: 20px; margin-top: 25px; border-left: 4px solid #000000; }
+    .footer { text-align: center; padding: 30px; font-size: 12px; color: #A8AAAD; text-transform: uppercase; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-content">
+      <div class="email-body">
+        <img src="https://bsrizjihqrywmukqsess.supabase.co/storage/v1/object/public/images/public-assets/pauv_logo_gold.png" alt="Pauv Logo" class="logo-img">
+        
+        <h1>Your Issuer status is active.</h1>
+        
+        <p>Congratulations. Your request to become a Pauv Issuer has been approved. Your account has been upgraded, and your ticker symbol is now live on the marketplace.</p>
+        
+        <p>You now have full access to your <strong>Issuer Dashboard</strong>. This is where you will monitor your PV market performance, view shareholder analytics, and manage your USDP distributions.</p>
+
+        <a href="${confirmationUrl}" class="button">Go to Issuer Dashboard</a>
+
+        <div class="highlight-box">
+          <p style="margin-bottom: 0; font-size: 14px;"><strong>Next Step:</strong> Review your listing details and ensure your bio and social links are up to date.</p>
+        </div>
+
+      </div>
+    </div>
+    <div class="footer">
+      Pauv Inc. | Global Headquarters | Austin, TX
+    </div>
+  </div>
+</body>
+</html>`;
+}

@@ -2,7 +2,16 @@
 
 ## Overview
 
-This document outlines the security architecture for the admin subdomain (`admin.pauv.com`) using Cloudflare Zero Trust (Access). This gates the entire admin subdomain behind Cloudflare Access, restricting access to a single administrator.
+This document outlines the security architecture for the admin subdomain (`admin.pauv.com`) using Cloudflare Zero Trust (Access). Only `@pauv.com` email addresses can authenticate, fully replacing the old Supabase-based admin claim check that previously gated `/admin` on the main site.
+
+## How it works
+
+1. **DNS**: `admin.pauv.com` → CNAME to Amplify, proxied through Cloudflare
+2. **Cloudflare Access**: gates all requests to `admin.pauv.com`, requiring a `@pauv.com` email
+3. **CF injects headers**: authenticated requests get `Cf-Access-Authenticated-User-Email` and `Cf-Access-Jwt-Assertion`
+4. **Next.js middleware**: verifies the CF email header as defense-in-depth; redirects `pauv.com/admin` → `admin.pauv.com`
+5. **API routes**: `verifyAdmin(request)` checks CF header first, falls back to Supabase JWT in dev
+6. **DB operations**: use `createAdminClient()` (service_role), audit logs map CF email → Supabase user ID
 
 ## Prerequisites
 
@@ -37,17 +46,16 @@ Application domain: admin.pauv.com
 
 Create a policy with the following rules:
 
-**Policy Name:** `Admin Access Only`
+**Policy Name:** `Pauv Admin Access`
 **Policy Action:** `Allow`
 
 **Configure Rules (Include):**
 
 | Rule Type | Selector | Value |
 |-----------|----------|-------|
-| Emails | is | `your-admin-email@example.com` |
-| IP Ranges | is | `YOUR_CURRENT_IP/32` |
+| Emails ending in | domain | `@pauv.com` |
 
-**Important:** Both conditions should be configured as "Include" rules with "AND" logic for maximum security.
+This ensures only `@pauv.com` email addresses can access the admin subdomain.
 
 ### 2.3 Additional Security Settings
 

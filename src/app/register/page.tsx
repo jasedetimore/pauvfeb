@@ -9,12 +9,14 @@ import { signUp } from "@/app/auth/actions";
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [requiresEmailConfirmation, setRequiresEmailConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setRequiresEmailConfirmation(false);
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
@@ -41,6 +43,7 @@ export default function RegisterPage() {
       setError(result.error);
     } else if (result?.success) {
       setSuccess(result.message || "Account created successfully!");
+      setRequiresEmailConfirmation(Boolean(result.requiresEmailConfirmation));
     }
     
     setIsLoading(false);
@@ -100,14 +103,16 @@ export default function RegisterPage() {
                 }}
               >
                 {success}
-                <p className="mt-2 text-sm">
-                  <Link
-                    href="/login"
-                    className="underline font-semibold"
-                  >
-                    Click here to login
-                  </Link>
-                </p>
+                {!requiresEmailConfirmation && (
+                  <p className="mt-2 text-sm">
+                    <Link
+                      href="/login"
+                      className="underline font-semibold"
+                    >
+                      Click here to login
+                    </Link>
+                  </p>
+                )}
               </div>
             )}
 

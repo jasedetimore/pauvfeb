@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -13,8 +13,7 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action");
@@ -84,8 +83,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    await verifyAdminFromJWT(authHeader);
+    await verifyAdmin(request);
 
     const adminClient = createAdminClient();
 

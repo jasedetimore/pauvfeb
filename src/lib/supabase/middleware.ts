@@ -8,6 +8,23 @@ const cookieOptions = {
   secure: process.env.NODE_ENV === "production",
 };
 
+/**
+ * Admin subdomain host pattern.
+ * In production: admin.pauv.com
+ * In development: admin.localhost:3000 (or override with ADMIN_HOST env)
+ */
+const ADMIN_HOST =
+  process.env.ADMIN_HOST ||
+  (process.env.NODE_ENV === "production" ? "admin.pauv.com" : "admin.localhost:3000");
+
+const MAIN_SITE_URL =
+  process.env.NEXT_PUBLIC_APP_URL || "https://pauv.com";
+
+function isAdminSubdomain(request: NextRequest): boolean {
+  const host = request.headers.get("host") || "";
+  return host === ADMIN_HOST || host.startsWith("admin.");
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -44,28 +61,45 @@ export async function updateSession(request: NextRequest) {
   // Do NOT add any logic between createServerClient and getUser().
   const { data: { user }, error } = await supabase.auth.getUser();
 
-  // Protect /admin routes - must be logged in AND be an admin
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    // Not logged in - redirect to login
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirectTo", request.nextUrl.pathname);
-      return NextResponse.redirect(url);
+  const pathname = request.nextUrl.pathname;
+
+  // ─── Admin Subdomain Handling (admin.pauv.com) ───
+  // Cloudflare Zero Trust gates access — only @pauv.com emails get through.
+  // We verify the CF header here as defense-in-depth.
+  if (isAdminSubdomain(request)) {
+    const cfEmail = request.headers.get("cf-access-authenticated-user-email");
+
+    // In production, CF headers must be present
+    if (process.env.NODE_ENV === "production" && (!cfEmail || !cfEmail.endsWith("@pauv.com"))) {
+      return new NextResponse("Forbidden", { status: 403 });
     }
-    
-    // Logged in but not an admin - redirect to home
-    const isAdmin = user.app_metadata?.admin === true;
-    if (!isAdmin) {
+
+    // Rewrite root to /admin so admin.pauv.com/ shows the admin dashboard
+    if (pathname === "/") {
       const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
+      url.pathname = "/admin";
+      return NextResponse.rewrite(url);
     }
+
+    // Allow /admin/* and /api/admin/* paths on the admin subdomain
+    // Block non-admin paths (don't serve the main site on admin subdomain)
+    if (!pathname.startsWith("/admin") && !pathname.startsWith("/api/admin") && !pathname.startsWith("/_next") && !pathname.startsWith("/api/")) {
+      return new NextResponse("Not Found", { status: 404 });
+    }
+
+    return supabaseResponse;
+  }
+
+  // ─── Main Domain: Redirect /admin to admin subdomain ───
+  if (pathname.startsWith("/admin")) {
+    const adminUrl = process.env.NODE_ENV === "production"
+      ? `https://${ADMIN_HOST}${pathname}`
+      : `http://${ADMIN_HOST}${pathname}`;
+    return NextResponse.redirect(adminUrl);
   }
   
   // Log for debugging (can be removed in production)
   if (process.env.NODE_ENV === "development") {
-    const pathname = request.nextUrl.pathname;
     if (!pathname.startsWith("/_next") && !pathname.startsWith("/api")) {
       // Only log strictly if it's NOT the "Auth session missing!" error which just means "not logged in"
       const isAuthMissing = error?.message === "Auth session missing!";

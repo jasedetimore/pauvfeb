@@ -1,7 +1,27 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const supabaseUrl = "https://bsrizjihqrywmukqsess.supabase.co";
+
+const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' blob: data: ${supabaseUrl};
+    connect-src 'self' ${supabaseUrl} https://*.supabase.co;
+    font-src 'self';
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+`;
+
 const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: cspHeader.replace(/\n/g, ""),
+  },
   {
     key: "X-DNS-Prefetch-Control",
     value: "on",

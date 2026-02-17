@@ -138,6 +138,49 @@ export interface TransactionUpdate {
 }
 
 /**
+ * Verify admin access via Cloudflare Zero Trust headers (production)
+ * or fall back to Supabase JWT (development).
+ *
+ * In production, Cloudflare injects `Cf-Access-Authenticated-User-Email` on
+ * every request that passes through the Zero Trust gate at admin.pauv.com.
+ * We check the email domain (@pauv.com) and look up the Supabase user ID
+ * for audit logging via the `get_user_id_by_email` RPC.
+ *
+ * In development (no CF headers), falls back to the existing JWT flow.
+ */
+export async function verifyAdmin(
+  request: Request
+): Promise<{ userId: string; email: string }> {
+  // 1. Check Cloudflare Access headers (production admin.pauv.com)
+  const cfEmail = request.headers.get("cf-access-authenticated-user-email");
+
+  if (cfEmail) {
+    if (!cfEmail.endsWith("@pauv.com")) {
+      throw new AdminOperationError(
+        "Unauthorized: only @pauv.com emails are allowed",
+        403,
+        "CF_UNAUTHORIZED"
+      );
+    }
+
+    // Look up Supabase user ID for audit trail
+    const adminClient = createAdminClient();
+    const { data: userId } = await adminClient.rpc("get_user_id_by_email", {
+      p_email: cfEmail,
+    });
+
+    return {
+      userId: userId || "00000000-0000-0000-0000-000000000000",
+      email: cfEmail,
+    };
+  }
+
+  // 2. Fall back to JWT verification (development / direct API calls)
+  const authHeader = request.headers.get("authorization");
+  return verifyAdminFromJWT(authHeader);
+}
+
+/**
  * Admin operation error class
  */
 export class AdminOperationError extends Error {

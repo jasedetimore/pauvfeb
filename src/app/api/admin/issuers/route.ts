@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -13,8 +13,7 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const adminClient = createAdminClient();
 
@@ -60,8 +59,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const body = await request.json();
     const { name, ticker, bio, headline, tag, photo } = body;
@@ -160,8 +158,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const body = await request.json();
     const { id, ...updateFields } = body;
@@ -238,8 +235,7 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

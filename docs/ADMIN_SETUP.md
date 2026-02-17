@@ -2,10 +2,14 @@
 
 This document provides instructions for setting up admin access to the Pauv platform.
 
+## Overview
+
+Admin access is managed via **Cloudflare Zero Trust** on the `admin.pauv.com` subdomain. Only `@pauv.com` email addresses can authenticate through the Cloudflare Access gate. There is no `/admin` route on the main site — requests to `pauv.com/admin` are automatically redirected to `admin.pauv.com`.
+
 ## Prerequisites
 
 1. Supabase project configured
-2. User account created in Supabase Auth
+2. Cloudflare Zero Trust configured for `admin.pauv.com` (see [CLOUDFLARE_ZERO_TRUST_SETUP.md](./CLOUDFLARE_ZERO_TRUST_SETUP.md))
 3. Service role key available
 
 ## Environment Variables
@@ -20,9 +24,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # Admin-specific (SERVER ONLY - never expose to client)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Cloudflare Zero Trust (optional, for verification)
+# Cloudflare Zero Trust
 CF_ACCESS_TEAM_NAME=your-team-name
 CF_ACCESS_AUD=your-application-aud-tag
+
+# Admin subdomain host (defaults to admin.pauv.com in production)
+# ADMIN_HOST=admin.localhost:3000  # Uncomment for local dev
 ```
 
 ## Step 1: Apply Database Migrations
@@ -37,22 +44,23 @@ This will create:
 - `is_admin()` function - checks if current user is admin
 - `set_admin_claim()` function - sets admin claim (service_role only)
 - `log_audit_entry()` function - logs actions to audit table
+- `get_user_id_by_email()` function - maps CF email to Supabase user ID for audit logging
 - `security_audit` table - immutable audit log
 - RLS policies for admin operations on `issuer_trading` and `transactions`
 
 ## Step 2: Make Yourself Admin
 
-### Option A: Using the API (Recommended)
+Admin users need a Supabase account with the admin claim **and** a `@pauv.com` email in Cloudflare Access.
 
-Make a POST request to `/api/admin/set-admin`:
+### Option A: Using the API
+
+Make a POST request to `admin.pauv.com/api/admin/set-admin` (must be authenticated via Cloudflare):
 
 ```bash
-curl -X POST https://your-domain.com/api/admin/set-admin \
+curl -X POST https://admin.pauv.com/api/admin/set-admin \
   -H "Content-Type: application/json" \
-  -d '{"email": "your-email@example.com", "make_admin": true}'
+  -d '{"email": "your-email@pauv.com", "make_admin": true}'
 ```
-
-Note: If no admin exists, this endpoint allows the first user to become admin without authentication.
 
 ### Option B: Using Supabase Dashboard
 
@@ -80,17 +88,36 @@ WHERE email = 'your-email@example.com';
 
 ## Step 3: Verify Admin Access
 
-After setting up, verify your admin access:
+After setting up:
+
+1. Navigate to `https://admin.pauv.com`
+2. Authenticate via Cloudflare Access (email OTP or GitHub)
+3. You should see the admin dashboard
+
+To test API endpoints directly:
 
 ```bash
-# Get your JWT token from the browser (Network tab when logged in)
-# Then test the admin endpoint:
-
-curl -X GET https://your-domain.com/api/admin/issuer-trading \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+# From admin.pauv.com (CF headers are injected automatically)
+curl -X GET https://admin.pauv.com/api/admin/issuer-trading
 ```
 
-You should receive a successful response with issuer trading data.
+## How Authentication Works
+
+### Production (admin.pauv.com)
+
+1. **Cloudflare Zero Trust** gates the subdomain — only `@pauv.com` emails pass
+2. Cloudflare injects `Cf-Access-Authenticated-User-Email` header on all requests
+3. **Middleware** verifies the CF header as defense-in-depth
+4. **API routes** call `verifyAdmin(request)` which checks the CF header
+5. The CF email is mapped to a Supabase user ID via `get_user_id_by_email()` for audit logging
+6. **Supabase RLS** enforces admin permissions on the database level
+
+### Development (localhost)
+
+In development, CF headers are not present. The system falls back to Supabase JWT auth:
+1. Admin user logs in via Supabase auth on the main site
+2. API calls include `Authorization: Bearer` token
+3. `verifyAdmin()` falls back to `verifyAdminFromJWT()` when no CF headers are present
 
 ## API Endpoints
 
@@ -135,9 +162,9 @@ You should receive a successful response with issuer trading data.
 │                                                                 │
 │  Browser → Cloudflare Zero Trust → AWS Amplify → Next.js API   │
 │                   ↓                       ↓                     │
-│            (Email + IP Check)      (JWT Admin Claim Check)     │
+│        (@pauv.com email gate)   (CF header verification)       │
 │                                          ↓                      │
-│                                    Supabase (RLS)               │
+│                                 Supabase (service_role)         │
 │                                          ↓                      │
 │                                    Audit Log                    │
 │                                                                 │
@@ -146,10 +173,11 @@ You should receive a successful response with issuer trading data.
 
 ### Security Layers
 
-1. **Cloudflare Zero Trust** - Gates the admin subdomain by email and IP
-2. **JWT Admin Claim** - API routes verify `app_metadata.admin === true`
-3. **Supabase RLS** - Database-level enforcement of admin permissions
-4. **Audit Logging** - All actions logged with full details
+1. **Cloudflare Zero Trust** - Gates `admin.pauv.com` — only `@pauv.com` emails
+2. **Middleware** - Verifies CF email header, blocks non-admin paths on subdomain
+3. **API Route Auth** - `verifyAdmin()` checks CF header (prod) or JWT (dev)
+4. **Supabase RLS** - Database-level enforcement of admin permissions
+5. **Audit Logging** - All actions logged with admin email and Supabase user ID
 
 ## Troubleshooting
 

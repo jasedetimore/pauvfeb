@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
@@ -27,6 +27,45 @@ const AuthContext = createContext<AuthContextType>({
   issuerId: null,
 });
 
+/** Helper: apply user data from a Supabase User object to state setters */
+function applyUser(
+  authUser: User,
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsIssuer: React.Dispatch<React.SetStateAction<boolean>>,
+  setIssuerId: React.Dispatch<React.SetStateAction<string | null>>,
+  supabase: ReturnType<typeof createClient>,
+  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>,
+) {
+  setUser(authUser);
+  setIsAdmin(authUser.app_metadata?.admin === true);
+  setIsIssuer(authUser.app_metadata?.issuer === true);
+  setIssuerId(authUser.app_metadata?.issuer_id || null);
+  // Fetch profile in background (non-blocking)
+  supabase
+    .from("users")
+    .select("username, usdp_balance")
+    .eq("user_id", authUser.id)
+    .single()
+    .then(({ data }: { data: UserProfile | null }) => {
+      if (data) setProfile(data);
+    });
+}
+
+function clearUser(
+  setUser: React.Dispatch<React.SetStateAction<User | null>>,
+  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>,
+  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsIssuer: React.Dispatch<React.SetStateAction<boolean>>,
+  setIssuerId: React.Dispatch<React.SetStateAction<string | null>>,
+) {
+  setUser(null);
+  setProfile(null);
+  setIsAdmin(false);
+  setIsIssuer(false);
+  setIssuerId(null);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -34,55 +73,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isIssuer, setIsIssuer] = useState(false);
   const [issuerId, setIssuerId] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Use a ref so the onAuthStateChange callback always sees the current value
+  const isInitializedRef = useRef(false);
 
   const supabase = createClient();
 
   useEffect(() => {
-    // 1. Set up auth state listener for FUTURE auth changes (sign in/out)
-    // Don't use this for initial session - use getUser() instead
+    let cancelled = false; // guard against setting state after unmount
+
+    // 1. Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      // Only handle auth changes AFTER initial hydration is complete
-      // The INITIAL_SESSION event can fire with null before getUser() validates
-      if (!isInitialized && event === "INITIAL_SESSION") {
-        // Skip - let checkSession handle initial state
+      if (cancelled) return;
+
+      if (event === "INITIAL_SESSION") {
+        // Use the cached session as a fast-path so the UI renders immediately
+        // (e.g. the issuer sidebar link appears without waiting for getUser()).
+        // checkSession() will still run afterwards and overwrite with the
+        // server-validated user if needed.
+        if (!isInitializedRef.current && session?.user) {
+          applyUser(session.user, setUser, setIsAdmin, setIsIssuer, setIssuerId, supabase, setProfile);
+          // Don't setIsLoading(false) here — let checkSession finalise loading
+        }
         return;
       }
-      
+
       // Keep this callback synchronous to prevent stale token deadlocks
       if (session?.user) {
-        setUser(session.user);
-        setIsAdmin(session.user.app_metadata?.admin === true);
-        setIsIssuer(session.user.app_metadata?.issuer === true);
-        setIssuerId(session.user.app_metadata?.issuer_id || null);
-        // Fetch profile in background (non-blocking)
-        supabase
-          .from("users")
-          .select("username, usdp_balance")
-          .eq("user_id", session.user.id)
-          .single()
-          .then(({ data }: { data: UserProfile | null }) => {
-            if (data) setProfile(data);
-          });
+        applyUser(session.user, setUser, setIsAdmin, setIsIssuer, setIssuerId, supabase, setProfile);
       } else {
-        setUser(null);
-        setProfile(null);
-        setIsAdmin(false);
-        setIsIssuer(false);
-        setIssuerId(null);
+        clearUser(setUser, setProfile, setIsAdmin, setIsIssuer, setIssuerId);
       }
       setIsLoading(false);
     });
 
-    // 2. Check active session with a timeout to prevent deadlocks
+    // 2. Check active session with supabase.auth.getUser() for initial hydration
     // Use Promise.race to force a fallback if getUser() hangs
     const checkSession = async () => {
       const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>((resolve) => {
         setTimeout(() => {
           resolve({ data: { user: null }, error: new Error("Auth timeout") });
-        }, 2000);
+        }, 5000);
       });
 
       try {
@@ -91,46 +124,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           timeoutPromise,
         ]);
 
+        if (cancelled) return;
+
         const { data: { user: authUser }, error } = result;
-        
+
         if (error || !authUser) {
-          // No valid session or timeout - clear state
-          setUser(null);
-          setProfile(null);
-          setIsAdmin(false);
+          // No valid session or timeout — only clear if INITIAL_SESSION
+          // didn't already populate (avoid flickering away valid state
+          // when it was just a timeout and the session *is* real).
+          // For a genuine "no user" we always clear.
+          if (!error || error.message !== "Auth timeout") {
+            clearUser(setUser, setProfile, setIsAdmin, setIsIssuer, setIssuerId);
+          }
+          // If timeout, keep whatever INITIAL_SESSION set — it'll be
+          // corrected on the next onAuthStateChange event.
         } else {
-          // User exists - set state directly
-          setUser(authUser);
-          setIsAdmin(authUser.app_metadata?.admin === true);
-          setIsIssuer(authUser.app_metadata?.issuer === true);
-          setIssuerId(authUser.app_metadata?.issuer_id || null);
-          // Fetch profile in background (non-blocking)
-          supabase
-            .from("users")
-            .select("username, usdp_balance")
-            .eq("user_id", authUser.id)
-            .single()
-            .then(({ data }: { data: UserProfile | null }) => {
-              if (data) setProfile(data);
-            });
+          // Server-validated user — authoritative source of truth
+          applyUser(authUser, setUser, setIsAdmin, setIsIssuer, setIssuerId, supabase, setProfile);
         }
       } catch (error) {
+        if (cancelled) return;
         console.error("Auth check failed:", error);
-        setUser(null);
-        setProfile(null);
-        setIsAdmin(false);
-        setIsIssuer(false);
-        setIssuerId(null);
+        clearUser(setUser, setProfile, setIsAdmin, setIsIssuer, setIssuerId);
       } finally {
-        // Always mark as initialized and done loading after checkSession
-        setIsInitialized(true);
-        setIsLoading(false);
+        if (!cancelled) {
+          isInitializedRef.current = true;
+          setIsLoading(false);
+        }
       }
     };
-    
+
     checkSession();
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
     };
   }, []);

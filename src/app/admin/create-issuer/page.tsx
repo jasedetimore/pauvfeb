@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 import { ImageUpload } from "@/components/atoms/ImageUpload";
 
@@ -67,17 +66,7 @@ export default function AdminCreateIssuerPage() {
   const fetchIssuers = useCallback(async () => {
     setLoadingIssuers(true);
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) return;
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-
-      const res = await fetch("/api/admin/issuers", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const res = await fetch("/api/admin/issuers");
       const json = await res.json();
       if (json.success && json.data) {
         setIssuers(json.data);
@@ -121,19 +110,10 @@ export default function AdminCreateIssuerPage() {
     setIssuerSuccess(null);
 
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Not authenticated");
-
       const response = await fetch("/api/admin/issuers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(issuerForm),
       });

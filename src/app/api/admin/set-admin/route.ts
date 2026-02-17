@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -14,11 +14,9 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-
     // Always require admin authentication — no bootstrap bypass.
     // Initial admin is seeded via migration (20260204223000_set_initial_admin.sql).
-    const admin = await verifyAdminFromJWT(authHeader).catch(() => {
+    const admin = await verifyAdmin(request).catch(() => {
       throw new AdminOperationError(
         "Admin authentication required",
         403,
@@ -155,8 +153,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    await verifyAdminFromJWT(authHeader);
+    await verifyAdmin(request);
 
     const adminClient = createAdminClient();
 

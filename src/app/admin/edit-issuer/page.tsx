@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 import { ImageUpload } from "@/components/atoms/ImageUpload";
 
@@ -44,27 +43,11 @@ export default function AdminEditIssuerPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
-  // Helper to get token — getUser() forces server-side verification / token refresh,
-  // then getSession() retrieves the (now-fresh) access token.
-  const getToken = async () => {
-    const supabase = createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) return null;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    return session?.access_token ?? null;
-  };
-
   // Fetch issuers
   const fetchIssuers = useCallback(async () => {
     setLoadingIssuers(true);
     try {
-      const token = await getToken();
-      if (!token) return;
-      const res = await fetch("/api/admin/issuers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch("/api/admin/issuers");
       const json = await res.json();
       if (json.success && json.data) {
         setIssuers(json.data);
@@ -144,14 +127,10 @@ export default function AdminEditIssuerPage() {
     setSaveSuccess(null);
 
     try {
-      const token = await getToken();
-      if (!token) throw new Error("Not authenticated");
-
       const res = await fetch("/api/admin/issuers", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: selected.id,

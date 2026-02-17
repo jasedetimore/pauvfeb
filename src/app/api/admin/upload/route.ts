@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -14,8 +14,7 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

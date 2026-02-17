@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -14,8 +14,7 @@ import type { IssuerTradingUpdate } from "@/lib/supabase/admin";
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const adminClient = createAdminClient();
 
@@ -61,8 +60,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const body = await request.json();
     const { ticker, base_price, price_step, current_price, current_supply, total_usdp } = body;
@@ -126,8 +124,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const body: IssuerTradingUpdate = await request.json();
     const { ticker, ...updateFields } = body;
@@ -196,8 +193,7 @@ export async function PUT(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const ticker = searchParams.get("ticker");

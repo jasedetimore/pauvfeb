@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/atoms/PrimaryButton";
 
 interface IssuerRequest {
@@ -32,26 +31,15 @@ export default function IssuerRequestsPage() {
   const [error, setError] = useState("");
   const [approving, setApproving] = useState<string | null>(null);
   const [approvalResults, setApprovalResults] = useState<ApprovalResult[]>([]);
-
-  const supabase = createClient();
+  const [resending, setResending] = useState<string | null>(null);
+  const [resendResults, setResendResults] = useState<Record<string, { success: boolean; message: string }>>({});
 
   const fetchRequests = useCallback(async () => {
     setIsLoading(true);
     setError("");
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError("Not authenticated");
-        setIsLoading(false);
-        return;
-      }
-
-      const res = await fetch("/api/admin/issuer-requests", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const res = await fetch("/api/admin/issuer-requests");
 
       const result = await res.json();
 
@@ -65,7 +53,7 @@ export default function IssuerRequestsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchRequests();
@@ -76,18 +64,10 @@ export default function IssuerRequestsPage() {
     setError("");
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError("Not authenticated");
-        setApproving(null);
-        return;
-      }
-
       const res = await fetch("/api/admin/issuer-requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ requestId }),
       });
@@ -119,6 +99,42 @@ export default function IssuerRequestsPage() {
       setError("Failed to approve request");
     } finally {
       setApproving(null);
+    }
+  };
+
+  const handleResendEmail = async (requestId: string) => {
+    setResending(requestId);
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/issuer-requests/resend-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ requestId }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setResendResults((prev) => ({
+          ...prev,
+          [requestId]: { success: false, message: result.error || "Failed to resend email" },
+        }));
+      } else {
+        setResendResults((prev) => ({
+          ...prev,
+          [requestId]: { success: true, message: "Approval email sent" },
+        }));
+      }
+    } catch {
+      setResendResults((prev) => ({
+        ...prev,
+        [requestId]: { success: false, message: "Failed to resend email" },
+      }));
+    } finally {
+      setResending(null);
     }
   };
 
@@ -229,6 +245,9 @@ export default function IssuerRequestsPage() {
                     onApprove={handleApprove}
                     isApproving={false}
                     approvalResult={getApprovalResult(req.id)}
+                    onResendEmail={handleResendEmail}
+                    isResending={resending === req.id}
+                    resendResult={resendResults[req.id]}
                   />
                 ))}
               </div>
@@ -247,11 +266,17 @@ function RequestCard({
   onApprove,
   isApproving,
   approvalResult,
+  onResendEmail,
+  isResending,
+  resendResult,
 }: {
   request: IssuerRequest;
   onApprove: (id: string) => void;
   isApproving: boolean;
   approvalResult?: ApprovalResult;
+  onResendEmail?: (id: string) => void;
+  isResending?: boolean;
+  resendResult?: { success: boolean; message: string };
 }) {
   const isPending = request.status === "pending";
   const isApproved = request.status === "approved";
@@ -369,7 +394,12 @@ function RequestCard({
         >
           {approvalResult.linkedExistingUser ? (
             <p style={{ color: colors.green }}>
-              ✓ Approved — Existing account linked. Issuer access granted immediately.
+              ✓ Approved — Account linked.{" "}
+              {approvalResult.emailSent
+                ? `Approval email sent to ${request.email}.`
+                : approvalResult.emailError
+                  ? `⚠ Approval email failed: ${approvalResult.emailError}`
+                  : "Issuer access granted immediately."}
             </p>
           ) : approvalResult.emailSent ? (
             <p style={{ color: colors.green }}>
@@ -407,6 +437,35 @@ function RequestCard({
         >
           ✓ Previously approved
         </p>
+      )}
+
+      {/* Resend email button for approved existing users */}
+      {isApproved && request.user_id && onResendEmail && (
+        <div className="flex items-center gap-3 pt-1">
+          <button
+            onClick={() => onResendEmail(request.id)}
+            disabled={isResending}
+            className="text-xs font-mono font-semibold px-3 py-1.5 rounded-md transition-colors"
+            style={{
+              backgroundColor: colors.gold,
+              color: colors.textDark,
+              opacity: isResending ? 0.6 : 1,
+              cursor: isResending ? "not-allowed" : "pointer",
+            }}
+          >
+            {isResending ? "Sending..." : "Resend Approval Email"}
+          </button>
+          {resendResult && (
+            <span
+              className="text-xs font-mono"
+              style={{ color: resendResult.success ? colors.green : colors.red }}
+            >
+              {resendResult.success
+                ? `✓ Email sent to ${request.email}`
+                : `⚠ ${resendResult.message}`}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

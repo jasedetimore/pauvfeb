@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { ImageUpload } from "@/components/atoms/ImageUpload";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 
@@ -47,20 +46,7 @@ export default function AdminTagsPage() {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("Not authenticated");
-      }
-
-      const res = await fetch("/api/admin/tags", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const res = await fetch("/api/admin/tags");
 
       const json = await res.json();
 
@@ -88,20 +74,10 @@ export default function AdminTagsPage() {
     setCreateSuccess(null);
 
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("Not authenticated");
-      }
-
       const res = await fetch("/api/admin/tags", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           tag: createForm.tag,
@@ -155,20 +131,10 @@ export default function AdminTagsPage() {
     setEditSuccess(null);
 
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("Not authenticated");
-      }
-
       const res = await fetch("/api/admin/tags", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           id: editingTag.id,

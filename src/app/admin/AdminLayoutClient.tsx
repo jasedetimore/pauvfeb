@@ -3,12 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User } from "@supabase/supabase-js";
 import { colors } from "@/lib/constants/colors";
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
-  user: User;
+  email: string;
 }
 
 const NAV_ITEMS = [
@@ -25,9 +24,10 @@ const NAV_ITEMS = [
  * Client Component for Admin Layout UI
  *
  * Renders a persistent left sidebar with navigation and
- * a content area on the right.
+ * a content area on the right. Admin access is gated by
+ * Cloudflare Zero Trust (admin.pauv.com, @pauv.com emails only).
  */
-export function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
+export function AdminLayoutClient({ children, email }: AdminLayoutClientProps) {
   const pathname = usePathname();
 
   return (
@@ -94,17 +94,17 @@ export function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
           <p
             className="text-xs truncate"
             style={{ color: colors.textSecondary }}
-            title={user.email ?? ""}
+            title={email}
           >
-            {user.email}
+            {email}
           </p>
-          <Link
-            href="/"
+          <a
+            href={process.env.NEXT_PUBLIC_APP_URL || "https://pauv.com"}
             className="block text-xs transition-colors hover:opacity-80"
             style={{ color: colors.textMuted }}
           >
             ← Exit Admin
-          </Link>
+          </a>
         </div>
       </aside>
 

@@ -51,7 +51,7 @@ function SidebarIcon({ icon }: { icon: string }) {
 export default function AccountLayout({ children }: AccountLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isIssuer } = useAuth();
+  const { isIssuer, isLoading } = useAuth();
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -60,8 +60,12 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
     router.refresh();
   }
 
+  // While auth is loading, show the issuer link as a placeholder so the
+  // sidebar doesn't visibly jump when isIssuer resolves to true.
+  const showIssuerLink = isLoading || isIssuer;
+
   // Build full sidebar links including conditional issuer dashboard
-  const allLinks = isIssuer
+  const allLinks = showIssuerLink
     ? [...sidebarLinks, { href: "/account/issuer-dashboard", label: "Issuer Dashboard", icon: "issuer" }]
     : sidebarLinks;
 

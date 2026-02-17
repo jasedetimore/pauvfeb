@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { IssuerLinksDB, SOCIAL_PLATFORMS, SocialPlatform } from "@/lib/types/issuer-links";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 import {
@@ -50,37 +49,15 @@ export default function AdminIssuerLinksPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
-  // Get auth token helper — getUser() forces server verification / token refresh,
-  // then getSession() retrieves the (now-fresh) access token.
-  const getAccessToken = async (): Promise<string> => {
-    const supabase = createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) {
-      throw new Error("Not authenticated");
-    }
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      throw new Error("Not authenticated");
-    }
-    return session.access_token;
-  };
-
   // Fetch issuer list (initial or filtered)
   const fetchIssuerList = useCallback(async (search?: string) => {
     setListLoading(true);
     try {
-      const token = await getAccessToken();
       const url = search
         ? `/api/admin/issuer-links?search=${encodeURIComponent(search)}`
         : "/api/admin/issuer-links";
 
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(url);
 
       const json = await res.json();
 
@@ -111,15 +88,8 @@ export default function AdminIssuerLinksPage() {
     setIssuerLinks(null);
 
     try {
-      const token = await getAccessToken();
-
       const res = await fetch(
-        `/api/admin/issuer-links?ticker=${encodeURIComponent(ticker)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `/api/admin/issuer-links?ticker=${encodeURIComponent(ticker)}`
       );
 
       const json = await res.json();
@@ -171,13 +141,10 @@ export default function AdminIssuerLinksPage() {
     setSaveSuccess(null);
 
     try {
-      const token = await getAccessToken();
-
       const res = await fetch("/api/admin/issuer-links", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ticker: issuerLinks.ticker,

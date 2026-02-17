@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 
 interface IssuerDetails {
@@ -50,28 +49,15 @@ export default function AdminListTradingPage() {
   const fetchData = useCallback(async () => {
     setLoadingData(true);
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) return;
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) return;
-
       // Fetch issuers
-      const issuerRes = await fetch("/api/admin/issuers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const issuerRes = await fetch("/api/admin/issuers");
       const issuerJson = await issuerRes.json();
       if (issuerJson.success && issuerJson.data) {
         setIssuers(issuerJson.data);
       }
 
       // Fetch trading records
-      const tradingRes = await fetch("/api/admin/issuer-trading", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const tradingRes = await fetch("/api/admin/issuer-trading");
       const tradingJson = await tradingRes.json();
       if (tradingJson.success) {
         setTradingRecords(tradingJson.data || []);
@@ -117,19 +103,10 @@ export default function AdminListTradingPage() {
     setTradingSuccess(null);
 
     try {
-      const supabase = createClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Not authenticated");
-
       const response = await fetch("/api/admin/issuer-trading", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           ticker: tradingForm.ticker,

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { colors } from "@/lib/constants/colors";
-import { createClient } from "@/lib/supabase/client";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 
 interface HideIssuerRow {
@@ -27,21 +26,7 @@ export default function AdminHideIssuerPage() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Not authenticated");
-
-      const res = await fetch("/api/admin/hide-issuer", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      const res = await fetch("/api/admin/hide-issuer");
       const json = await res.json();
 
       if (!json.success) throw new Error(json.error || "Failed to fetch issuers");
@@ -62,23 +47,10 @@ export default function AdminHideIssuerPage() {
   const handleToggle = async (issuer: HideIssuerRow) => {
     setTogglingId(issuer.id);
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("Not authenticated");
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Not authenticated");
-
       const res = await fetch("/api/admin/hide-issuer", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ id: issuer.id, is_hidden: !issuer.is_hidden }),
       });

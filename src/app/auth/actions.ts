@@ -33,9 +33,11 @@ export async function signUp(formData: FormData) {
     return { error: authError.message };
   }
 
+  const requiresEmailConfirmation = REQUIRE_EMAIL_CONFIRMATION || !authData.session;
+
   // Safety guard: in environments where confirmations are required,
   // ensure we don't keep an authenticated session even if provider config drifts.
-  if (REQUIRE_EMAIL_CONFIRMATION && authData.session) {
+  if (requiresEmailConfirmation && authData.session) {
     await supabase.auth.signOut();
   }
 
@@ -56,9 +58,9 @@ export async function signUp(formData: FormData) {
 
   return {
     success: true,
-    requiresEmailConfirmation: REQUIRE_EMAIL_CONFIRMATION,
-    message: REQUIRE_EMAIL_CONFIRMATION
-      ? "Check your email for confirmation link!"
+    requiresEmailConfirmation,
+    message: requiresEmailConfirmation
+      ? "Confirm your email to sign in."
       : "Account created successfully! You can now sign in.",
   };
 }

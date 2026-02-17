@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -14,8 +14,7 @@ import type { TransactionUpdate } from "@/lib/supabase/admin";
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const ticker = searchParams.get("ticker");
@@ -95,8 +94,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const body = await request.json();
     const {
@@ -180,8 +178,7 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const body: TransactionUpdate = await request.json();
     const { id, ...updateFields } = body;
@@ -254,8 +251,7 @@ export async function PUT(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

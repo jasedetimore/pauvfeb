@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   createAdminClient,
-  verifyAdminFromJWT,
+  verifyAdmin,
   logAuditEntry,
   getClientIP,
   AdminOperationError,
@@ -14,8 +14,7 @@ import { getURL } from "@/lib/utils/get-url";
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
@@ -64,8 +63,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const admin = await verifyAdminFromJWT(authHeader);
+    const admin = await verifyAdmin(request);
     const adminClient = createAdminClient();
 
     const body = await request.json();
@@ -185,6 +183,30 @@ export async function POST(request: NextRequest) {
       }
 
       linkedExistingUser = true;
+
+      // ── SEND APPROVAL EMAIL via Supabase magic link ──
+      // Uses the auth.email.template.magic_link template configured in Supabase
+      // (which uses the project's Resend integration — no local API key needed).
+      try {
+        const { error: otpError } = await adminClient.auth.signInWithOtp({
+          email: issuerRequest.email,
+          options: {
+            shouldCreateUser: false,
+            emailRedirectTo: `${getURL()}auth/issuer-approved`,
+          },
+        });
+
+        if (otpError) {
+          console.error("Failed to send approval magic link email:", otpError);
+          emailError = otpError.message;
+        } else {
+          emailSent = true;
+        }
+      } catch (emailErr) {
+        console.error("Approval email send error:", emailErr);
+        emailError =
+          emailErr instanceof Error ? emailErr.message : "Failed to send approval email";
+      }
     } else {
       // ── NEW USER FLOW ──
       // Create invite record and send Supabase invite email

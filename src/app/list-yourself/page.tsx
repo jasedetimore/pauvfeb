@@ -221,19 +221,6 @@ export default function ListYourselfPage() {
               borderColor: colors.boxOutline,
             }}
           >
-            {/* Logged-in user notice */}
-            {authUserId && (
-              <div
-                className="px-4 py-3 rounded-lg text-sm"
-                style={{
-                  color: colors.green,
-                  backgroundColor: `${colors.green}10`,
-                  border: `1px solid ${colors.green}30`,
-                }}
-              >
-                You&apos;re signed in. If approved, your existing account will automatically get issuer access — no new password needed.
-              </div>
-            )}
             {/* Name */}
             <div>
               <label
