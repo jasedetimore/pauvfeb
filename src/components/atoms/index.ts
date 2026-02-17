@@ -2,6 +2,7 @@
 // These are the smallest, most fundamental UI elements
 
 export { AdminSearchBar } from "./AdminSearchBar";
+export { AnalyticsLink, type AnalyticsLinkProps } from "./AnalyticsLink";
 export { Button } from "./Button";
 export { Logo } from "./Logo";
 export { IssuerCard, type IssuerCardProps } from "./IssuerCard";

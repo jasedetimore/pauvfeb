@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { sendGAEvent } from "@next/third-parties/google";
 import { colors } from "@/lib/constants/colors";
 import {
   IssuerHeaderSkeleton,
@@ -208,7 +209,18 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     };
   }, [ticker]);
 
-
+  // Fire a GA event when issuer profile data is available
+  useEffect(() => {
+    if (issuerData) {
+      sendGAEvent('event', 'view_issuer', {
+        issuer_ticker: issuerData.ticker,
+        issuer_name: issuerData.name,
+        issuer_tag: issuerData.tag || 'none',
+        content_type: 'issuer_profile',
+        currency: 'USDP',
+      });
+    }
+  }, [issuerData]);
 
   // Handler for buy action
   const handleBuy = (amount: number) => {

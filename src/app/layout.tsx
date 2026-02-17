@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Fira_Code, Instrument_Serif } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
@@ -51,6 +52,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </AuthProvider>
+        <GoogleAnalytics gaId="G-BCL77Q2MXW" />
       </body>
     </html>
   );
