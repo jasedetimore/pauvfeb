@@ -80,7 +80,10 @@ export function getClientIP(request: Request): string | null {
 }
 
 /**
- * Log an action to the security audit table
+ * Log an action to the security audit table.
+ *
+ * IMPORTANT: This function never throws. Audit logging must not prevent
+ * admin data operations from succeeding. Errors are logged to console only.
  */
 export async function logAuditEntry(params: {
   adminId: string;
@@ -94,27 +97,32 @@ export async function logAuditEntry(params: {
   userAgent?: string | null;
   requestId?: string;
 }): Promise<string> {
-  const adminClient = createAdminClient();
+  try {
+    const adminClient = createAdminClient();
 
-  const { data, error } = await adminClient.rpc("log_audit_entry", {
-    p_admin_id: params.adminId,
-    p_action: params.action,
-    p_target_table: params.targetTable,
-    p_target_id: params.targetId || null,
-    p_old_value: params.oldValue || null,
-    p_new_value: params.newValue || null,
-    p_metadata: params.metadata || {},
-    p_ip_address: params.ipAddress || null,
-    p_user_agent: params.userAgent || null,
-    p_request_id: params.requestId || null,
-  });
+    const { data, error } = await adminClient.rpc("log_audit_entry", {
+      p_admin_id: params.adminId,
+      p_action: params.action,
+      p_target_table: params.targetTable,
+      p_target_id: params.targetId || null,
+      p_old_value: params.oldValue || null,
+      p_new_value: params.newValue || null,
+      p_metadata: params.metadata || {},
+      p_ip_address: params.ipAddress || null,
+      p_user_agent: params.userAgent || null,
+      p_request_id: params.requestId || null,
+    });
 
-  if (error) {
-    console.error("Failed to log audit entry:", error);
-    throw new Error("Failed to log audit entry");
+    if (error) {
+      console.error("[AuditLog] Failed to log entry:", error.message);
+      return "";
+    }
+
+    return data as string;
+  } catch (err) {
+    console.error("[AuditLog] Unexpected error:", err);
+    return "";
   }
-
-  return data as string;
 }
 
 /**
@@ -163,11 +171,17 @@ export async function verifyAdmin(
       );
     }
 
-    // Look up Supabase user ID for audit trail
-    const adminClient = createAdminClient();
-    const { data: userId } = await adminClient.rpc("get_user_id_by_email", {
-      p_email: cfEmail,
-    });
+    // Look up Supabase user ID for audit trail (non-fatal if missing)
+    let userId: string | null = null;
+    try {
+      const adminClient = createAdminClient();
+      const { data } = await adminClient.rpc("get_user_id_by_email", {
+        p_email: cfEmail,
+      });
+      userId = data;
+    } catch {
+      console.warn("[verifyAdmin] Could not look up user ID for", cfEmail);
+    }
 
     return {
       userId: userId || "00000000-0000-0000-0000-000000000000",
