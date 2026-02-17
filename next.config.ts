@@ -5,12 +5,13 @@ const supabaseUrl = "https://bsrizjihqrywmukqsess.supabase.co";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com;
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: ${supabaseUrl};
-    connect-src 'self' ${supabaseUrl} https://*.supabase.co;
+    connect-src 'self' ${supabaseUrl} https://*.supabase.co https://cloudflareinsights.com;
     font-src 'self';
     object-src 'none';
+    frame-src 'self' https://iframe.mediadelivery.net;
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
