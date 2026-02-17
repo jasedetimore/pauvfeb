@@ -51,16 +51,19 @@ export default function ListYourselfPage() {
   // Detect if the user is already logged in
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setAuthUserId(user.id);
-        setAuthEmail(user.email || null);
-        setForm((prev) => ({
-          ...prev,
-          email: user.email || prev.email,
-        }));
-      }
-    });
+    const hydrateAuthUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) return;
+
+      setAuthUserId(data.user.id);
+      setAuthEmail(data.user.email || null);
+      setForm((prev) => ({
+        ...prev,
+        email: data.user?.email || prev.email,
+      }));
+    };
+
+    void hydrateAuthUser();
   }, []);
 
   const handleChange = (

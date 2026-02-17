@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
 import { ClaimForm } from "@/components/molecules/ClaimForm";
@@ -12,7 +12,7 @@ interface InviteData {
   issuerTicker: string;
 }
 
-export default function ClaimAccountPage() {
+function ClaimAccountContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -125,5 +125,40 @@ export default function ClaimAccountPage() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function ClaimAccountFallback() {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-16"
+      style={{ backgroundColor: colors.backgroundDark }}
+    >
+      <div
+        className="w-full max-w-md rounded-xl p-8"
+        style={{
+          backgroundColor: colors.box,
+          border: `1px solid ${colors.boxOutline}`,
+        }}
+      >
+        <div className="flex flex-col items-center justify-center py-12 gap-3">
+          <LoadingSpinner />
+          <p
+            className="text-sm font-mono"
+            style={{ color: colors.textSecondary }}
+          >
+            Loading invite...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ClaimAccountPage() {
+  return (
+    <Suspense fallback={<ClaimAccountFallback />}>
+      <ClaimAccountContent />
+    </Suspense>
   );
 }
