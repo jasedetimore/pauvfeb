@@ -34,6 +34,7 @@ export function IssuerCard({
   onClick,
 }: IssuerCardProps) {
   const [imageError, setImageError] = React.useState(false);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
 
   // Helper function to capitalize first letter
@@ -88,7 +89,7 @@ export function IssuerCard({
         style={{
           width: "88px",
           aspectRatio: "1",
-          backgroundColor: colors.textPrimary,
+          backgroundColor: colors.box,
           flexShrink: 0,
           borderRadius: "5px",
           overflow: "hidden",
@@ -105,7 +106,10 @@ export function IssuerCard({
               width: "100%",
               height: "100%",
               objectFit: "cover",
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.2s ease-in",
             }}
+            onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
           />
         ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "../atoms/Logo";
 import { colors } from "@/lib/constants/colors";
@@ -32,6 +32,7 @@ export function HeroSection({
   selectedTag = null,
 }: HeroSectionProps) {
   const router = useRouter();
+  const [heroImgLoaded, setHeroImgLoaded] = useState(false);
 
   // Format market cap
   const formatMarketCap = (value: number): string => {
@@ -135,7 +136,10 @@ export function HeroSection({
                   height: "100%",
                   objectFit: "fill",
                   display: "block",
+                  opacity: heroImgLoaded ? 1 : 0,
+                  transition: "opacity 0.25s ease-in",
                 }}
+                onLoad={() => setHeroImgLoaded(true)}
               />
               {/* Left fade — starts 10px outside the photo's left edge */}
               <div
@@ -166,20 +170,20 @@ export function HeroSection({
 
           {/* Left side — tag info */}
           <div
-            className="font-mono"
             style={{
               position: "relative",
               zIndex: 3,
               flex: 1,
               padding: "20px",
+              fontFamily: 'var(--font-fira-code), "Fira Code", monospace',
             }}
           >
             <div
               style={{
-                color: colors.gold,
-                fontSize: "clamp(20px, 5vw, 32px)",
+                color: colors.textPrimary,
+                fontSize: "clamp(26px, 5vw, 42px)",
                 fontWeight: "700",
-                marginBottom: "8px",
+                marginBottom: "2px",
                 lineHeight: "1.1",
               }}
             >
@@ -188,8 +192,8 @@ export function HeroSection({
             {selectedTag.description && (
               <div
                 style={{
-                  color: colors.textSecondary,
-                  fontSize: "clamp(14px, 3vw, 18px)",
+                  color: colors.textMuted,
+                  fontSize: "clamp(13px, 2vw, 16px)",
                   fontWeight: "400",
                   marginBottom: "8px",
                   lineHeight: "1.3",

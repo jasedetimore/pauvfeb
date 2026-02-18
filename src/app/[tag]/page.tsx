@@ -4,7 +4,7 @@ import { useMemo, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { sendGAEvent } from "@next/third-parties/google";
 import { MainPageTemplate } from "@/components/templates";
-import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
+import { useIssuers, useTags, useIssuerStats, useImagePreloader } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
 import { IssuerListData } from "@/components/molecules/IssuerListView";
 import { TagItemData } from "@/components/atoms/TagItem";
@@ -222,7 +222,24 @@ export default function TagPage({
   };
 
   const combinedLoading = isLoading || statsLoading;
-  const showSkeleton = tagsLoading || combinedLoading;
+  const dataLoaded = !tagsLoading && !combinedLoading;
+
+  // Collect image URLs for the hero banner + first visible cards (above the fold)
+  // Default sort is "biggest", so use biggestIssuers order
+  // Only preload the hero photo + first 9 cards (3x3 grid)
+  const imageUrls = useMemo(() => {
+    const urls: string[] = [];
+    if (selectedTagInfo?.photoUrl) urls.push(selectedTagInfo.photoUrl);
+    const visibleIssuers = biggestIssuers.slice(0, 9);
+    visibleIssuers.forEach((issuer) => {
+      if (issuer.imageUrl) urls.push(issuer.imageUrl);
+    });
+    return urls;
+  }, [selectedTagInfo, biggestIssuers]);
+
+  // Keep skeleton visible until all images are preloaded (or 3s timeout)
+  const imagesReady = useImagePreloader(imageUrls, 3000);
+  const showSkeleton = !dataLoaded || (imageUrls.length > 0 && !imagesReady);
 
   if (showSkeleton) {
     return <TagPageSkeleton />;

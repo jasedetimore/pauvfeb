@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { sendGAEvent } from "@next/third-parties/google";
 import { MainPageTemplate } from "@/components/templates";
-import { useIssuers, useTags, useIssuerStats } from "@/lib/hooks";
+import { useIssuers, useTags, useIssuerStats, useImagePreloader } from "@/lib/hooks";
 import { IssuerData } from "@/components/molecules/IssuerGrid";
 import { IssuerListData } from "@/components/molecules/IssuerListView";
 import { TagItemData } from "@/components/atoms/TagItem";
@@ -197,7 +197,10 @@ export default function Home() {
 
   // Combined loading state - show loading while fetching issuers or stats
   const combinedLoading = isLoading || statsLoading;
-  const showSkeleton = tagsLoading || combinedLoading;
+
+  // Preload the Pauv logo so it's instantly visible when skeleton clears
+  const logoReady = useImagePreloader(["/pauv_logo_black.png"], 3000);
+  const showSkeleton = tagsLoading || combinedLoading || !logoReady;
 
   if (showSkeleton) {
     return selectedTagId ? <TagPageSkeleton /> : <HomePageSkeleton />;
