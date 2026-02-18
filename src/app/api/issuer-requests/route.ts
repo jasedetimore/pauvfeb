@@ -61,12 +61,20 @@ export async function POST(request: Request) {
       desired_ticker,
       message,
       user_id,
+      terms_accepted,
     } = body;
 
     // Server-side validation
     if (!name || !email || !phone || !social_media_platform || !social_media_handle || !desired_ticker) {
       return NextResponse.json(
         { error: "All required fields must be filled out." },
+        { status: 400 }
+      );
+    }
+
+    if (!terms_accepted) {
+      return NextResponse.json(
+        { error: "You must agree to the Terms of Service, Privacy Policy, and Issuer Terms." },
         { status: 400 }
       );
     }
@@ -91,6 +99,7 @@ export async function POST(request: Request) {
         social_media_handle,
         desired_ticker: desired_ticker.toUpperCase(),
         message: message || null,
+        terms_accepted_at: new Date().toISOString(),
         ...(user_id ? { user_id } : {}),
       });
 

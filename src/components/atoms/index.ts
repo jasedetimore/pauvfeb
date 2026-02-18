@@ -42,3 +42,6 @@ export { WalletDepositsWithdrawalsSkeleton } from "./Skeleton";
 
 // Issuer onboarding atoms
 export { PrimaryButton } from "./PrimaryButton";
+
+// Legal / compliance atoms
+export { TermsCheckbox } from "./TermsCheckbox";

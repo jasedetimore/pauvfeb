@@ -76,6 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Use a ref so the onAuthStateChange callback always sees the current value
   const isInitializedRef = useRef(false);
+  // Track whether INITIAL_SESSION already provided a valid user
+  const hadInitialUserRef = useRef(false);
 
   const supabase = createClient();
 
@@ -94,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // checkSession() will still run afterwards and overwrite with the
         // server-validated user if needed.
         if (!isInitializedRef.current && session?.user) {
+          hadInitialUserRef.current = true;
           applyUser(session.user, setUser, setIsAdmin, setIsIssuer, setIssuerId, supabase, setProfile);
           // Don't setIsLoading(false) here — let checkSession finalise loading
         }
@@ -129,15 +132,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { user: authUser }, error } = result;
 
         if (error || !authUser) {
-          // No valid session or timeout — only clear if INITIAL_SESSION
-          // didn't already populate (avoid flickering away valid state
-          // when it was just a timeout and the session *is* real).
-          // For a genuine "no user" we always clear.
-          if (!error || error.message !== "Auth timeout") {
+          // If INITIAL_SESSION already provided a valid user, don't clear
+          // state here — let onAuthStateChange handle corrections
+          // (e.g. SIGNED_OUT). This prevents the flash-then-disappear
+          // when getUser() fails temporarily (expired token before
+          // auto-refresh, transient network error, timeout, etc.).
+          if (!hadInitialUserRef.current) {
             clearUser(setUser, setProfile, setIsAdmin, setIsIssuer, setIssuerId);
           }
-          // If timeout, keep whatever INITIAL_SESSION set — it'll be
-          // corrected on the next onAuthStateChange event.
         } else {
           // Server-validated user — authoritative source of truth
           applyUser(authUser, setUser, setIsAdmin, setIsIssuer, setIssuerId, supabase, setProfile);
@@ -145,7 +147,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         if (cancelled) return;
         console.error("Auth check failed:", error);
-        clearUser(setUser, setProfile, setIsAdmin, setIsIssuer, setIssuerId);
+        if (!hadInitialUserRef.current) {
+          clearUser(setUser, setProfile, setIsAdmin, setIsIssuer, setIssuerId);
+        }
       } finally {
         if (!cancelled) {
           isInitializedRef.current = true;

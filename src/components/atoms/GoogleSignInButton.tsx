@@ -8,11 +8,14 @@ interface GoogleSignInButtonProps {
   label?: string;
   /** URL to redirect to after sign-in completes */
   redirectTo?: string;
+  /** Disable the button (e.g. until terms are accepted) */
+  disabled?: boolean;
 }
 
 export function GoogleSignInButton({
   label = "Continue with Google",
   redirectTo = "/",
+  disabled = false,
 }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,7 +45,7 @@ export function GoogleSignInButton({
     <button
       type="button"
       onClick={handleGoogleSignIn}
-      disabled={isLoading}
+      disabled={isLoading || disabled}
       className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded border transition-all hover:shadow-md disabled:opacity-50"
       style={{
         backgroundColor: "#ffffff",
@@ -52,7 +55,7 @@ export function GoogleSignInButton({
         fontSize: "14px",
         fontWeight: 500,
         letterSpacing: "0.25px",
-        cursor: isLoading ? "not-allowed" : "pointer",
+        cursor: isLoading || disabled ? "not-allowed" : "pointer",
       }}
     >
       {/* Google "G" logo SVG */}

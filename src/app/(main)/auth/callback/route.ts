@@ -36,6 +36,7 @@ export async function GET(request: Request) {
             user_id: user.id,
             username,
             usdp_balance: 1000, // Give new users 1000 USDP to start
+            terms_accepted_at: new Date().toISOString(),
           });
         }
       }

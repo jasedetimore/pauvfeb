@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { colors } from "@/lib/constants/colors";
 import { GoogleSignInButton } from "@/components/atoms/GoogleSignInButton";
+import { TermsCheckbox } from "@/components/atoms/TermsCheckbox";
 import { signUp } from "@/app/auth/actions";
 
 export default function RegisterPage() {
@@ -11,6 +12,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [requiresEmailConfirmation, setRequiresEmailConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -37,6 +39,13 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!termsAccepted) {
+      setError("You must agree to the Terms of Service and Privacy Policy");
+      setIsLoading(false);
+      return;
+    }
+
+    formData.append("termsAccepted", "true");
     const result = await signUp(formData);
 
     if (result?.error) {
@@ -217,10 +226,17 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Terms & Conditions */}
+            <TermsCheckbox
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              variant="signup"
+            />
+
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !termsAccepted}
               className="w-full py-3 rounded-lg font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{
                 backgroundColor: colors.gold,
@@ -251,9 +267,21 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Terms notice for Google sign-up - OUTSIDE BOX */}
+          {!termsAccepted && (
+            <div className="mt-2.5 px-1">
+              <TermsCheckbox
+                checked={termsAccepted}
+                onChange={setTermsAccepted}
+                variant="signup"
+                id="terms-checkbox-google"
+              />
+            </div>
+          )}
+
           {/* Google Sign Up - OUTSIDE BOX */}
           <div className="mt-2.5">
-            <GoogleSignInButton label="Sign up with Google" />
+            <GoogleSignInButton label="Sign up with Google" disabled={!termsAccepted} />
           </div>
 
           {/* Sign In Link - OUTSIDE BOX */}

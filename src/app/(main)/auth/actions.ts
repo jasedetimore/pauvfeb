@@ -16,6 +16,11 @@ export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const username = formData.get("username") as string;
+  const termsAccepted = formData.get("termsAccepted") === "true";
+
+  if (!termsAccepted) {
+    return { error: "You must agree to the Terms of Service and Privacy Policy." };
+  }
 
   // Sign up with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -47,6 +52,7 @@ export async function signUp(formData: FormData) {
       user_id: authData.user.id,
       username,
       usdp_balance: 1000, // Give new users 1000 USDP to start
+      terms_accepted_at: new Date().toISOString(),
     });
 
     if (userError) {

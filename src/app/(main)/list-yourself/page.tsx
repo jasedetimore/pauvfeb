@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import emailjs from "@emailjs/browser";
 import { colors } from "@/lib/constants/colors";
 import { createClient } from "@/lib/supabase/client";
+import { TermsCheckbox } from "@/components/atoms/TermsCheckbox";
 
 const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "service_l36mged";
 const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "template_f9cpm9n";
@@ -47,6 +48,7 @@ export default function ListYourselfPage() {
   const [error, setError] = useState("");
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [authEmail, setAuthEmail] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Detect if the user is already logged in
   useEffect(() => {
@@ -94,6 +96,11 @@ export default function ListYourselfPage() {
     if (!form.socialHandle.trim()) { setError("Social media handle is required."); return; }
     if (!form.desiredTicker.trim()) { setError("Desired ticker is required."); return; }
 
+    if (!termsAccepted) {
+      setError("You must agree to the Terms of Service, Privacy Policy, and Issuer Terms.");
+      return;
+    }
+
     // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email.trim())) {
@@ -115,6 +122,7 @@ export default function ListYourselfPage() {
           social_media_handle: `@${form.socialHandle.trim()}`,
           desired_ticker: form.desiredTicker.trim().toUpperCase(),
           message: form.message.trim() || null,
+          terms_accepted: true,
           ...(authUserId ? { user_id: authUserId } : {}),
         }),
       });
@@ -393,10 +401,17 @@ export default function ListYourselfPage() {
               </p>
             )}
 
+            {/* Terms & Conditions */}
+            <TermsCheckbox
+              checked={termsAccepted}
+              onChange={setTermsAccepted}
+              variant="issuer"
+            />
+
             {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !termsAccepted}
               className="w-full py-3 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{
                 backgroundColor: colors.gold,
