@@ -112,26 +112,23 @@ export function ImageUpload({
 
       try {
         const supabase = createClient();
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) throw new Error("Not authenticated");
         const {
           data: { session },
         } = await supabase.auth.getSession();
-
-        if (!session?.access_token) {
-          throw new Error("Not authenticated");
-        }
 
         const file = new File([blob], originalName, { type: blob.type });
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", folder);
 
+        const headers: HeadersInit = {};
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
+
         const res = await fetch(uploadEndpoint, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers,
           body: formData,
         });
 

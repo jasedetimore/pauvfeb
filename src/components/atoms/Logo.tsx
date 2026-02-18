@@ -22,8 +22,9 @@ export function Logo({
     <Image
       src={src}
       alt="PAUV"
-      width={height * 3}
-      height={height}
+      width={0}
+      height={0}
+      sizes="100vw"
       style={{ width: "auto", height: `${height}px` }}
       priority
     />

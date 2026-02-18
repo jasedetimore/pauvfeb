@@ -15,7 +15,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, verifyAdminFromJWT } from "@/lib/supabase/admin";
+import { verifyAdmin } from "@/lib/supabase/admin";
 import { timingSafeEqual } from "crypto";
 import {
   processNextOrder,
@@ -33,7 +33,6 @@ function safeCompare(a: string, b: string): boolean {
 export async function GET(request: NextRequest) {
   try {
     // Check for admin auth or API key
-    const authHeader = request.headers.get("authorization");
     const apiKey = request.headers.get("x-api-key");
 
     // Validate authentication (constant-time comparison to prevent timing attacks)
@@ -41,7 +40,7 @@ export async function GET(request: NextRequest) {
     const isValidApiKey = !!(apiKey && expectedKey && safeCompare(apiKey, expectedKey));
     if (!isValidApiKey) {
       try {
-        await verifyAdminFromJWT(authHeader);
+        await verifyAdmin(request);
       } catch {
         return NextResponse.json(
           { error: "Unauthorized - Admin access required" },
@@ -72,7 +71,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check for admin auth or API key
-    const authHeader = request.headers.get("authorization");
     const apiKey = request.headers.get("x-api-key");
 
     // Validate authentication (constant-time comparison to prevent timing attacks)
@@ -80,7 +78,7 @@ export async function POST(request: NextRequest) {
     const isValidApiKeyPost = !!(apiKey && expectedKeyPost && safeCompare(apiKey, expectedKeyPost));
     if (!isValidApiKeyPost) {
       try {
-        await verifyAdminFromJWT(authHeader);
+        await verifyAdmin(request);
       } catch {
         return NextResponse.json(
           { error: "Unauthorized - Admin access required" },

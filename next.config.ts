@@ -5,10 +5,10 @@ const supabaseUrl = "https://bsrizjihqrywmukqsess.supabase.co";
 
 const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com;
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: ${supabaseUrl};
-    connect-src 'self' ${supabaseUrl} https://*.supabase.co https://cloudflareinsights.com;
+    connect-src 'self' ${supabaseUrl} https://*.supabase.co wss://*.supabase.co https://cloudflareinsights.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;
     font-src 'self';
     object-src 'none';
     frame-src 'self' https://iframe.mediadelivery.net;
