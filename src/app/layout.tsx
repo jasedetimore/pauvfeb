@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Fira_Code, Instrument_Serif } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
@@ -36,11 +37,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const isAdmin = host.startsWith("admin.");
+
   return (
     <html lang="en">
       <body
@@ -48,9 +53,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <AuthHeader />
+          {!isAdmin && <AuthHeader />}
           {children}
-          <Footer />
+          {!isAdmin && <Footer />}
         </AuthProvider>
         <GoogleAnalytics gaId="G-BCL77Q2MXW" />
       </body>
