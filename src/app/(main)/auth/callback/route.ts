@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Derive the public-facing origin from forwarded headers.
@@ -17,15 +17,53 @@ function getPublicOrigin(request: Request): string {
   return `${proto}://${host}`;
 }
 
-export async function GET(request: Request) {
+const cookieOptions = {
+  path: "/",
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+};
+
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const origin = getPublicOrigin(request);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
   const safeNext = next.startsWith("/") ? next : "/";
 
+  // Build the redirect response up-front so we can attach Set-Cookie headers
+  const redirectUrl = code
+    ? `${origin}${safeNext}`
+    : `${origin}/login?error=auth_callback_error`;
+  const response = NextResponse.redirect(redirectUrl);
+
   if (code) {
-    const supabase = await createClient();
+    // Create a Supabase client that reads cookies from the request
+    // and writes cookies onto both the request AND the response.
+    // This ensures exchangeCodeForSession's Set-Cookie headers
+    // are actually sent to the browser on the redirect.
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, {
+                ...options,
+                ...cookieOptions,
+              })
+            );
+          },
+        },
+      }
+    );
+
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       // Ensure user record exists in the users table (for OAuth sign-ups)
@@ -58,10 +96,13 @@ export async function GET(request: Request) {
         }
       }
 
-      return NextResponse.redirect(`${origin}${safeNext}`);
+      return response;
     }
+
+    // Code exchange failed — redirect to login with error
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
   }
 
-  // Return the user to an error page with instructions
+  // No code present — redirect to login with error
   return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
 }

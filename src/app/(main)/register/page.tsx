@@ -267,21 +267,9 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Terms notice for Google sign-up - OUTSIDE BOX */}
-          {!termsAccepted && (
-            <div className="mt-2.5 px-1">
-              <TermsCheckbox
-                checked={termsAccepted}
-                onChange={setTermsAccepted}
-                variant="signup"
-                id="terms-checkbox-google"
-              />
-            </div>
-          )}
-
           {/* Google Sign Up - OUTSIDE BOX */}
           <div className="mt-2.5">
-            <GoogleSignInButton label="Sign up with Google" disabled={!termsAccepted} />
+            <GoogleSignInButton label="Sign up with Google" />
           </div>
 
           {/* Sign In Link - OUTSIDE BOX */}
