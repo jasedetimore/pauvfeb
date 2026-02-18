@@ -281,7 +281,7 @@ function SearchResultItem({
         style={{
           width: "44px",
           height: "44px",
-          backgroundColor: colors.textPrimary,
+          backgroundColor: colors.box,
           flexShrink: 0,
           borderRadius: "5px",
           overflow: "hidden",
