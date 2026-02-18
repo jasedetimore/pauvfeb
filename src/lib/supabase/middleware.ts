@@ -56,12 +56,32 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // ─── PKCE code rescue ───
+  // If Supabase redirected the OAuth code to a URL other than /auth/callback
+  // (e.g. the site-url fallback https://pauv.com/?code=...), forward it to
+  // the callback route so the code gets exchanged for a session.
+  const pathname = request.nextUrl.pathname;
+  const code = request.nextUrl.searchParams.get("code");
+  if (
+    code &&
+    !pathname.startsWith("/auth/callback") &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/_next")
+  ) {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
+    // Preserve the code param; add next= so callback knows where to land
+    callbackUrl.searchParams.set("code", code);
+    if (!callbackUrl.searchParams.has("next")) {
+      callbackUrl.searchParams.set("next", pathname === "/" ? "/" : pathname);
+    }
+    return NextResponse.redirect(callbackUrl);
+  }
+
   // IMPORTANT: Call getUser() FIRST before any route matching.
   // This refreshes the session cookie if needed.
   // Do NOT add any logic between createServerClient and getUser().
   const { data: { user }, error } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   // ─── Admin Subdomain Handling (admin.pauv.com) ───
   // Cloudflare Zero Trust gates access — only @pauv.com emails get through.
