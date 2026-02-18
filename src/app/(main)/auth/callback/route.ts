@@ -1,8 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+/**
+ * Derive the public-facing origin from forwarded headers.
+ * AWS Amplify (and other reverse proxies) set x-forwarded-host /
+ * x-forwarded-proto while the internal request.url uses localhost.
+ */
+function getPublicOrigin(request: Request): string {
+  const url = new URL(request.url);
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    url.host;
+  const proto =
+    request.headers.get("x-forwarded-proto") || url.protocol.replace(":", "");
+  return `${proto}://${host}`;
+}
+
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = getPublicOrigin(request);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
   const safeNext = next.startsWith("/") ? next : "/";

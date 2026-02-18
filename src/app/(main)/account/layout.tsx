@@ -51,7 +51,13 @@ function SidebarIcon({ icon }: { icon: string }) {
 export default function AccountLayout({ children }: AccountLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { isIssuer, isLoading } = useAuth();
+  const { user, isIssuer, isLoading } = useAuth();
+
+  React.useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/");
+    }
+  }, [isLoading, user, router]);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -68,6 +74,10 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
   const allLinks = showIssuerLink
     ? [...sidebarLinks, { href: "/account/issuer-dashboard", label: "Issuer Dashboard", icon: "issuer" }]
     : sidebarLinks;
+
+  if (!isLoading && !user) {
+    return null;
+  }
 
   return (
     <div
