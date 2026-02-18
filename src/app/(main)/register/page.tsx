@@ -5,7 +5,7 @@ import Link from "next/link";
 import { colors } from "@/lib/constants/colors";
 import { GoogleSignInButton } from "@/components/atoms/GoogleSignInButton";
 import { TermsCheckbox } from "@/components/atoms/TermsCheckbox";
-import { signUp } from "@/app/auth/actions";
+import { signUp } from "@/app/(main)/auth/actions";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
