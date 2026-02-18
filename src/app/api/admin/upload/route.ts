@@ -9,26 +9,38 @@ import {
 
 /**
  * POST /api/admin/upload
- * Upload an image to Supabase Storage (admin only)
- * Accepts multipart/form-data with a "file" field and optional "folder" field
+ * Creates a signed upload URL for direct client-to-Supabase uploads (admin only).
+ * This avoids sending the file binary through the Next.js server, which
+ * hits body-size limits on AWS Amplify / CloudFront / Cloudflare.
+ *
+ * Request JSON body: { fileName: string, fileType: string, fileSize: number, folder?: string }
+ * Response JSON:     { success, data: { signedUrl, token, path, publicUrl } }
  */
 export async function POST(request: NextRequest) {
   try {
     const admin = await verifyAdmin(request);
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "general";
+    const body = await request.json();
+    const { fileName, fileType, fileSize, folder = "general" } = body as {
+      fileName: string;
+      fileType: string;
+      fileSize: number;
+      folder?: string;
+    };
 
-    if (!file) {
-      throw new AdminOperationError("No file provided", 400, "VALIDATION_ERROR");
+    if (!fileName || !fileType || !fileSize) {
+      throw new AdminOperationError(
+        "Missing required fields: fileName, fileType, fileSize",
+        400,
+        "VALIDATION_ERROR"
+      );
     }
 
     // Validate file type
     const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(fileType)) {
       throw new AdminOperationError(
-        `Invalid file type: ${file.type}. Allowed: ${allowedTypes.join(", ")}`,
+        `Invalid file type: ${fileType}. Allowed: ${allowedTypes.join(", ")}`,
         400,
         "VALIDATION_ERROR"
       );
@@ -36,17 +48,17 @@ export async function POST(request: NextRequest) {
 
     // Validate file size (10MB max)
     const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (fileSize > maxSize) {
       throw new AdminOperationError(
-        `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max: 10MB`,
+        `File too large: ${(fileSize / 1024 / 1024).toFixed(1)}MB. Max: 10MB`,
         400,
         "VALIDATION_ERROR"
       );
     }
 
     // Generate unique filename: folder/timestamp-originalname
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const sanitizedName = file.name
+    const ext = fileName.split(".").pop()?.toLowerCase() || "jpg";
+    const sanitizedName = fileName
       .replace(/\.[^/.]+$/, "") // remove extension
       .replace(/[^a-zA-Z0-9-_]/g, "-") // sanitize
       .toLowerCase()
@@ -56,40 +68,34 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Convert File to ArrayBuffer then to Buffer for upload
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
+    // Create a signed upload URL so the client can upload directly to Supabase Storage
     const { data, error } = await adminClient.storage
       .from("images")
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+      .createSignedUploadUrl(filePath);
 
     if (error) {
       throw new AdminOperationError(
-        `Upload failed: ${error.message}`,
+        `Failed to create upload URL: ${error.message}`,
         500,
         "STORAGE_ERROR"
       );
     }
 
-    // Get public URL
+    // Get public URL for the path (will be valid after upload completes)
     const { data: urlData } = adminClient.storage
       .from("images")
-      .getPublicUrl(data.path);
+      .getPublicUrl(filePath);
 
-    // Log the upload
+    // Log the upload intent
     await logAuditEntry({
       adminId: admin.userId,
       action: "UPLOAD",
       targetTable: "storage.images",
       metadata: {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        storagePath: data.path,
+        fileName,
+        fileSize,
+        fileType,
+        storagePath: filePath,
         folder,
       },
       ipAddress: getClientIP(request),
@@ -99,6 +105,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        signedUrl: data.signedUrl,
+        token: data.token,
         path: data.path,
         publicUrl: urlData.publicUrl,
       },

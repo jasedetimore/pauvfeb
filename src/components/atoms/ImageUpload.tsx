@@ -62,8 +62,10 @@ export interface ImageUploadProps {
   label?: string;
   /** Whether the upload is disabled */
   disabled?: boolean;
-  /** Aspect ratio for cropping (width / height). e.g. 1 for square, 4 for 10:2.5 banner */
+  /** Aspect ratio for cropping (width / height). e.g. 1 for square, 10/3 for banner */
   aspectRatio?: number;
+  /** Override the displayed ratio label, e.g. "10 : 3" */
+  aspectRatioLabel?: string;
   /** API endpoint used for file upload */
   uploadEndpoint?: string;
 }
@@ -76,6 +78,7 @@ export function ImageUpload({
   label = "Photo",
   disabled = false,
   aspectRatio,
+  aspectRatioLabel: aspectRatioLabelProp,
   uploadEndpoint = "/api/admin/upload",
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -104,7 +107,7 @@ export function ImageUpload({
     return null;
   };
 
-  // Upload a blob/file to the API
+  // Upload a blob/file via signed URL (2-step: get signed URL from API, then upload directly to Supabase)
   const doUpload = useCallback(
     async (blob: Blob, originalName: string) => {
       setError(null);
@@ -116,29 +119,45 @@ export function ImageUpload({
           data: { session },
         } = await supabase.auth.getSession();
 
-        const file = new File([blob], originalName, { type: blob.type });
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("folder", folder);
-
-        const headers: HeadersInit = {};
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
         if (session?.access_token) {
           headers.Authorization = `Bearer ${session.access_token}`;
         }
 
+        // Step 1: Get a signed upload URL from the API (small JSON request)
         const res = await fetch(uploadEndpoint, {
           method: "POST",
           headers,
-          body: formData,
+          body: JSON.stringify({
+            fileName: originalName,
+            fileType: blob.type,
+            fileSize: blob.size,
+            folder,
+          }),
         });
 
         const json = await res.json();
 
         if (!json.success) {
-          throw new Error(json.error || "Upload failed");
+          throw new Error(json.error || "Failed to get upload URL");
         }
 
-        onChange(json.data.publicUrl);
+        // Step 2: Upload the file directly to Supabase Storage via signed URL
+        const { signedUrl, token, path, publicUrl } = json.data;
+
+        const { error: uploadError } = await supabase.storage
+          .from("images")
+          .uploadToSignedUrl(path, token, blob, {
+            contentType: blob.type,
+          });
+
+        if (uploadError) {
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
+
+        onChange(publicUrl);
         setPreviewUrl(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
@@ -280,11 +299,13 @@ export function ImageUpload({
   const displayUrl = previewUrl || value;
 
   // Descriptive ratio label
-  const ratioLabel = aspectRatio
-    ? aspectRatio === 1
-      ? "Square (1 : 1)"
-      : `${aspectRatio > 1 ? aspectRatio : 1} : ${aspectRatio > 1 ? 1 : Math.round(1 / aspectRatio)}`
-    : null;
+  const ratioLabel = aspectRatioLabelProp
+    ? aspectRatioLabelProp
+    : aspectRatio
+      ? aspectRatio === 1
+        ? "Square (1 : 1)"
+        : `${aspectRatio > 1 ? aspectRatio : 1} : ${aspectRatio > 1 ? 1 : Math.round(1 / aspectRatio)}`
+      : null;
 
   return (
     <div>

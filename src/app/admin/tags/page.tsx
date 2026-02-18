@@ -277,7 +277,8 @@ export default function AdminTagsPage() {
               folder="tags"
               label="Photo"
               disabled={createLoading}
-              aspectRatio={4 / 1}
+              aspectRatio={10 / 3}
+              aspectRatioLabel="10 : 3"
             />
 
             {createError && (
@@ -432,7 +433,8 @@ export default function AdminTagsPage() {
                         folder="tags"
                         label="Photo"
                         disabled={editLoading}
-                        aspectRatio={4 / 1}
+                        aspectRatio={10 / 3}
+                        aspectRatioLabel="10 : 3"
                       />
 
                       {editError && (

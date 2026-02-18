@@ -115,6 +115,7 @@ export function HeroSection({
 
           {/* Center photo with fades on both sides */}
           {selectedTag.photoUrl && (
+            /* Photo sits at 10:3, height = banner height, centered, background shows on sides */
             <div
               style={{
                 position: "absolute",
@@ -122,7 +123,7 @@ export function HeroSection({
                 bottom: 0,
                 left: "50%",
                 transform: "translateX(-50%)",
-                width: "50%",
+                aspectRatio: "10 / 3",
                 zIndex: 1,
               }}
             >
@@ -132,31 +133,30 @@ export function HeroSection({
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover",
-                  objectPosition: "center top",
+                  objectFit: "fill",
                   display: "block",
                 }}
               />
-              {/* Left fade: background → transparent */}
+              {/* Left fade — starts 10px outside the photo's left edge */}
               <div
                 style={{
                   position: "absolute",
                   top: 0,
-                  left: 0,
+                  left: "-10px",
                   bottom: 0,
-                  width: "50%",
+                  width: "calc(30% + 10px)",
                   background: `linear-gradient(to right, ${colors.background}, transparent)`,
                   zIndex: 2,
                 }}
               />
-              {/* Right fade: transparent → background */}
+              {/* Right fade — starts 10px outside the photo's right edge */}
               <div
                 style={{
                   position: "absolute",
                   top: 0,
-                  right: 0,
+                  right: "-10px",
                   bottom: 0,
-                  width: "50%",
+                  width: "calc(30% + 10px)",
                   background: `linear-gradient(to left, ${colors.background}, transparent)`,
                   zIndex: 2,
                 }}
