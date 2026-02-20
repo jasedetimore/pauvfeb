@@ -33,8 +33,9 @@ export function TagSidebar({
       }}
     >
       <div
+        className="backdrop-blur-md"
         style={{
-          backgroundColor: colors.box,
+          backgroundColor: "rgba(23, 23, 23, 0.75)", // Semi-transparent #171717
           border: `1px solid ${colors.border}`,
           borderRadius: "10px",
           padding: "12px 8px",

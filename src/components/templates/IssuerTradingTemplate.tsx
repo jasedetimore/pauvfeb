@@ -45,10 +45,10 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   const [issuerLinks, setIssuerLinks] = useState<IssuerLinksDB | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Fetch real metrics from the API
   const { metrics, isLoading: metricsLoading, isTradable, refetch: refetchMetrics } = useIssuerMetrics(ticker);
-  
+
   // Fetch real top holders data
   const { holders, isLoading: holdersLoading, refetch: refetchHolders } = useTopHolders(ticker, 10);
 
@@ -127,7 +127,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   // Fetch issuer data from Supabase
   useEffect(() => {
     let isCancelled = false;
-    
+
     const fetchIssuer = async () => {
       try {
         setIsLoading(true);
@@ -147,7 +147,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             },
           }
         );
-        
+
         const { data, error: fetchError } = await supabase
           .from("issuer_details")
           .select("*")
@@ -247,7 +247,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         });
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticker]);
 
   // Handler for buy action
@@ -327,21 +327,21 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   // Prepare issuer data for components (safe defaults when still loading)
   const issuer = issuerData
     ? {
-        ticker: issuerData.ticker,
-        name: issuerData.name,
-        imageUrl: issuerData.photo,
-        headline: issuerData.headline,
-        bio: issuerData.bio,
-        tags: issuerData.tag ? [issuerData.tag] : [],
-      }
+      ticker: issuerData.ticker,
+      name: issuerData.name,
+      imageUrl: issuerData.photo,
+      headline: issuerData.headline,
+      bio: issuerData.bio,
+      tags: issuerData.tag ? [issuerData.tag] : [],
+    }
     : {
-        ticker,
-        name: "",
-        imageUrl: null as string | null,
-        headline: null as string | null,
-        bio: null as string | null,
-        tags: [] as string[],
-      };
+      ticker,
+      name: "",
+      imageUrl: null as string | null,
+      headline: null as string | null,
+      bio: null as string | null,
+      tags: [] as string[],
+    };
 
   // Use real metrics data from the API
   const tradingData = {
@@ -364,6 +364,29 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         className="min-h-screen pt-4 pb-16"
         style={{ backgroundColor: colors.background }}
       >
+        {/* Breadcrumb Navigation */}
+        <nav className="px-4 mb-4 lg:mb-6" aria-label="Breadcrumb">
+          <ol className="flex items-center space-x-2 text-sm" style={{ color: colors.textSecondary }}>
+            <li>
+              <a href="/" className="hover:text-white transition-colors">Issuers</a>
+            </li>
+            {issuerData?.tag && (
+              <>
+                <li><span style={{ color: colors.boxOutline }}>/</span></li>
+                <li>
+                  <a href={`/?tag=${issuerData.tag.toLowerCase()}`} className="hover:text-white transition-colors capitalize">
+                    {issuerData.tag}
+                  </a>
+                </li>
+              </>
+            )}
+            <li><span style={{ color: colors.boxOutline }}>/</span></li>
+            <li style={{ color: colors.textPrimary }} className="font-medium" aria-current="page">
+              {issuerData?.name || ticker}
+            </li>
+          </ol>
+        </nav>
+
         {/* ── Mobile Layout ── */}
         <div className="lg:hidden px-4">
           {/* 1. Big heading (name, bio, links) — price is shown on the chart */}
@@ -450,7 +473,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         {/* ── Desktop Layout ── 3-column with sidebars */}
         <div className="hidden lg:flex gap-6 px-4">
           {/* Left Sidebar - Pinned to left */}
-          <aside className="w-80 flex-shrink-0">
+          <aside className="w-80 flex-shrink-0 sticky top-24 self-start">
             <TradingLeftSidebar
               ticker={ticker}
               price={initialLoading ? null : currentPrice}
@@ -484,7 +507,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
           </div>
 
           {/* Right Sidebar - Pinned to right */}
-          <aside className="w-80 flex-shrink-0">
+          <aside className="w-80 flex-shrink-0 sticky top-24 self-start max-h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar pb-8">
             <TradingRightSidebar
               ticker={ticker}
               price={currentPrice}

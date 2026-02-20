@@ -226,20 +226,30 @@ export const IssuerHeaderSkeleton: React.FC = () => {
     <div className="flex flex-col min-w-0">
       <div className="flex items-center w-full justify-between gap-3">
         {/* Avatar */}
-        <Skeleton width={80} height={80} rounded />
+        <div className="w-16 h-16 md:w-[90px] md:h-[90px] flex-shrink-0">
+          <Skeleton width="100%" height="100%" rounded />
+        </div>
         {/* Name + headline */}
         <div className="flex-1 min-w-0 space-y-2">
-          <Skeleton height="2rem" width="65%" />
-          <Skeleton height="0.85rem" width="40%" />
+          <div className="h-10 md:h-12 w-[65%] rounded overflow-hidden">
+            <Skeleton width="100%" height="100%" />
+          </div>
+          <Skeleton height="1rem" width="40%" />
         </div>
         {/* Tag pill */}
-        <Skeleton width={72} height={26} className="rounded-full flex-shrink-0" />
+        <Skeleton width={80} height={28} className="rounded-full flex-shrink-0" />
       </div>
       {/* Bio lines */}
       <div className="pl-1 mt-3 space-y-2">
-        <Skeleton height="0.85rem" width="100%" />
-        <Skeleton height="0.85rem" width="92%" />
-        <Skeleton height="0.85rem" width="60%" />
+        <Skeleton height="0.875rem" width="100%" />
+        <Skeleton height="0.875rem" width="92%" />
+        <Skeleton height="0.875rem" width="60%" />
+      </div>
+      {/* Social Links placeholder */}
+      <div className="mt-4 flex gap-3 pl-1">
+        <Skeleton width={20} height={20} rounded />
+        <Skeleton width={20} height={20} rounded />
+        <Skeleton width={20} height={20} rounded />
       </div>
     </div>
   );

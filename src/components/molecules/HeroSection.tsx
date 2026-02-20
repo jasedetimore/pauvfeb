@@ -185,6 +185,7 @@ export function HeroSection({
                 fontWeight: "700",
                 marginBottom: "2px",
                 lineHeight: "1.1",
+                textShadow: "0px 1px 4px rgba(0, 0, 0, 0.8), 0px 2px 8px rgba(0, 0, 0, 0.6)",
               }}
             >
               {capitalize(selectedTag.name)}
@@ -192,11 +193,12 @@ export function HeroSection({
             {selectedTag.description && (
               <div
                 style={{
-                  color: colors.textMuted,
+                  color: colors.textPrimary,
                   fontSize: "clamp(13px, 2vw, 16px)",
-                  fontWeight: "400",
+                  fontWeight: "500",
                   marginBottom: "8px",
                   lineHeight: "1.3",
+                  textShadow: "0px 1px 4px rgba(0, 0, 0, 0.9), 0px 2px 8px rgba(0, 0, 0, 0.8)",
                 }}
               >
                 {selectedTag.description}
@@ -204,9 +206,10 @@ export function HeroSection({
             )}
             <div
               style={{
-                color: colors.textMuted,
+                color: colors.textPrimary,
                 fontSize: "14px",
-                fontWeight: "400",
+                fontWeight: "500",
+                textShadow: "0px 1px 4px rgba(0, 0, 0, 0.9), 0px 2px 8px rgba(0, 0, 0, 0.8)",
               }}
             >
               {displayIssuerCount.toLocaleString()} Issuers
