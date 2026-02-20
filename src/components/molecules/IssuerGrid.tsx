@@ -2,6 +2,7 @@
 
 import React from "react";
 import { IssuerCard, IssuerCardProps } from "../atoms/IssuerCard";
+import { GetListedCard } from "../atoms/GetListedCard";
 import { colors } from "@/lib/constants/colors";
 
 export interface IssuerData {
@@ -41,17 +42,6 @@ export function IssuerGrid({
     );
   }
 
-  if (issuers.length === 0) {
-    return (
-      <div
-        className="col-span-full text-sm text-center py-8"
-        style={{ color: colors.textSecondary }}
-      >
-        No issuers found
-      </div>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
       {issuers.map((issuer) => (
@@ -67,6 +57,7 @@ export function IssuerGrid({
           onClick={() => onIssuerClick?.(issuer)}
         />
       ))}
+      <GetListedCard />
     </div>
   );
 }
