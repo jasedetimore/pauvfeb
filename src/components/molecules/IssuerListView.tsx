@@ -2,29 +2,15 @@
 
 import React, { useState } from "react";
 import { colors } from "@/lib/constants/colors";
+import { IssuerListData } from "@/lib/types";
 
-export interface IssuerListData {
-  ticker: string;
-  fullName: string;
-  primaryTag?: string;
-  currentPrice: number;
-  price1hChange?: number;
-  price24hChange: number;
-  price7dChange?: number;
-  volume24h?: number;
-  holders?: number;
-  marketCap?: number;
-  /** false when issuer has no issuer_trading row yet */
-  isTradable?: boolean;
-}
-
-type SortColumn = 
-  | "current_price" 
-  | "price_1h_change" 
-  | "price_24h_change" 
-  | "price_7d_change" 
-  | "trading_volume_24h" 
-  | "number_of_holders" 
+type SortColumn =
+  | "current_price"
+  | "price_1h_change"
+  | "price_24h_change"
+  | "price_7d_change"
+  | "trading_volume_24h"
+  | "number_of_holders"
   | "total_value_usdp";
 
 type SortOrder = "ASC" | "DESC";

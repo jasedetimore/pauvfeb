@@ -21,7 +21,8 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   const cfEmail = headersList.get("cf-access-authenticated-user-email");
 
   // Production path: Cloudflare Zero Trust provides the authenticated email
-  if (cfEmail) {
+  // STRICT CHECK: Only trust this header in production to prevent local spoofing.
+  if (process.env.NODE_ENV === "production" && cfEmail) {
     if (!cfEmail.endsWith("@pauv.com")) {
       redirect("/");
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { colors } from "@/lib/constants/colors";
 
 export interface IssuerCardProps {
@@ -84,174 +85,175 @@ export function IssuerCard({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div style={{ display: "flex", gap: "12px", flex: 1, alignItems: "stretch" }}>
-      {/* Left side - Square image */}
-      <div
-        style={{
-          width: "88px",
-          aspectRatio: "1",
-          backgroundColor: colors.box,
-          flexShrink: 0,
-          borderRadius: "5px",
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {imageUrl && !imageError ? (
-          <img
-            src={imageUrl}
-            alt={`${ticker} logo`}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: imageLoaded ? 1 : 0,
-              transition: "opacity 0.2s ease-in",
-            }}
-            onLoad={() => setImageLoaded(true)}
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <span
-            style={{
-              color: colors.textMuted,
-              fontSize: "20px",
-              fontWeight: "600",
-            }}
-          >
-            {initials}
-          </span>
-        )}
-      </div>
-
-      {/* Right side - Information */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          gap: "2px",
-          paddingTop: "1px",
-          paddingBottom: "1px",
-        }}
-      >
-        {/* Ticker */}
+        {/* Left side - Square image */}
         <div
           style={{
-            fontSize: "14px",
-            fontWeight: "600",
-            color: colors.gold,
-            fontFamily: "monospace",
-          }}
-        >
-          ${ticker}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-          {/* Stock Name */}
-          <div
-            style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: colors.textPrimary,
-              lineHeight: "1.2",
-              wordWrap: "break-word",
-              overflowWrap: "break-word",
-            }}
-          >
-            {fullName}
-          </div>
-
-          {/* Industry/Tag */}
-          <div
-            style={{
-              fontSize: "11px",
-              color: colors.textMuted,
-              fontWeight: "400",
-            }}
-          >
-            {primaryTag ? capitalizeFirstLetter(primaryTag) : "—"}
-          </div>
-        </div>
-
-        {/* Bottom section - Price and Change */}
-        <div
-          style={{
+            width: "88px",
+            aspectRatio: "1",
+            backgroundColor: colors.box,
+            flexShrink: 0,
+            borderRadius: "5px",
+            overflow: "hidden",
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            gap: "8px",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
           }}
         >
-          {isTradable ? (
-            <>
-              {/* Price */}
-              <div
-                style={{
-                  fontSize: "16px",
-                  fontWeight: "400",
-                  color: colors.textPrimary,
-                  letterSpacing: "-0.5px",
-                  flexShrink: 1,
-                  minWidth: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {formatPrice(currentPrice)}
-              </div>
+          {imageUrl && !imageError ? (
+            <Image
+              src={imageUrl}
+              alt={`${ticker} logo`}
+              fill
+              sizes="88px"
+              style={{
+                objectFit: "cover",
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.2s ease-in",
+              }}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <span
+              style={{
+                color: colors.textMuted,
+                fontSize: "20px",
+                fontWeight: "600",
+              }}
+            >
+              {initials}
+            </span>
+          )}
+        </div>
 
-              {/* 24hr Change with triangle */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "3px",
-                  flexShrink: 0,
-                }}
-              >
-                {/* Triangle indicator */}
-                <span
-                  style={{
-                    width: 0,
-                    height: 0,
-                    borderLeft: "4px solid transparent",
-                    borderRight: "4px solid transparent",
-                    ...(isPositiveChange
-                      ? { borderBottom: `5px solid ${colors.green}` }
-                      : { borderTop: `5px solid ${colors.red}` }),
-                  }}
-                />
+        {/* Right side - Information */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: "2px",
+            paddingTop: "1px",
+            paddingBottom: "1px",
+          }}
+        >
+          {/* Ticker */}
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: colors.gold,
+              fontFamily: "monospace",
+            }}
+          >
+            ${ticker}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+            {/* Stock Name */}
+            <div
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: colors.textPrimary,
+                lineHeight: "1.2",
+                wordWrap: "break-word",
+                overflowWrap: "break-word",
+              }}
+            >
+              {fullName}
+            </div>
+
+            {/* Industry/Tag */}
+            <div
+              style={{
+                fontSize: "11px",
+                color: colors.textMuted,
+                fontWeight: "400",
+              }}
+            >
+              {primaryTag ? capitalizeFirstLetter(primaryTag) : "—"}
+            </div>
+          </div>
+
+          {/* Bottom section - Price and Change */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              gap: "8px",
+            }}
+          >
+            {isTradable ? (
+              <>
+                {/* Price */}
                 <div
                   style={{
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    color: changeColor,
+                    fontSize: "16px",
+                    fontWeight: "400",
+                    color: colors.textPrimary,
+                    letterSpacing: "-0.5px",
+                    flexShrink: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {isPositiveChange ? "+" : ""}
-                  {priceChange.toFixed(2)}%
+                  {formatPrice(currentPrice)}
                 </div>
+
+                {/* 24hr Change with triangle */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "3px",
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Triangle indicator */}
+                  <span
+                    style={{
+                      width: 0,
+                      height: 0,
+                      borderLeft: "4px solid transparent",
+                      borderRight: "4px solid transparent",
+                      ...(isPositiveChange
+                        ? { borderBottom: `5px solid ${colors.green}` }
+                        : { borderTop: `5px solid ${colors.red}` }),
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      color: changeColor,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {isPositiveChange ? "+" : ""}
+                    {priceChange.toFixed(2)}%
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "400",
+                  color: colors.textPrimary,
+                  fontStyle: "italic",
+                }}
+              >
+                Launching soon...
               </div>
-            </>
-          ) : (
-            <div
-              style={{
-                fontSize: "13px",
-                fontWeight: "400",
-                color: colors.textPrimary,
-                fontStyle: "italic",
-              }}
-            >
-              Launching soon...
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

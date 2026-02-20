@@ -115,7 +115,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   }, [selectedAction]);
 
   const numericAmount = parseFloat(amount) || 0;
-  
+
   // Use bonding curve formulas for accurate estimates
   // BUY: Tokens = (-CurrentPrice + SQRT(CurrentPrice^2 + 2 * price_step * USDP)) / price_step
   // SELL: USDP = avg_price * tokens (area under the curve)
@@ -182,23 +182,25 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
     }
 
     try {
-      const supabase = createClient();
-
-      // Insert order into queue table
-      // Buy: user enters USDP to spend, PV is blank (calculated at processing)
-      // Sell: user enters PV to sell, USDP is blank (calculated at processing)
-      const { error } = await supabase.from("queue").insert({
-        user_id: user.id,
-        ticker: ticker.toUpperCase(),
-        order_type: selectedAction,
-        amount_pv: selectedAction === "sell" ? numericAmount : 0,
-        amount_usdp: selectedAction === "buy" ? numericAmount : 0,
-        status: "pending",
+      // 1. Call Secure API
+      const response = await fetch("/api/trade/place-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: ticker.toUpperCase(),
+          order_type: selectedAction,
+          amount: numericAmount,
+        }),
       });
 
-      if (error) {
-        console.error("Queue insert error:", error);
-        setSubmitError(error.message || "Failed to place order");
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("Order placement failed:", result.error);
+        setSubmitError(result.error || "Failed to place order");
+        // Ensure we stop the loading state if there is an error
+        setSubmitStage("idle");
+        setIsSubmitting(false);
         return;
       }
 
@@ -377,11 +379,11 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
                 className="font-mono font-medium"
                 style={{ color: colors.textPrimary }}
               >
-                {selectedAction === "buy" 
+                {selectedAction === "buy"
                   ? `${pvAmount.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })} PV`
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} PV`
                   : formatCurrency(usdpAmount)
                 }
               </span>

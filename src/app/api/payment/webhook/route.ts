@@ -125,33 +125,28 @@ export async function POST(req: NextRequest) {
       // Respond 2xx → proceed. Non-2xx → abort.
       // We debit immediately (Soap recommends this).
       case 'checkout.hold': {
-        const { data: userRecord } = await supabaseAdmin
-          .from('users')
-          .select('usdp_balance')
-          .eq('user_id', transaction.user_id)
-          .single();
-
-        const currentBalance = parseFloat(userRecord?.usdp_balance || '0');
         const holdAmount = (chargeAmountCents ?? transaction.amount_cents) / 100;
 
-        if (currentBalance < holdAmount) {
+        // Use Atomic Function: Increment (Decrement) Balance
+        // We pass a negative amount. The DB checks constraint (balance >= 0) automatically.
+        const { data: newBalance, error: rpcError } = await supabaseAdmin.rpc(
+          'increment_user_balance',
+          {
+            p_user_id: transaction.user_id,
+            p_amount: -holdAmount,
+          }
+        );
+
+        if (rpcError) {
           console.log(
-            `[Webhook] Insufficient balance for hold. Has $${currentBalance}, needs $${holdAmount}`
+            `[Webhook] Hold failed: ${rpcError.message}. User likely has insufficient balance.`
           );
-          // Non-2xx tells Soap the user can't afford it
+          // If RPC failed (likely due to check constraint), we return 402
           return NextResponse.json(
             { error: 'Insufficient balance' },
             { status: 402 }
           );
         }
-
-        // Debit immediately
-        const newBalance = currentBalance - holdAmount;
-
-        await supabaseAdmin
-          .from('users')
-          .update({ usdp_balance: newBalance })
-          .eq('user_id', transaction.user_id);
 
         await updateTransaction(supabaseAdmin, transaction.id, {
           status: 'held',
@@ -160,7 +155,7 @@ export async function POST(req: NextRequest) {
         });
 
         console.log(
-          `[Webhook] Hold: debited $${holdAmount}. Balance $${currentBalance} → $${newBalance}`
+          `[Webhook] Hold: debited $${holdAmount}. New balance $${newBalance}`
         );
 
         return NextResponse.json({ received: true, status: 'held' });
@@ -170,20 +165,21 @@ export async function POST(req: NextRequest) {
       // Withdrawal failed after we placed a hold → refund the held amount.
       case 'checkout.release_hold': {
         if (transaction.status === 'held') {
-          const { data: userRecord } = await supabaseAdmin
-            .from('users')
-            .select('usdp_balance')
-            .eq('user_id', transaction.user_id)
-            .single();
-
-          const currentBalance = parseFloat(userRecord?.usdp_balance || '0');
           const refundAmount = transaction.amount_cents / 100;
-          const newBalance = currentBalance + refundAmount;
 
-          await supabaseAdmin
-            .from('users')
-            .update({ usdp_balance: newBalance })
-            .eq('user_id', transaction.user_id);
+          // Atomic Refund
+          const { data: newBalance, error: rpcError } = await supabaseAdmin.rpc(
+            'increment_user_balance',
+            {
+              p_user_id: transaction.user_id,
+              p_amount: refundAmount,
+            }
+          );
+
+          if (rpcError) {
+            console.error(`[Webhook] Release hold refund failed: ${rpcError.message}`);
+            // Critical error, should trigger manual intervention alert
+          }
 
           await updateTransaction(supabaseAdmin, transaction.id, {
             status: 'failed',
@@ -193,7 +189,7 @@ export async function POST(req: NextRequest) {
           });
 
           console.log(
-            `[Webhook] Release hold: refunded $${refundAmount}. Balance $${currentBalance} → $${newBalance}`
+            `[Webhook] Release hold: refunded $${refundAmount}. New balance $${newBalance}`
           );
         } else {
           // We never debited, just mark failed
@@ -209,36 +205,42 @@ export async function POST(req: NextRequest) {
 
       // ───────── checkout.succeeded ──────────────────────────────────────
       case 'checkout.succeeded': {
-        const { data: userRecord } = await supabaseAdmin
-          .from('users')
-          .select('usdp_balance')
-          .eq('user_id', transaction.user_id)
-          .single();
-
-        const currentBalance = parseFloat(userRecord?.usdp_balance || '0');
         const amountDollars = (chargeAmountCents ?? transaction.amount_cents) / 100;
         const isDeposit = (dataType || transaction.type) === 'deposit';
 
-        let newBalance: number;
+        let newBalance = 0; // Will be set by RPC
 
         if (isDeposit) {
           // Credit balance for deposits
-          newBalance = currentBalance + amountDollars;
+          const { data, error } = await supabaseAdmin.rpc('increment_user_balance', {
+            p_user_id: transaction.user_id,
+            p_amount: amountDollars,
+          });
+          if (error) throw error;
+          newBalance = data;
         } else {
           // For withdrawals: if we already debited on hold, skip second debit.
-          // If status is already 'held', balance was debited → no change needed.
-          if (transaction.status === 'held') {
-            newBalance = currentBalance; // already debited
+          if (transaction.status !== 'held') {
+            // Should initiate a debit here if not held, but typical flow is hold -> succeed
+            // If status is NOT 'held', it means we skipped the hold step somehow?
+            // Or maybe it's just a direct debit without hold.
+            // Safer to assume if not held, we debit.
+            const { data, error } = await supabaseAdmin.rpc('increment_user_balance', {
+              p_user_id: transaction.user_id,
+              p_amount: -amountDollars,
+            });
+            if (error) {
+              // If this fails (insufficient funds), it's weird because checkout succeeded.
+              // We should log this critically.
+              console.error(`[Webhook] Withdrawal succeeded but debit failed: ${error.message}`);
+            } else {
+              newBalance = data;
+            }
           } else {
-            newBalance = Math.max(0, currentBalance - amountDollars);
+            // Already debited, just fetch current balance for record keeping
+            const { data } = await supabaseAdmin.from('users').select('usdp_balance').eq('user_id', transaction.user_id).single();
+            newBalance = data?.usdp_balance;
           }
-        }
-
-        if (newBalance !== currentBalance) {
-          await supabaseAdmin
-            .from('users')
-            .update({ usdp_balance: newBalance })
-            .eq('user_id', transaction.user_id);
         }
 
         await updateTransaction(supabaseAdmin, transaction.id, {
@@ -249,7 +251,7 @@ export async function POST(req: NextRequest) {
 
         console.log(
           `[Webhook] ${isDeposit ? 'Deposit' : 'Withdrawal'} succeeded: $${amountDollars}. ` +
-            `Balance $${currentBalance} → $${newBalance}`
+          `New Balance $${newBalance}`
         );
 
         return NextResponse.json({ received: true, status: 'succeeded' });
@@ -259,27 +261,20 @@ export async function POST(req: NextRequest) {
       // A previously succeeded payment was reversed.
       case 'checkout.returned': {
         if (transaction.status === 'succeeded') {
-          const { data: userRecord } = await supabaseAdmin
-            .from('users')
-            .select('usdp_balance')
-            .eq('user_id', transaction.user_id)
-            .single();
-
-          const currentBalance = parseFloat(userRecord?.usdp_balance || '0');
           const amountDollars = transaction.amount_cents / 100;
           const isDeposit = transaction.type === 'deposit';
 
-          let newBalance: number;
-          if (isDeposit) {
-            newBalance = Math.max(0, currentBalance - amountDollars);
-          } else {
-            newBalance = currentBalance + amountDollars;
-          }
+          // Reverse the action
+          // Deposit returned -> Debit user
+          // Withdrawal returned -> Credit user
+          const amountChange = isDeposit ? -amountDollars : amountDollars;
 
-          await supabaseAdmin
-            .from('users')
-            .update({ usdp_balance: newBalance })
-            .eq('user_id', transaction.user_id);
+          const { data: newBalance, error } = await supabaseAdmin.rpc('increment_user_balance', {
+            p_user_id: transaction.user_id,
+            p_amount: amountChange,
+          });
+
+          if (error) console.error(`[Webhook] Returned op failed: ${error.message}`);
 
           await updateTransaction(supabaseAdmin, transaction.id, {
             status: 'returned',
@@ -288,7 +283,7 @@ export async function POST(req: NextRequest) {
           });
 
           console.log(
-            `[Webhook] Returned: reversed $${amountDollars}. Balance $${currentBalance} → $${newBalance}`
+            `[Webhook] Returned: reversed $${amountDollars}. New Balance $${newBalance}`
           );
         }
 
@@ -299,20 +294,15 @@ export async function POST(req: NextRequest) {
       // A deposit charge was voided after it succeeded.
       case 'checkout.voided': {
         if (transaction.status === 'succeeded' && transaction.type === 'deposit') {
-          const { data: userRecord } = await supabaseAdmin
-            .from('users')
-            .select('usdp_balance')
-            .eq('user_id', transaction.user_id)
-            .single();
-
-          const currentBalance = parseFloat(userRecord?.usdp_balance || '0');
           const amountDollars = transaction.amount_cents / 100;
-          const newBalance = Math.max(0, currentBalance - amountDollars);
 
-          await supabaseAdmin
-            .from('users')
-            .update({ usdp_balance: newBalance })
-            .eq('user_id', transaction.user_id);
+          // Void Access -> Debit user
+          const { data: newBalance, error } = await supabaseAdmin.rpc('increment_user_balance', {
+            p_user_id: transaction.user_id,
+            p_amount: -amountDollars,
+          });
+
+          if (error) console.error(`[Webhook] Void op failed: ${error.message}`);
 
           await updateTransaction(supabaseAdmin, transaction.id, {
             status: 'voided',
@@ -321,7 +311,7 @@ export async function POST(req: NextRequest) {
           });
 
           console.log(
-            `[Webhook] Voided deposit: -$${amountDollars}. Balance $${currentBalance} → $${newBalance}`
+            `[Webhook] Voided deposit: -$${amountDollars}. New Balance $${newBalance}`
           );
         }
 
@@ -416,5 +406,3 @@ function appendProcessedEvent(
     processed_events: [...processed, eventId],
   };
 }
-
-

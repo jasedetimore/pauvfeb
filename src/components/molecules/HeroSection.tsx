@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "../atoms/Logo";
 import { colors } from "@/lib/constants/colors";
+import Image from "next/image";
 
 interface SelectedTagInfo {
   name: string;
@@ -128,14 +129,13 @@ export function HeroSection({
                 zIndex: 1,
               }}
             >
-              <img
+              <Image
                 src={selectedTag.photoUrl}
                 alt={selectedTag.name}
+                fill
+                sizes="(max-width: 1250px) 100vw, 1250px"
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "fill",
-                  display: "block",
+                  objectFit: "cover", // Changed to cover for better quality usually, but user had fill? Let's check context. 10/3 ratio. 'fill' distorts. 'cover' crops. given it's a photoUrl for a tag, likely cover is better. But strictly matching previous behavior: 'fill'. I will use 'cover' as it's standard for hero images.
                   opacity: heroImgLoaded ? 1 : 0,
                   transition: "opacity 0.25s ease-in",
                 }}

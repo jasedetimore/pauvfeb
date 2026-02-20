@@ -17,7 +17,8 @@ export interface IssuerDetailsDB {
 }
 
 // Transformed issuer data for UI components (card view)
-export interface IssuerCardData {
+// Renamed/Aliased to match component usage
+export interface IssuerData {
   ticker: string;
   fullName: string;
   imageUrl?: string;
@@ -26,48 +27,66 @@ export interface IssuerCardData {
   primaryTag?: string;
   bio?: string;
   headline?: string;
+  isTradable?: boolean;
 }
 
+// Alias for backward compatibility if needed, or just use IssuerData
+export type IssuerCardData = IssuerData;
+
 // Extended issuer data for list view
-export interface IssuerListViewData extends IssuerCardData {
+export interface IssuerListData {
+  ticker: string;
+  fullName: string;
+  primaryTag?: string;
+  currentPrice: number;
   price1hChange?: number;
+  price24hChange: number;
   price7dChange?: number;
   volume24h?: number;
   holders?: number;
   marketCap?: number;
+  isTradable?: boolean;
+  imageUrl?: string; // Optional for list view too
 }
+
+export type IssuerListViewData = IssuerListData;
 
 // API response type
 export interface IssuersApiResponse {
-  issuers: IssuerCardData[];
+  issuers: IssuerData[];
   total: number;
   error?: string;
 }
 
 // Transform function to convert DB model to UI model
-export function transformIssuerDetailsToCard(dbIssuer: IssuerDetailsDB): IssuerCardData {
+export function transformIssuerDetailsToCard(dbIssuer: IssuerDetailsDB): IssuerData {
   return {
     ticker: dbIssuer.ticker,
     fullName: dbIssuer.name,
     imageUrl: dbIssuer.photo || undefined,
-    // Price data will be added from a different source (market data)
-    // For now, we use placeholder values
     currentPrice: 0,
     priceChange: 0,
     primaryTag: dbIssuer.tag || undefined,
     bio: dbIssuer.bio || undefined,
     headline: dbIssuer.headline || undefined,
+    isTradable: false, // Default to false until enriched with stats
   };
 }
 
 // Transform function to convert DB model to list view model
-export function transformIssuerDetailsToList(dbIssuer: IssuerDetailsDB): IssuerListViewData {
+export function transformIssuerDetailsToList(dbIssuer: IssuerDetailsDB): IssuerListData {
   return {
-    ...transformIssuerDetailsToCard(dbIssuer),
+    ticker: dbIssuer.ticker,
+    fullName: dbIssuer.name,
+    primaryTag: dbIssuer.tag || undefined,
+    currentPrice: 0,
     price1hChange: 0,
+    price24hChange: 0,
     price7dChange: 0,
     volume24h: 0,
     holders: 0,
     marketCap: 0,
+    isTradable: false,
+    imageUrl: dbIssuer.photo || undefined,
   };
 }
