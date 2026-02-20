@@ -93,20 +93,17 @@ export async function POST(request: NextRequest) {
 
     if (processAll) {
       // Process all pending orders
-      const results = await processAllPendingOrders();
-
-      const successful = results.filter((r) => r.success).length;
-      const failed = results.filter((r) => !r.success).length;
+      const batchResult = await processAllPendingOrders();
 
       return NextResponse.json({
         success: true,
-        message: `Processed ${results.length} orders`,
+        message: `Processed ${batchResult.processed_count} orders`,
         summary: {
-          total: results.length,
-          successful,
-          failed,
+          total: batchResult.processed_count,
+          successful: batchResult.success_count,
+          failed: batchResult.fail_count,
         },
-        results,
+        results: batchResult.results,
         timestamp: new Date().toISOString(),
       });
     } else {
