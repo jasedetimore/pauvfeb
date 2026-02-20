@@ -13,8 +13,8 @@ export default function PrivacyPolicyPage() {
       >
         <div style={{ position: "relative", paddingTop: "56.25%" }}>
           <iframe
-            src="https://iframe.mediadelivery.net/embed/579822/a063c464-ce61-4730-a4ec-0662b94ca81c?autoplay=true&loop=false&muted=false&preload=true&responsive=true"
-            loading="lazy"
+            src="https://iframe.mediadelivery.net/embed/579822/a063c464-ce61-4730-a4ec-0662b94ca81c?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
+            loading="eager"
             style={{
               border: 0,
               position: "absolute",
