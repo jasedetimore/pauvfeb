@@ -1,5 +1,4 @@
-import { IssuerData } from "@/components/molecules/IssuerGrid";
-import { IssuerListData } from "@/components/molecules/IssuerListView";
+import { IssuerData, IssuerListData } from "@/lib/types";
 import { TagItemData } from "@/components/atoms/TagItem";
 
 /**

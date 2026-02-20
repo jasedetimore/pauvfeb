@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { sendGAEvent } from "@next/third-parties/google";
 import { MainPageTemplate } from "@/components/templates";
 import { useIssuers, useTags, useIssuerStats, useImagePreloader } from "@/lib/hooks";
-import { IssuerData } from "@/components/molecules/IssuerGrid";
-import { IssuerListData } from "@/components/molecules/IssuerListView";
+import { IssuerData, IssuerListData } from "@/lib/types";
 import { TagItemData } from "@/components/atoms/TagItem";
 import { TagPageSkeleton } from "@/components/atoms";
 

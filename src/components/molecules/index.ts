@@ -4,8 +4,8 @@
 export { Header } from "./Header";
 export { AuthHeader } from "./AuthHeader";
 export { TagSidebar } from "./TagSidebar";
-export { IssuerGrid, type IssuerData } from "./IssuerGrid";
-export { IssuerListView, type IssuerListData } from "./IssuerListView";
+export { IssuerGrid } from "./IssuerGrid";
+export { IssuerListView } from "./IssuerListView";
 export { HeroSection } from "./HeroSection";
 export { ControlsBar } from "./ControlsBar";
 export { Navigation } from "./Navigation";
