@@ -22,9 +22,15 @@ export function GetListedCard() {
         alignItems: "center",
         height: "112px",
         cursor: "pointer",
-        transition: "all 0.2s",
+        transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         gap: "12px",
         padding: "12px",
+        borderRadius: "12px",
+        transform: isHovered ? "translateY(-4px)" : "translateY(0)",
+        boxShadow: isHovered
+          ? `0 12px 24px -10px rgba(0,0,0,0.8), 0 0 20px rgba(229, 198, 141, 0.15)`
+          : "none",
+        border: `1px solid ${isHovered ? "rgba(229, 198, 141, 0.25)" : colors.boxOutline}`,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

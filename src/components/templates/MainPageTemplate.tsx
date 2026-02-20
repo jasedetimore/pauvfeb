@@ -167,9 +167,16 @@ export function MainPageTemplate({
         />
 
         {/* Mobile Tags Strip */}
-        <div className="lg:hidden px-4 md:px-5 mb-2">
+        <div className="lg:hidden px-4 md:px-5 mb-2 relative">
+          {/* Right edge fade indicator for scrolling */}
           <div
-            className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1"
+            className="absolute right-0 top-0 bottom-1 w-12 pointer-events-none z-10"
+            style={{
+              background: `linear-gradient(to right, transparent, ${colors.backgroundDark})`
+            }}
+          />
+          <div
+            className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 relative z-0"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {tagsLoading ? (

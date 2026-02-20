@@ -48,7 +48,7 @@ export function Header({
   };
 
   return (
-    <header role="banner" className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: colors.background, borderBottom: `1px solid ${colors.boxOutline}` }}>
+    <header role="banner" className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md" style={{ backgroundColor: "rgba(0, 0, 0, 0.75)", borderBottom: `1px solid ${colors.boxOutline}` }}>
       <div className="relative flex items-center justify-between px-4 sm:px-6 lg:px-9 py-2 lg:py-3">
         {/* Left Section: Logo and Navigation */}
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -158,34 +158,34 @@ export function Header({
       </div>
 
       {/* Mobile Navigation Menu */}
-      {isMobileMenuOpen && (
-        <div
-          className="lg:hidden absolute top-full left-0 right-0 z-40 border-t shadow-lg"
-          style={{
-            backgroundColor: colors.boxLight,
-            borderColor: colors.boxOutline,
-          }}
-        >
-          <nav>
-            {navigationLinks.map((link) => {
-              const isActive = isLinkActive(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  className="block px-4 py-3 text-base font-medium border-b last:border-b-0"
-                  style={{
-                    borderColor: colors.boxOutline,
-                    backgroundColor: isActive ? colors.box : "transparent",
-                  }}
-                  href={link.href}
+      <div
+        className={`lg:hidden absolute top-full left-0 right-0 z-40 border-t shadow-lg overflow-hidden transition-all duration-300 ease-in-out backdrop-blur-md ${isMobileMenuOpen ? "max-h-72 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+          }`}
+        style={{
+          backgroundColor: "rgba(38, 38, 38, 0.90)",
+          borderColor: colors.boxOutline,
+        }}
+      >
+        <nav>
+          {navigationLinks.map((link) => {
+            const isActive = isLinkActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                className="block px-4 py-3 text-base font-medium border-b last:border-b-0 transition-colors"
+                style={{
+                  borderColor: colors.boxOutline,
+                  backgroundColor: isActive ? colors.box : "transparent",
+                }}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.label}
               </Link>
-              );
-            })}
-          </nav>
-        </div>
-      )}
+            );
+          })}
+        </nav>
+      </div>
     </header>
   );
 }

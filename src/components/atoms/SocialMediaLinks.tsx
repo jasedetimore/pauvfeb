@@ -74,7 +74,10 @@ export const SocialMediaLinks: React.FC<SocialMediaLinksProps> = ({
   if (activePlatforms.length === 0) return null;
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div
+      className={`flex items-center gap-2 overflow-x-auto pb-1 flex-nowrap ${className}`}
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+    >
       {activePlatforms.map((platform) => (
         <a
           key={platform}

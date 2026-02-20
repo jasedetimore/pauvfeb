@@ -28,8 +28,10 @@ export function PrimaryButton({
         font-semibold font-mono text-sm
         px-6 py-3
         transition-all duration-200
+        hover:scale-[1.02] active:scale-[0.98]
+        hover:shadow-[0_0_15px_rgba(229,198,141,0.3)]
         focus:outline-none focus:ring-2 focus:ring-offset-2
-        disabled:opacity-50 disabled:cursor-not-allowed
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none
         ${fullWidth ? "w-full" : ""}
         ${className}
       `}
