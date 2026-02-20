@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { HeroSection } from "../molecules/HeroSection";
 import { TagSidebar } from "../molecules/TagSidebar";
-import { IssuerGrid, IssuerData } from "../molecules/IssuerGrid";
-import { IssuerListView, IssuerListData } from "../molecules/IssuerListView";
+import { IssuerGrid } from "../molecules/IssuerGrid";
+import { IssuerListView } from "../molecules/IssuerListView";
+import { IssuerData, IssuerListData } from "@/lib/types";
 import { Navigation } from "../molecules/Navigation";
 import { TagItemData, ViewMode, SortMode } from "../atoms";
 import { colors } from "@/lib/constants/colors";
@@ -22,26 +24,26 @@ interface MainPageTemplateProps {
   issuerCount: number;
   marketCap: number;
   marketCapChange: number;
-  
+
   // Tags
   tags: TagItemData[];
   tagsLoading?: boolean;
-  
+
   // Issuers for card view (by sort mode)
   biggestIssuers: IssuerData[];
   trendingIssuers: IssuerData[];
   newestIssuers: IssuerData[];
   alphabeticalIssuers: IssuerData[];
-  
+
   // Issuers for list view
   listViewIssuers: IssuerListData[];
-  
+
   issuersLoading?: boolean;
-  
+
   // Auth state
   isAuthenticated?: boolean;
   username?: string;
-  
+
   // Callbacks
   onIssuerClick?: (issuer: IssuerData) => void;
   onListIssuerClick?: (issuer: IssuerListData) => void;
@@ -78,16 +80,17 @@ export function MainPageTemplate({
   selectedTag = null,
   initialTagId = null,
 }: MainPageTemplateProps) {
+  const router = useRouter();
+
   // View and sort state
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [sortMode, setSortMode] = useState<SortMode>("biggest");
   const [selectedTagId, setSelectedTagId] = useState<string | null>(initialTagId);
 
-  // Sync selectedTagId when initialTagId changes (e.g. after async tag load)
+  // Sync selectedTagId when initialTagId changes (e.g. after async tag load or navigation)
   useEffect(() => {
-    if (initialTagId !== null) {
-      setSelectedTagId(initialTagId);
-    }
+    // Always sync, even if null (which happens when navigating to home / clearing filters)
+    setSelectedTagId(initialTagId);
   }, [initialTagId]);
 
   // Get current issuers based on sort mode
@@ -105,10 +108,47 @@ export function MainPageTemplate({
     }
   };
 
+  // Handle issuer selection
+  const handleIssuerClick = (issuer: IssuerData) => {
+    if (onIssuerClick) {
+      onIssuerClick(issuer);
+    } else {
+      router.push(`/issuer/${issuer.ticker}`);
+    }
+  };
+
+  const handleListIssuerClick = (issuer: IssuerListData) => {
+    if (onListIssuerClick) {
+      onListIssuerClick(issuer);
+    } else {
+      router.push(`/issuer/${issuer.ticker}`);
+    }
+  };
+
   // Handle tag selection
   const handleTagSelect = (tag: TagItemData) => {
-    setSelectedTagId(tag.id === selectedTagId ? null : tag.id);
-    onTagSelect?.(tag);
+    const newTagId = tag.id === selectedTagId ? null : tag.id;
+    setSelectedTagId(newTagId);
+
+    // Execute callback if provided (backward compatibility)
+    if (onTagSelect) {
+      onTagSelect(tag);
+      return;
+    }
+
+    // Default behavior: Navigate with query param
+    const url = new URL(window.location.href);
+    if (newTagId) {
+      url.searchParams.set("tag", tag.name.toLowerCase());
+    } else {
+      url.searchParams.delete("tag");
+    }
+    // Reset offset/pagination if present (start fresh filtering)
+    url.searchParams.delete("offset");
+
+    // Use router to navigate (shallow if possible? Server Components usually verify this)
+    // For Server Components we want full navigation to re-run server loader
+    router.push(url.pathname + url.search);
   };
 
   return (
@@ -160,11 +200,10 @@ export function MainPageTemplate({
                   <button
                     key={tag.id}
                     onClick={() => handleTagSelect(tag)}
-                    className={`min-w-[140px] flex-shrink-0 rounded-lg border text-left px-3 py-2 transition-colors ${
-                      selectedTagId === tag.id
-                        ? "border-accent-logo bg-box-light"
-                        : "border-box-outline bg-box"
-                    }`}
+                    className={`min-w-[140px] flex-shrink-0 rounded-lg border text-left px-3 py-2 transition-colors ${selectedTagId === tag.id
+                      ? "border-accent-logo bg-box-light"
+                      : "border-box-outline bg-box"
+                      }`}
                     style={{
                       borderColor:
                         selectedTagId === tag.id ? colors.textPrimary : colors.border,
@@ -225,13 +264,13 @@ export function MainPageTemplate({
                   <IssuerListView
                     issuers={listViewIssuers}
                     isLoading={issuersLoading}
-                    onIssuerClick={onListIssuerClick}
+                    onIssuerClick={handleListIssuerClick}
                   />
                 ) : (
                   <IssuerGrid
                     issuers={getCurrentIssuers()}
                     isLoading={issuersLoading}
-                    onIssuerClick={onIssuerClick}
+                    onIssuerClick={handleIssuerClick}
                   />
                 )}
               </div>

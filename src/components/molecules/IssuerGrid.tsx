@@ -3,17 +3,7 @@
 import React from "react";
 import { IssuerCard, IssuerCardProps } from "../atoms/IssuerCard";
 import { colors } from "@/lib/constants/colors";
-
-export interface IssuerData {
-  ticker: string;
-  fullName: string;
-  imageUrl?: string;
-  currentPrice: number;
-  priceChange: number;
-  primaryTag?: string;
-  /** false when issuer has no issuer_trading row yet */
-  isTradable?: boolean;
-}
+import { IssuerData } from "@/lib/types";
 
 interface IssuerGridProps {
   issuers: IssuerData[];
