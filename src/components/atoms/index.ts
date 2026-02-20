@@ -5,6 +5,7 @@ export { AdminSearchBar } from "./AdminSearchBar";
 export { AnalyticsLink, type AnalyticsLinkProps } from "./AnalyticsLink";
 export { Button } from "./Button";
 export { Logo } from "./Logo";
+export { GetListedCard } from "./GetListedCard";
 export { IssuerCard, type IssuerCardProps } from "./IssuerCard";
 export { TagItem, type TagItemData } from "./TagItem";
 export { ViewToggle, type ViewMode } from "./ViewToggle";
