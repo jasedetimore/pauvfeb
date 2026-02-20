@@ -8,6 +8,22 @@ export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
       <main className="max-w-4xl mx-auto px-6 py-16 space-y-6">
+        <div style={{ position: "relative", paddingTop: "56.25%" }}>
+          <iframe
+            src="https://iframe.mediadelivery.net/embed/579822/a063c464-ce61-4730-a4ec-0662b94ca81c?autoplay=true&loop=false&muted=false&preload=true&responsive=true"
+            loading="lazy"
+            style={{
+              border: 0,
+              position: "absolute",
+              top: 0,
+              height: "100%",
+              width: "100%",
+            }}
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+            allowFullScreen
+          />
+        </div>
+
         <div className="flex flex-col gap-6">
           <Image
             src="/pauv_logo_gold.png"
