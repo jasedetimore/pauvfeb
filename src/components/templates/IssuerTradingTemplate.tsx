@@ -384,7 +384,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
 
           {/* 3. Chart — tight gap from social links */}
           <div className="mt-1">
-            {initialLoading ? (
+            {initialLoading && (metricsLoading || isTradable) ? (
               <ChartSkeleton height={420} />
             ) : (
               <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
@@ -469,7 +469,11 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               <>
                 <IssuerHeaderSkeleton />
                 <div className="mt-4">
-                  <ChartSkeleton height={420} />
+                  {(metricsLoading || isTradable) ? (
+                    <ChartSkeleton height={420} />
+                  ) : (
+                    <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
+                  )}
                 </div>
               </>
             ) : (

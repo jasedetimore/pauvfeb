@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
 import { GoogleSignInButton } from "@/components/atoms/GoogleSignInButton";
 import { TermsCheckbox } from "@/components/atoms/TermsCheckbox";
@@ -13,6 +14,8 @@ export default function RegisterPage() {
   const [requiresEmailConfirmation, setRequiresEmailConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,6 +49,9 @@ export default function RegisterPage() {
     }
 
     formData.append("termsAccepted", "true");
+    if (refCode) {
+      formData.append("referralCode", refCode);
+    }
     const result = await signUp(formData);
 
     if (result?.error) {
@@ -60,10 +66,10 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="flex flex-col"
       style={{ backgroundColor: colors.backgroundDark }}
     >
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="flex justify-center px-4 py-16">
         <div className="w-full max-w-md">
           {/* Title - OUTSIDE BOX */}
           <h1

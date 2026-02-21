@@ -98,10 +98,10 @@ function LoginContent() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="flex flex-col"
       style={{ backgroundColor: colors.backgroundDark }}
     >
-      <div className="flex-1 flex items-center justify-center px-4">
+      <div className="flex justify-center px-4 py-16">
         <div className="w-full max-w-md">
           {/* Title - OUTSIDE BOX */}
           <h1
