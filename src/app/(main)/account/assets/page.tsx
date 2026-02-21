@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { usePortfolio, PortfolioHolding } from "@/lib/hooks/usePortfolio";
+import { WaitlistPanel } from "@/components/organisms/WaitlistPanel";
 
 type SortColumn = "ticker" | "avg_cost" | "amount" | "current_price" | "total_holdings" | "pnl" | "last_purchase";
 type SortOrder = "ASC" | "DESC";
@@ -265,7 +266,31 @@ export default function AssetsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative">
+      {/* Waitlist overlay – TODO: Hook up to Supabase waitlist API. See docs/WAITLIST_API.md */}
+      <div className="absolute inset-0 z-20 flex items-start justify-center pt-12 px-4">
+        <div
+          className="w-full max-w-2xl rounded-xl border shadow-2xl"
+          style={{
+            backgroundColor: colors.background,
+            borderColor: colors.boxOutline,
+          }}
+        >
+          <div className="px-6 pt-5 pb-1 text-center">
+            <span
+              className="font-mono text-lg font-semibold"
+              style={{ color: colors.textPrimary }}
+            >
+              Assets Coming at Launch
+            </span>
+          </div>
+          <WaitlistPanel height={480} expanded />
+        </div>
+      </div>
+
+      {/* Blurred background content */}
+      <div className="pointer-events-none select-none" style={{ filter: "blur(6px)", opacity: 0.4 }}>
+      <div className="space-y-6">
       {/* USDP Balance Card */}
       <div
         className="rounded-lg p-6 border"
@@ -470,6 +495,8 @@ export default function AssetsPage() {
           )}
         </div>
       </div>
+    </div>
+    </div>{/* end blur wrapper */}
     </div>
   );
 }

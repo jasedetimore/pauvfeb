@@ -68,6 +68,11 @@ export default function ListYourselfPage() {
     void hydrateAuthUser();
   }, []);
 
+  useEffect(() => {
+    if (!submitted) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [submitted]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -188,12 +193,18 @@ export default function ListYourselfPage() {
             className="text-3xl sm:text-4xl font-bold mb-3"
             style={{ color: colors.textPrimary }}
           >
-            List Yourself
+            Why should I be an Issuer?
           </h1>
-          <p style={{ color: colors.textSecondary }}>
-            Want to be listed on Pauv? Fill out the form below and our team will
-            review your request.
-          </p>
+          <div className="mt-5 relative w-full" style={{ paddingTop: "56.25%" }}>
+            <iframe
+              src="https://iframe.mediadelivery.net/embed/579822/2e8fa410-9325-4e21-9c64-0d7e1b8e2b63?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
+              loading="lazy"
+              title="Pauv listing walkthrough"
+              className="absolute top-0 h-full w-full border-0"
+              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+              allowFullScreen
+            />
+          </div>
         </div>
 
         {submitted ? (
@@ -217,7 +228,8 @@ export default function ListYourselfPage() {
               Confirmed
             </h2>
             <p style={{ color: colors.textSecondary }}>
-              Your request has been submitted. We&apos;ll be in touch soon.
+              Your request has been submitted. Our team will review and get back
+              to you as soon as possible.
             </p>
           </div>
         ) : (
@@ -229,6 +241,18 @@ export default function ListYourselfPage() {
               borderColor: colors.boxOutline,
             }}
           >
+            <div>
+              <h2
+                className="text-xl sm:text-2xl font-bold"
+                style={{ color: colors.textPrimary }}
+              >
+                Request to be an Issuer
+              </h2>
+              <p className="mt-1 text-sm" style={{ color: colors.textSecondary }}>
+                Our team will review and get back to you as soon as possible.
+              </p>
+            </div>
+
             {/* Name */}
             <div>
               <label

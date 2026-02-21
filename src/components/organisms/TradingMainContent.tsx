@@ -46,7 +46,7 @@ export const TradingMainContent: React.FC<TradingMainContentProps> = ({
       />
 
       {/* Chart Area (passed as children) */}
-      <div className="mt-0">
+      <div className="mt-3">
         {children ? (
           children
         ) : (

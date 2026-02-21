@@ -17,6 +17,7 @@ export async function signUp(formData: FormData) {
   const password = formData.get("password") as string;
   const username = formData.get("username") as string;
   const termsAccepted = formData.get("termsAccepted") === "true";
+  const referralCode = formData.get("referralCode") as string | null;
 
   if (!termsAccepted) {
     return { error: "You must agree to the Terms of Service and Privacy Policy." };
@@ -59,6 +60,27 @@ export async function signUp(formData: FormData) {
       console.error("Error creating user record:", userError);
       // Don't fail the signup if user record creation fails
       // The user can still log in and we can create the record later
+    }
+
+    // Process referral if a code was provided
+    if (referralCode && !userError) {
+      try {
+        const adminClient = createAdminClient();
+        const { data: refResult, error: refError } = await adminClient.rpc(
+          "process_referral",
+          {
+            p_new_user_id: authData.user.id,
+            p_referral_code: referralCode,
+          }
+        );
+        if (refError) {
+          console.error("Error processing referral:", refError);
+        } else if (refResult?.error) {
+          console.error("Referral processing returned error:", refResult.error);
+        }
+      } catch (err) {
+        console.error("Unexpected error processing referral:", err);
+      }
     }
   }
 

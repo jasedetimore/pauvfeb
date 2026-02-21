@@ -13,6 +13,7 @@ import {
 } from "lightweight-charts";
 import { colors } from "@/lib/constants/colors";
 import { createBrowserClient } from "@supabase/ssr";
+import { WaitlistPanel } from "@/components/organisms/WaitlistPanel";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface OHLCDataPoint {
@@ -366,86 +367,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setSelectedRange(range);
   };
 
-  // If issuer is not tradable, show a big "Launching soon..." placeholder with email signup
-  const [launchEmail, setLaunchEmail] = React.useState("");
-  const [emailSubmitted, setEmailSubmitted] = React.useState(false);
-
-  const handleEmailSubmit = async () => {
-    if (!launchEmail || !launchEmail.includes("@")) return;
-    try {
-      const res = await fetch("/api/launch-notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: launchEmail, ticker }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        console.error("[PriceChart] Email signup failed:", data.error);
-        return;
-      }
-      setEmailSubmitted(true);
-    } catch (err) {
-      console.error("[PriceChart] Email signup error:", err);
-    }
-  };
-
+  // If issuer is not tradable, show the waitlist panel
+  // TODO: Hook up to Supabase waitlist API. See docs/WAITLIST_API.md
   if (!isTradable) {
-    return (
-      <div
-        className="rounded-[10px] overflow-hidden"
-        style={{ backgroundColor: "#000000" }}
-      >
-        <div
-          className="flex flex-col items-center justify-start gap-4 pt-16"
-          style={{ height }}
-        >
-          <span
-            className="font-mono text-2xl font-bold"
-            style={{ color: colors.textPrimary }}
-          >
-            Launching soon...
-          </span>
-
-          {emailSubmitted ? (
-            <p className="font-mono text-sm" style={{ color: colors.green }}>
-              You&apos;ll be notified when ${ticker.toUpperCase()} launches!
-            </p>
-          ) : (
-            <div className="flex flex-col items-center gap-4 w-full max-w-sm px-4">
-              <p className="font-mono text-base" style={{ color: colors.textSecondary }}>
-                Get notified when trading goes live
-              </p>
-              <div className="flex w-full gap-2">
-                <input
-                  type="email"
-                  value={launchEmail}
-                  onChange={(e) => setLaunchEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleEmailSubmit()}
-                  placeholder="Your email"
-                  className="flex-1 min-w-0 px-3 py-2 rounded-md font-mono text-sm focus:outline-none"
-                  style={{
-                    backgroundColor: colors.background,
-                    border: `1px solid ${colors.boxOutline}`,
-                    color: colors.textPrimary,
-                  }}
-                />
-                <button
-                  onClick={handleEmailSubmit}
-                  className="px-4 py-2 rounded-md font-mono text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
-                  style={{
-                    backgroundColor: colors.gold,
-                    cursor: "pointer",
-                    color: colors.textDark,
-                  }}
-                >
-                  Notify Me
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return <WaitlistPanel height={height} />;
   }
 
   return (
