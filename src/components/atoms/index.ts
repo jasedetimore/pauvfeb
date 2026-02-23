@@ -46,3 +46,4 @@ export { PrimaryButton } from "./PrimaryButton";
 
 // Legal / compliance atoms
 export { TermsCheckbox } from "./TermsCheckbox";
+export { SidebarIcon, sidebarLinks } from "./SidebarIcon";
