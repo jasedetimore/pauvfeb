@@ -61,10 +61,22 @@ export async function sendEmail({ to, subject, html }: SendEmailParams): Promise
   return { success: true, message: "Email logged to console (no RESEND_API_KEY configured)" };
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Build the issuer claim email HTML
  */
 export function buildClaimEmailHtml(claimUrl: string, issuerName: string): string {
+  const safeName = escapeHtml(issuerName);
+  const safeUrl = escapeHtml(claimUrl);
+
   return `
     <div style="font-family: 'Courier New', monospace; max-width: 600px; margin: 0 auto; background: #000000; color: #FFFFFF; padding: 40px; border: 1px solid #333333;">
       <div style="text-align: center; margin-bottom: 32px;">
@@ -74,13 +86,13 @@ export function buildClaimEmailHtml(claimUrl: string, issuerName: string): strin
         Your Issuer Profile is Ready
       </h2>
       <p style="color: #A3A3A3; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-        Congratulations, <strong style="color: #FFFFFF;">${issuerName}</strong>! Your application to become a Pauv Issuer has been approved.
+        Congratulations, <strong style="color: #FFFFFF;">${safeName}</strong>! Your application to become a Pauv Issuer has been approved.
       </p>
       <p style="color: #A3A3A3; font-size: 14px; line-height: 1.6; margin-bottom: 32px;">
         Click the button below to set up your account password and claim your profile. This link expires in 72 hours.
       </p>
       <div style="text-align: center; margin-bottom: 32px;">
-        <a href="${claimUrl}" style="
+        <a href="${safeUrl}" style="
           display: inline-block;
           background: #E5C68D;
           color: #000000;
@@ -111,6 +123,8 @@ export function buildClaimEmailHtml(claimUrl: string, issuerName: string): strin
  * and redirected straight to their Issuer Dashboard.
  */
 export function buildIssuerApprovalEmailHtml(confirmationUrl: string): string {
+  const safeUrl = escapeHtml(confirmationUrl);
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -140,7 +154,7 @@ export function buildIssuerApprovalEmailHtml(confirmationUrl: string): string {
         
         <p>You now have full access to your <strong>Issuer Dashboard</strong>. This is where you will monitor your PV market performance, view shareholder analytics, and manage your USDP distributions.</p>
 
-        <a href="${confirmationUrl}" class="button">Go to Issuer Dashboard</a>
+        <a href="${safeUrl}" class="button">Go to Issuer Dashboard</a>
 
         <div class="highlight-box">
           <p style="margin-bottom: 0; font-size: 14px;"><strong>Next Step:</strong> Review your listing details and ensure your bio and social links are up to date.</p>

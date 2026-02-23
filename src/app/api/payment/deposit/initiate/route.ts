@@ -17,14 +17,25 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { amount } = body;
 
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
+    if (!amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
-        { success: false, message: 'Invalid amount. Must be a positive number.' },
+        { success: false, message: 'Invalid amount. Must be a positive finite number.' },
         { status: 400 }
       );
     }
 
-    const amountCents = Math.round(amount * 100);
+    const MIN_DEPOSIT = 1;
+    const MAX_DEPOSIT = 10_000;
+    if (amount < MIN_DEPOSIT || amount > MAX_DEPOSIT) {
+      return NextResponse.json(
+        { success: false, message: `Amount must be between $${MIN_DEPOSIT} and $${MAX_DEPOSIT}.` },
+        { status: 400 }
+      );
+    }
+
+    // Round to 2 decimal places to prevent sub-cent amounts
+    const roundedAmount = Math.round(amount * 100) / 100;
+    const amountCents = Math.round(roundedAmount * 100);
 
     // Ensure Soap customer exists
     const fullName = user.user_metadata?.full_name || 'User Customer';
@@ -51,12 +62,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Build success/failure redirect URLs
-    // Behind Amplify/CloudFront, req.nextUrl.origin returns localhost.
-    // Use forwarded headers to get the real origin.
-    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
-    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-    const origin = process.env.NEXT_PUBLIC_APP_URL || (forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin);
+    // Use the configured app URL; never trust forwarded headers for redirect targets
+    const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://pauv.com';
 
     // Create the Soap checkout session
     const checkout = await createSoapCheckout({
@@ -68,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     const checkoutId = checkout.id;
 
-    console.log(`[Payment] Deposit checkout created: ${checkoutId} for $${amount}`);
+    console.log(`[Payment] Deposit checkout created: ${checkoutId}`);
 
     // Store the payment transaction in our DB
     const { error: dbError } = await supabase

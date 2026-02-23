@@ -25,6 +25,8 @@ import crypto from 'crypto';
 
 // ─── Signature verification ───────────────────────────────────────────────
 
+const WEBHOOK_TOLERANCE_SECONDS = 300; // 5-minute replay window
+
 function verifySignature(
   payload: string,
   signatureHeader: string,
@@ -38,6 +40,13 @@ function verifySignature(
 
   const timestamp = timestampPart.split('=')[1];
   const receivedSignature = signaturePart.split('=')[1];
+
+  // Reject events outside the tolerance window to prevent replay attacks
+  const eventAge = Math.abs(Date.now() / 1000 - parseInt(timestamp, 10));
+  if (!Number.isFinite(eventAge) || eventAge > WEBHOOK_TOLERANCE_SECONDS) {
+    console.error(`[Webhook] Timestamp outside tolerance: age=${eventAge}s`);
+    return false;
+  }
 
   const message = `${timestamp}.${payload}`;
   const calculatedSignature = crypto
@@ -55,6 +64,20 @@ function verifySignature(
   }
 }
 
+const IS_PROD = process.env.NODE_ENV === "production";
+
+/** Log payment events without leaking balances/amounts in production */
+function logWebhook(message: string, data?: Record<string, unknown>) {
+  if (IS_PROD) {
+    const safe = data ? Object.fromEntries(
+      Object.entries(data).filter(([k]) => !["balance", "amount", "newBalance"].includes(k))
+    ) : undefined;
+    console.log(`[Webhook] ${message}`, safe ?? "");
+  } else {
+    console.log(`[Webhook] ${message}`, data ?? "");
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
@@ -66,18 +89,22 @@ export async function POST(req: NextRequest) {
   try {
     const payload = await req.text();
 
-    // Verify webhook signature
-    const signatureHeader = req.headers.get('soap-webhook-signature');
+    // Verify webhook signature — always enforced, never optional
     const webhookSecret = process.env.SOAP_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[Webhook] SOAP_WEBHOOK_SECRET is not configured — rejecting all webhooks');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+    }
 
-    if (webhookSecret && signatureHeader) {
-      if (!verifySignature(payload, signatureHeader, webhookSecret)) {
-        console.error('[Webhook] Invalid signature');
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-      }
-    } else if (webhookSecret && !signatureHeader) {
+    const signatureHeader = req.headers.get('soap-webhook-signature');
+    if (!signatureHeader) {
       console.error('[Webhook] Missing SOAP-WEBHOOK-SIGNATURE header');
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
+
+    if (!verifySignature(payload, signatureHeader, webhookSecret)) {
+      console.error('[Webhook] Invalid signature');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     const event = JSON.parse(payload);
@@ -89,7 +116,7 @@ export async function POST(req: NextRequest) {
     const dataType: string | undefined = event.data?.type; // deposit | withdrawal
     const customerId: string | undefined = event.data?.customer?.id;
 
-    console.log(`[Webhook] event_id=${eventId} type=${eventType} checkout=${checkoutId}`);
+    logWebhook("event received", { eventId, eventType, checkoutId });
 
     if (!checkoutId) {
       console.warn('[Webhook] No checkout id (data.id) in event');
@@ -125,10 +152,28 @@ export async function POST(req: NextRequest) {
       // Respond 2xx → proceed. Non-2xx → abort.
       // We debit immediately (Soap recommends this).
       case 'checkout.hold': {
+        // If the withdrawal was initiated with atomic reservation (status='reserved'),
+        // the balance was already debited at initiation time. Skip the debit.
+        if (transaction.status === 'reserved') {
+          const { data: balanceData } = await supabaseAdmin
+            .from('users')
+            .select('usdp_balance')
+            .eq('user_id', transaction.user_id)
+            .single();
+
+          await updateTransaction(supabaseAdmin, transaction.id, {
+            status: 'held',
+            balance_after: balanceData?.usdp_balance ?? null,
+            provider_data: appendProcessedEvent(transaction.provider_data, eventId, event),
+          });
+
+          logWebhook("Hold: balance already reserved at initiation", { checkoutId });
+          return NextResponse.json({ received: true, status: 'held' });
+        }
+
+        // Legacy path: balance was not reserved at initiation, debit now
         const holdAmount = (chargeAmountCents ?? transaction.amount_cents) / 100;
 
-        // Use Atomic Function: Increment (Decrement) Balance
-        // We pass a negative amount. The DB checks constraint (balance >= 0) automatically.
         const { data: newBalance, error: rpcError } = await supabaseAdmin.rpc(
           'increment_user_balance',
           {
@@ -141,7 +186,6 @@ export async function POST(req: NextRequest) {
           console.log(
             `[Webhook] Hold failed: ${rpcError.message}. User likely has insufficient balance.`
           );
-          // If RPC failed (likely due to check constraint), we return 402
           return NextResponse.json(
             { error: 'Insufficient balance' },
             { status: 402 }
@@ -154,17 +198,14 @@ export async function POST(req: NextRequest) {
           provider_data: appendProcessedEvent(transaction.provider_data, eventId, event),
         });
 
-        console.log(
-          `[Webhook] Hold: debited $${holdAmount}. New balance $${newBalance}`
-        );
-
+        logWebhook("Hold processed", { checkoutId, amount: holdAmount, newBalance });
         return NextResponse.json({ received: true, status: 'held' });
       }
 
       // ───────── checkout.release_hold ───────────────────────────────────
       // Withdrawal failed after we placed a hold → refund the held amount.
       case 'checkout.release_hold': {
-        if (transaction.status === 'held') {
+        if (transaction.status === 'held' || transaction.status === 'reserved') {
           const refundAmount = transaction.amount_cents / 100;
 
           // Atomic Refund
@@ -188,9 +229,7 @@ export async function POST(req: NextRequest) {
             provider_data: appendProcessedEvent(transaction.provider_data, eventId, event),
           });
 
-          console.log(
-            `[Webhook] Release hold: refunded $${refundAmount}. New balance $${newBalance}`
-          );
+          logWebhook("Release hold: refunded", { checkoutId, amount: refundAmount, newBalance });
         } else {
           // We never debited, just mark failed
           await updateTransaction(supabaseAdmin, transaction.id, {
@@ -220,7 +259,7 @@ export async function POST(req: NextRequest) {
           newBalance = data;
         } else {
           // For withdrawals: if we already debited on hold, skip second debit.
-          if (transaction.status !== 'held') {
+          if (transaction.status !== 'held' && transaction.status !== 'reserved') {
             // Should initiate a debit here if not held, but typical flow is hold -> succeed
             // If status is NOT 'held', it means we skipped the hold step somehow?
             // Or maybe it's just a direct debit without hold.
@@ -249,10 +288,7 @@ export async function POST(req: NextRequest) {
           provider_data: appendProcessedEvent(transaction.provider_data, eventId, event),
         });
 
-        console.log(
-          `[Webhook] ${isDeposit ? 'Deposit' : 'Withdrawal'} succeeded: $${amountDollars}. ` +
-          `New Balance $${newBalance}`
-        );
+        logWebhook(`${isDeposit ? 'Deposit' : 'Withdrawal'} succeeded`, { checkoutId, amount: amountDollars, newBalance });
 
         return NextResponse.json({ received: true, status: 'succeeded' });
       }
@@ -282,9 +318,7 @@ export async function POST(req: NextRequest) {
             provider_data: appendProcessedEvent(transaction.provider_data, eventId, event),
           });
 
-          console.log(
-            `[Webhook] Returned: reversed $${amountDollars}. New Balance $${newBalance}`
-          );
+          logWebhook("Returned: reversed", { checkoutId, amount: amountDollars, newBalance });
         }
 
         return NextResponse.json({ received: true, status: 'returned' });
@@ -310,9 +344,7 @@ export async function POST(req: NextRequest) {
             provider_data: appendProcessedEvent(transaction.provider_data, eventId, event),
           });
 
-          console.log(
-            `[Webhook] Voided deposit: -$${amountDollars}. New Balance $${newBalance}`
-          );
+          logWebhook("Voided deposit", { checkoutId, amount: amountDollars, newBalance });
         }
 
         return NextResponse.json({ received: true, status: 'voided' });

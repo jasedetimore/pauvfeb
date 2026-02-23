@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createSoapCheckout, createSoapCustomer } from '@/lib/soap/client';
+
+function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,36 +26,40 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { amount } = body;
 
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
+    if (!amount || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
-        { success: false, message: 'Invalid amount. Must be a positive number.' },
+        { success: false, message: 'Invalid amount. Must be a positive finite number.' },
         { status: 400 }
       );
     }
 
-    // Check sufficient balance
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('usdp_balance')
-      .eq('user_id', user.id)
-      .single();
-
-    if (userError || !userData) {
+    const MIN_WITHDRAWAL = 1;
+    const MAX_WITHDRAWAL = 10_000;
+    if (amount < MIN_WITHDRAWAL || amount > MAX_WITHDRAWAL) {
       return NextResponse.json(
-        { success: false, message: 'Failed to fetch user balance' },
-        { status: 500 }
-      );
-    }
-
-    const currentBalance = parseFloat(userData.usdp_balance) || 0;
-    if (amount > currentBalance) {
-      return NextResponse.json(
-        { success: false, message: `Insufficient balance. Available: $${currentBalance.toFixed(2)}` },
+        { success: false, message: `Amount must be between $${MIN_WITHDRAWAL} and $${MAX_WITHDRAWAL}.` },
         { status: 400 }
       );
     }
 
-    const amountCents = Math.round(amount * 100);
+    const roundedAmount = Math.round(amount * 100) / 100;
+    const amountCents = Math.round(roundedAmount * 100);
+
+    // Atomically reserve (debit) the balance.
+    // The DB constraint (usdp_balance >= 0) prevents over-withdrawal
+    // even under concurrent requests, eliminating the TOCTOU race.
+    const adminClient = createAdminClient();
+    const { error: reserveError } = await adminClient.rpc(
+      'increment_user_balance',
+      { p_user_id: user.id, p_amount: -roundedAmount }
+    );
+
+    if (reserveError) {
+      return NextResponse.json(
+        { success: false, message: 'Insufficient balance for this withdrawal.' },
+        { status: 400 }
+      );
+    }
 
     // Ensure Soap customer exists
     const fullName = user.user_metadata?.full_name || 'User Customer';
@@ -72,37 +85,50 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Behind Amplify/CloudFront, req.nextUrl.origin returns localhost.
-    // Use forwarded headers to get the real origin.
-    const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
-    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-    const origin = process.env.NEXT_PUBLIC_APP_URL || (forwardedHost ? `${forwardedProto}://${forwardedHost}` : req.nextUrl.origin);
+    // Use the configured app URL; never trust forwarded headers for redirect targets
+    const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://pauv.com';
 
-    // Create the Soap checkout session for withdrawal
-    const checkout = await createSoapCheckout({
-      customer_id: customerId,
-      type: 'withdrawal',
-      fixed_amount_cents: amountCents,
-      return_url: `${origin}/payment/success?type=withdrawal`,
-    });
+    // Create the Soap checkout session for withdrawal.
+    // If this fails, we must refund the reserved amount.
+    let checkout;
+    try {
+      checkout = await createSoapCheckout({
+        customer_id: customerId,
+        type: 'withdrawal',
+        fixed_amount_cents: amountCents,
+        return_url: `${origin}/payment/success?type=withdrawal`,
+      });
+    } catch (checkoutError) {
+      // Refund the reserved amount atomically
+      await adminClient.rpc('increment_user_balance', {
+        p_user_id: user.id,
+        p_amount: roundedAmount,
+      });
+      throw checkoutError;
+    }
 
     const checkoutId = checkout.id;
 
-    console.log(`[Payment] Withdrawal checkout created: ${checkoutId} for $${amount}`);
+    console.log(`[Payment] Withdrawal checkout created: ${checkoutId}`);
 
-    // Store the payment transaction
-    const { error: dbError } = await supabase
+    // Store the payment transaction — status 'reserved' because balance is already debited
+    const { error: dbError } = await adminClient
       .from('payment_transactions')
       .insert({
         user_id: user.id,
         checkout_id: checkoutId,
         type: 'withdrawal',
-        status: 'pending',
+        status: 'reserved',
         amount_cents: amountCents,
       });
 
     if (dbError) {
       console.error('[Payment] DB error:', dbError);
+      // Refund the reserved amount since we can't track this withdrawal
+      await adminClient.rpc('increment_user_balance', {
+        p_user_id: user.id,
+        p_amount: roundedAmount,
+      });
       return NextResponse.json(
         { success: false, message: 'Failed to create payment record' },
         { status: 500 }

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const origin = getPublicOrigin(request);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
-  const safeNext = next.startsWith("/") ? next : "/";
+  const safeNext = next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : "/";
 
   // Build the redirect response up-front so we can attach Set-Cookie headers
   const redirectUrl = code

@@ -161,11 +161,28 @@ export async function PATCH(request: NextRequest) {
     const admin = await verifyAdmin(request);
 
     const body = await request.json();
-    const { id, ...updateFields } = body;
+    const { id } = body;
 
     if (!id) {
       throw new AdminOperationError(
         "Issuer ID is required",
+        400,
+        "VALIDATION_ERROR"
+      );
+    }
+
+    // Whitelist: only allow safe fields to be updated
+    const ALLOWED_UPDATE_KEYS = ["name", "bio", "headline", "tag", "photo"] as const;
+    const updateFields: Record<string, unknown> = {};
+    for (const key of ALLOWED_UPDATE_KEYS) {
+      if (key in body) {
+        updateFields[key] = body[key];
+      }
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      throw new AdminOperationError(
+        "No valid fields to update",
         400,
         "VALIDATION_ERROR"
       );
@@ -184,7 +201,7 @@ export async function PATCH(request: NextRequest) {
       throw new AdminOperationError("Issuer not found", 404, "NOT_FOUND");
     }
 
-    // Update issuer
+    // Update issuer with only whitelisted fields
     const { data, error } = await adminClient
       .from("issuer_details")
       .update(updateFields)

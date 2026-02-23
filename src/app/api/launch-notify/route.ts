@@ -1,52 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-/**
- * Simple in-memory rate limiter by IP.
- * Allows maxRequests per windowMs per IP address.
- * Not shared across serverless instances, but provides basic protection.
- */
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requests per minute per IP
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-
-  // Clean up expired entries periodically
-  if (rateLimitMap.size > 10000) {
-    const entries = Array.from(rateLimitMap.entries());
-    for (const [key, val] of entries) {
-      if (val.resetAt < now) rateLimitMap.delete(key);
-    }
-  }
-
-  if (!entry || entry.resetAt < now) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-
-  entry.count++;
-  return entry.count > RATE_LIMIT_MAX_REQUESTS;
-}
+import { isRateLimited, getClientIP } from "@/lib/utils/rate-limit";
 
 /**
  * POST /api/launch-notify
  * Stores an email signup for an issuer launch notification.
  * Body: { email: string, ticker: string }
  * 
- * Rate limited: 5 requests per minute per IP.
+ * Rate limited: 5 requests per minute per IP (distributed via DB).
  */
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit by IP
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
+    const ip = getClientIP(request);
 
-    if (isRateLimited(ip)) {
+    if (await isRateLimited(ip, "/api/launch-notify", 5, 60_000)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 }

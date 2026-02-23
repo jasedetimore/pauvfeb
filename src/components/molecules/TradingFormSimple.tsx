@@ -71,7 +71,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   };
 
   // Get user auth context for USDP balance
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading, refreshProfile } = useAuth();
   const usdpBalance = profile?.usdp_balance ?? 0;
 
   // Fetch user's holdings for this ticker
@@ -222,6 +222,9 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
 
       // Refresh holdings in the form
       fetchHoldings();
+      if (refreshProfile) {
+        refreshProfile();
+      }
 
       // Notify parent after success message disappears
       if (onOrderComplete) {
@@ -356,7 +359,10 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
           <div className="mb-1 mt-1 text-center">
             <button
               onClick={() => {
-                setAmount(tickerHoldings.toFixed(4));
+                // To avoid rounding up (which fails the insufficient balance check), 
+                // we truncate mathematically or via string matching up to 4 decimals.
+                const match = tickerHoldings.toString().match(/^-?\d+(?:\.\d{0,4})?/);
+                setAmount(match ? match[0] : tickerHoldings.toString());
                 setSellAllClicked(true);
               }}
               className="text-sm underline transition-opacity hover:opacity-80"

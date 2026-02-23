@@ -16,6 +16,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isIssuer: boolean;
   issuerId: string | null;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isIssuer: false,
   issuerId: null,
+  refreshProfile: async () => { },
 });
 
 /** Helper: apply user data from a Supabase User object to state setters */
@@ -166,8 +168,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const refreshProfile = React.useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("users")
+      .select("username, usdp_balance")
+      .eq("user_id", user.id)
+      .single();
+    if (data) setProfile(data);
+  }, [user, supabase]);
+
   return (
-    <AuthContext.Provider value={{ user, profile, isLoading, isAdmin, isIssuer, issuerId }}>
+    <AuthContext.Provider value={{ user, profile, isLoading, isAdmin, isIssuer, issuerId, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

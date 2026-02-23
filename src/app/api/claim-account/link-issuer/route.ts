@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/claim-account/link-issuer
@@ -12,15 +13,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, email } = body;
+    // Authenticate via session cookie — never trust userId/email from body
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!userId || !email) {
+    if (authError || !user || !user.email) {
       return NextResponse.json(
-        { success: false, error: "userId and email are required" },
-        { status: 400 }
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
       );
     }
+
+    const userId = user.id;
+    const email = user.email;
 
     const adminClient = createAdminClient();
 
