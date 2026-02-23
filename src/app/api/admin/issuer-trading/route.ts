@@ -127,10 +127,23 @@ export async function PUT(request: NextRequest) {
     const admin = await verifyAdmin(request);
 
     const body: IssuerTradingUpdate = await request.json();
-    const { ticker, ...updateFields } = body;
+    const { ticker } = body;
 
     if (!ticker) {
       throw new AdminOperationError("Ticker is required", 400, "VALIDATION_ERROR");
+    }
+
+    // Whitelist: only allow safe fields to be updated
+    const ALLOWED_KEYS = ["current_supply", "base_price", "price_step", "current_price", "total_usdp"] as const;
+    const updateFields: Record<string, unknown> = {};
+    for (const key of ALLOWED_KEYS) {
+      if (key in body && body[key] !== undefined) {
+        updateFields[key] = body[key];
+      }
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      throw new AdminOperationError("No valid fields to update", 400, "VALIDATION_ERROR");
     }
 
     const adminClient = createAdminClient();
@@ -146,7 +159,7 @@ export async function PUT(request: NextRequest) {
       throw new AdminOperationError("Record not found", 404, "NOT_FOUND");
     }
 
-    // Update the record
+    // Update the record with only whitelisted fields
     const { data, error } = await adminClient
       .from("issuer_trading")
       .update(updateFields)

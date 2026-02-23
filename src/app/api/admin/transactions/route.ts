@@ -181,11 +181,28 @@ export async function PUT(request: NextRequest) {
     const admin = await verifyAdmin(request);
 
     const body: TransactionUpdate = await request.json();
-    const { id, ...updateFields } = body;
+    const { id } = body;
 
     if (!id) {
       throw new AdminOperationError(
         "Transaction ID is required",
+        400,
+        "VALIDATION_ERROR"
+      );
+    }
+
+    // Whitelist: only allow safe fields to be updated
+    const ALLOWED_KEYS = ["status", "amount_usdp", "avg_price_paid", "pv_traded"] as const;
+    const updateFields: Record<string, unknown> = {};
+    for (const key of ALLOWED_KEYS) {
+      if (key in body && body[key] !== undefined) {
+        updateFields[key] = body[key];
+      }
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      throw new AdminOperationError(
+        "No valid fields to update",
         400,
         "VALIDATION_ERROR"
       );
@@ -204,7 +221,7 @@ export async function PUT(request: NextRequest) {
       throw new AdminOperationError("Transaction not found", 404, "NOT_FOUND");
     }
 
-    // Update the record
+    // Update the record with only whitelisted fields
     const { data, error } = await adminClient
       .from("transactions")
       .update(updateFields)

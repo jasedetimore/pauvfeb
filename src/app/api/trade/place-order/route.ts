@@ -15,16 +15,48 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { ticker, order_type, amount } = body;
 
-        if (!ticker || !order_type || !amount || amount <= 0) {
-            return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+        if (typeof ticker !== 'string' || typeof order_type !== 'string' || typeof amount !== 'number') {
+            return NextResponse.json({ error: "Invalid parameter types" }, { status: 400 });
+        }
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return NextResponse.json({ error: "Amount must be a positive finite number" }, { status: 400 });
+        }
+
+        const MAX_ORDER_AMOUNT = 1_000_000;
+        const MIN_ORDER_AMOUNT = 0.01;
+        if (amount < MIN_ORDER_AMOUNT || amount > MAX_ORDER_AMOUNT) {
+            return NextResponse.json(
+                { error: `Amount must be between $${MIN_ORDER_AMOUNT} and $${MAX_ORDER_AMOUNT}` },
+                { status: 400 }
+            );
+        }
+
+        if (!/^[A-Z]{2,10}$/i.test(ticker)) {
+            return NextResponse.json({ error: "Invalid ticker format" }, { status: 400 });
         }
 
         if (!["buy", "sell"].includes(order_type)) {
             return NextResponse.json({ error: "Invalid order type" }, { status: 400 });
         }
 
-        // 3. Prepare Queue Payload
-        // Note: The UI sends "amount" which maps to either usdp or pv based on order type
+        const adminClient = createAdminClient();
+
+        // 3. Rate limit: max 5 concurrent pending orders per user
+        const { count: pendingCount } = await adminClient
+            .from("queue")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id)
+            .eq("status", "pending");
+
+        if ((pendingCount ?? 0) >= 5) {
+            return NextResponse.json(
+                { error: "Too many pending orders. Please wait for existing orders to process." },
+                { status: 429 }
+            );
+        }
+
+        // 4. Prepare Queue Payload
         const queuePayload = {
             user_id: user.id,
             ticker: ticker.toUpperCase(),
@@ -33,18 +65,6 @@ export async function POST(request: Request) {
             amount_pv: order_type === "sell" ? amount : 0,
             status: "pending",
         };
-
-        // 4. Insert into Queue (Using Service Role to bypass RLS)
-        // We need a Service Role client because we disabled INSERT for authenticated users.
-        // However, `createClient` from `@/lib/supabase/server` usually returns the user's client (cookie-based).
-        // We need to instantiate a Service Role client here specifically for this write operation.
-
-        // WARNING: 'createClient' in 'src/lib/supabase/server.ts' is likely context-aware. 
-        // We need to construct a new admin client manually or extend server.ts.
-        // Let's check 'src/lib/supabase/server.ts' content first to be sure.
-        // For now, I'll inline the creation of the admin client to ensure it works.
-
-        const adminClient = await createAdminClient();
 
         const { data, error } = await adminClient
             .from("queue")
