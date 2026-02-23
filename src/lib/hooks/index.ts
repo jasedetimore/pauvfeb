@@ -10,3 +10,4 @@ export * from "./usePortfolio";
 export * from "./useUserTransactions";
 export * from "./useTopHolders";
 export * from "./useImagePreloader";
+export * from "./useIsMobile";

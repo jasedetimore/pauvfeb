@@ -15,6 +15,7 @@ export interface IssuerCardProps {
   isTradable?: boolean;
   backgroundColor?: string;
   hoverBackgroundColor?: string;
+  variant?: "grid" | "list";
   onClick?: () => void;
 }
 
@@ -32,11 +33,14 @@ export function IssuerCard({
   isTradable = true,
   backgroundColor = colors.background,
   hoverBackgroundColor = colors.boxHover,
+  variant = "grid",
   onClick,
 }: IssuerCardProps) {
   const [imageError, setImageError] = React.useState(false);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
+
+  const isGrid = variant === "grid";
 
   // Helper function to capitalize first letter
   const capitalizeFirstLetter = (str: string): string => {
@@ -77,15 +81,15 @@ export function IssuerCard({
         alignItems: "center",
         height: "112px",
         cursor: "pointer",
-        transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+        transition: isGrid ? "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)" : "background-color 0.2s",
         gap: "12px",
         padding: "12px",
-        borderRadius: "12px",
-        transform: isHovered ? "translateY(-4px)" : "translateY(0)",
-        boxShadow: isHovered
+        borderRadius: isGrid ? "12px" : "0",
+        transform: isGrid && isHovered ? "translateY(-4px)" : "translateY(0)",
+        boxShadow: isGrid && isHovered
           ? `0 12px 24px -10px rgba(0,0,0,0.8), 0 0 20px rgba(229, 198, 141, 0.15)`
           : "none",
-        border: `1px solid ${isHovered ? "rgba(229, 198, 141, 0.25)" : colors.boxOutline}`,
+        border: isGrid ? `1px solid ${isHovered ? "rgba(229, 198, 141, 0.25)" : colors.boxOutline}` : "none",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { colors } from "@/lib/constants/colors";
-import { IssuerHeaderSkeleton } from "@/components/atoms";
-import { SocialMediaLinks } from "@/components/atoms";
+import { IssuerHeaderSkeleton, SocialMediaLinks } from "@/components/atoms";
 import { IssuerLinksDB } from "@/lib/types/issuer-links";
+
+import { AutoTextSize } from "auto-text-size";
+import { useIsMobile } from "@/lib/hooks/useIsMobile";
 
 interface IssuerHeaderProps {
   ticker: string;
@@ -32,6 +34,15 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
   isLoading = false,
 }) => {
   const [imageError, setImageError] = useState(false);
+  const isMobileHook = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use the hook if mounted, otherwise assume desktop for SSR
+  const isMobile = mounted ? isMobileHook : false;
 
   // Get fallback initial from name
   const getInitial = () => {
@@ -68,12 +79,28 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
 
         {/* Name and Headline */}
         <div className="flex-1 min-w-0">
-          <h1
-            className="font-mono font-bold truncate text-[2.5rem] md:text-[3rem] leading-none"
-            style={{ color: colors.textPrimary }}
-          >
-            {name || ticker}
-          </h1>
+          {isMobile ? (
+            <div className="w-full overflow-hidden">
+              <AutoTextSize
+                mode="oneline"
+                maxFontSizePx={35}
+                minFontSizePx={24}
+                className="font-mono font-bold leading-none w-full whitespace-nowrap"
+                style={{ color: colors.textPrimary, paddingBottom: "4px" }}
+              >
+                {name || ticker}
+              </AutoTextSize>
+            </div>
+          ) : (
+            <h1
+              className="font-mono font-bold truncate text-[3rem] leading-none text-white"
+              style={{ color: colors.textPrimary }}
+              title={name || ticker}
+            >
+              {name || ticker}
+            </h1>
+          )}
+
           {headline && (
             <div
               className="text-base md:text-lg font-light mt-1"
@@ -84,8 +111,8 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
           )}
         </div>
 
-        {/* Tag aligned with name */}
-        {tags && tags.length > 0 && (
+        {/* Tag aligned with name - Only on desktop */}
+        {!isMobile && tags && tags.length > 0 && (
           <div className="flex-shrink-0">
             <a
               href={`/${tags[0].toLowerCase()}`}
