@@ -198,6 +198,7 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
                   isTradable={issuer.isTradable}
                   backgroundColor={colors.box}
                   hoverBackgroundColor={colors.boxHover}
+                  variant="list"
                   onClick={() => {
                     window.location.href = `/issuer/${encodeURIComponent(issuer.ticker.toLowerCase())}`;
                   }}

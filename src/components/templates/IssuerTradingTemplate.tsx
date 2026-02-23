@@ -26,7 +26,7 @@ import {
 import { createBrowserClient } from "@supabase/ssr";
 import { IssuerDetailsDB } from "@/lib/types/issuer";
 import { IssuerLinksDB } from "@/lib/types/issuer-links";
-import { useIssuerMetrics, useTopHolders } from "@/lib/hooks";
+import { useIssuerMetrics, useTopHolders, useIsMobile } from "@/lib/hooks";
 
 interface IssuerTradingTemplateProps {
   ticker: string;
@@ -45,6 +45,8 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   const [issuerLinks, setIssuerLinks] = useState<IssuerLinksDB | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isMobile = useIsMobile();
 
   // Fetch real metrics from the API
   const { metrics, isLoading: metricsLoading, isTradable, refetch: refetchMetrics } = useIssuerMetrics(ticker);
@@ -364,28 +366,30 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         className="min-h-screen pt-4 pb-16"
         style={{ backgroundColor: colors.background }}
       >
-        {/* Breadcrumb Navigation */}
-        <nav className="px-4 mb-4 lg:mb-6" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2 text-sm" style={{ color: colors.textSecondary }}>
-            <li>
-              <a href="/" className="hover:text-white transition-colors">Issuers</a>
-            </li>
-            {issuerData?.tag && (
-              <>
-                <li><span style={{ color: colors.boxOutline }}>/</span></li>
-                <li>
-                  <a href={`/?tag=${issuerData.tag.toLowerCase()}`} className="hover:text-white transition-colors capitalize">
-                    {issuerData.tag}
-                  </a>
-                </li>
-              </>
-            )}
-            <li><span style={{ color: colors.boxOutline }}>/</span></li>
-            <li style={{ color: colors.textPrimary }} className="font-medium" aria-current="page">
-              {issuerData?.name || ticker}
-            </li>
-          </ol>
-        </nav>
+        {/* Breadcrumb Navigation - Mobile Only */}
+        {isMobile && (
+          <nav className="px-4 mb-4" aria-label="Breadcrumb">
+            <ol className="flex items-center space-x-2 text-sm" style={{ color: colors.textSecondary }}>
+              <li>
+                <a href="/" className="hover:text-white transition-colors">Issuers</a>
+              </li>
+              {issuerData?.tag && (
+                <>
+                  <li><span style={{ color: colors.boxOutline }}>/</span></li>
+                  <li>
+                    <a href={`/?tag=${issuerData.tag.toLowerCase()}`} className="hover:text-white transition-colors capitalize">
+                      {issuerData.tag}
+                    </a>
+                  </li>
+                </>
+              )}
+              <li><span style={{ color: colors.boxOutline }}>/</span></li>
+              <li style={{ color: colors.textPrimary }} className="font-medium" aria-current="page">
+                {issuerData?.name || ticker}
+              </li>
+            </ol>
+          </nav>
+        )}
 
         {/* ── Mobile Layout ── */}
         <div className="lg:hidden px-4">

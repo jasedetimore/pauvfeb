@@ -33,7 +33,7 @@ export function IssuerGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 lg:gap-2">
       {issuers.map((issuer) => (
         <IssuerCard
           key={issuer.ticker}

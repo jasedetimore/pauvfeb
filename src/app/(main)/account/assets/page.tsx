@@ -339,7 +339,7 @@ export default function AssetsPage() {
           >
             Balances
           </h2>
-          
+
           <div
             className="flex items-center p-4 rounded-lg border"
             style={{
@@ -389,7 +389,7 @@ export default function AssetsPage() {
           >
             PV Holdings
           </h2>
-          
+
           {portfolioLoading ? (
             <div
               className="p-8 rounded-lg border text-center"
