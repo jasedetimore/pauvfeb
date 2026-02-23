@@ -290,213 +290,217 @@ export default function AssetsPage() {
 
       {/* Blurred background content */}
       <div className="pointer-events-none select-none" style={{ filter: "blur(6px)", opacity: 0.4 }}>
-      <div className="space-y-6">
-      {/* USDP Balance Card */}
-      <div
-        className="rounded-lg p-6 border"
-        style={{
-          backgroundColor: colors.background,
-          borderColor: colors.boxOutline,
-        }}
-      >
-        <h1
-          className="text-2xl font-bold mb-6"
-          style={{ color: colors.textPrimary }}
-        >
-          Assets
-        </h1>
-
-        {/* Total Value */}
-        <div
-          className="p-4 rounded-lg mb-6 border"
-          style={{
-            backgroundColor: colors.boxLight,
-            borderColor: colors.boxOutline,
-          }}
-        >
-          <p
-            className="text-sm mb-1"
-            style={{ color: colors.textSecondary }}
-          >
-            Total Portfolio Value
-          </p>
-          <p
-            className="text-3xl font-bold"
-            style={{ color: colors.textPrimary }}
-          >
-            ${(
-              (profile?.usdp_balance || 0) +
-              holdings.reduce((sum, h) => sum + h.pvAmount * h.currentPrice, 0)
-            ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-        </div>
-
-        {/* USDP */}
-        <div className="space-y-4">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: colors.textPrimary }}
-          >
-            Balances
-          </h2>
-
+        <div className="space-y-6">
+          {/* USDP Balance Card */}
           <div
-            className="flex items-center p-4 rounded-lg border"
+            className="rounded-lg p-6 border"
             style={{
-              backgroundColor: colors.boxLight,
+              backgroundColor: colors.background,
               borderColor: colors.boxOutline,
             }}
           >
+            <h1
+              className="text-2xl font-bold mb-6"
+              style={{ color: colors.textPrimary }}
+            >
+              Assets
+            </h1>
+
+            {/* Total Value */}
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+              className="p-4 rounded-lg mb-6 border"
               style={{
-                backgroundColor: colors.box,
-                color: colors.textPrimary,
+                backgroundColor: colors.boxLight,
+                borderColor: colors.boxOutline,
               }}
             >
-              $
-            </div>
-            <div className="ml-3">
-              <div className="flex items-center gap-3">
-                <p
-                  className="font-semibold"
-                  style={{ color: colors.textPrimary }}
-                >
-                  USDP
-                </p>
-                <p
-                  className="text-lg font-semibold"
-                  style={{ color: colors.textPrimary }}
-                >
-                  {profile?.usdp_balance?.toLocaleString() || "0.00"}
-                </p>
-              </div>
               <p
-                className="text-sm"
+                className="text-sm mb-1"
                 style={{ color: colors.textSecondary }}
               >
-                Pauv Stable Coin
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* PV Holdings */}
-        <div className="mt-6 space-y-4">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: colors.textPrimary }}
-          >
-            PV Holdings
-          </h2>
-
-          {portfolioLoading ? (
-            <div
-              className="p-8 rounded-lg border text-center"
-              style={{
-                backgroundColor: colors.boxLight,
-                borderColor: colors.boxOutline,
-              }}
-            >
-              <p style={{ color: colors.textSecondary }}>
-                Loading portfolio...
-              </p>
-            </div>
-          ) : holdings.length === 0 ? (
-            <div
-              className="p-8 rounded-lg border text-center"
-              style={{
-                backgroundColor: colors.boxLight,
-                borderColor: colors.boxOutline,
-              }}
-            >
-              <p style={{ color: colors.textSecondary }}>
-                You don&apos;t own any PV tokens yet.
+                Total Portfolio Value
               </p>
               <p
-                className="text-sm mt-2"
-                style={{ color: colors.textMuted }}
+                className="text-3xl font-bold"
+                style={{ color: colors.textPrimary }}
               >
-                Start trading to build your portfolio.
+                ${(
+                  (profile?.usdp_balance || 0) +
+                  holdings.reduce((sum, h) => sum + h.pvAmount * h.currentPrice, 0)
+                ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-          ) : (
-            <div
-              className="rounded-lg border overflow-hidden"
-              style={{
-                backgroundColor: colors.background,
-                borderColor: colors.boxOutline,
-              }}
-            >
-              {/* Table Header */}
+
+            {/* USDP */}
+            <div className="space-y-4">
+              <h2
+                className="text-lg font-semibold"
+                style={{ color: colors.textPrimary }}
+              >
+                Balances
+              </h2>
+
               <div
-                className="font-mono"
+                className="flex items-center p-4 rounded-lg border"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.2fr 1fr 1.2fr 1fr 1.2fr 1.5fr 1.2fr",
-                  gap: "12px",
-                  padding: "8px 20px",
-                  backgroundColor: colors.background,
-                  borderBottom: `1px solid ${colors.border}`,
-                  fontSize: "11px",
-                  color: colors.textPrimary,
-                  fontWeight: "600",
+                  backgroundColor: colors.boxLight,
+                  borderColor: colors.boxOutline,
                 }}
               >
                 <div
-                  onClick={() => handleColumnSort("ticker")}
-                  style={{ cursor: "pointer", userSelect: "none" }}
+                  className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
+                  style={{
+                    backgroundColor: colors.box,
+                    color: colors.textPrimary,
+                  }}
                 >
-                  Ticker{getSortIndicator("ticker")}
+                  $
                 </div>
-                <div
-                  onClick={() => handleColumnSort("avg_cost")}
-                  style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
-                >
-                  Avg Cost{getSortIndicator("avg_cost")}
+                <div className="ml-3">
+                  <div className="flex items-center gap-3">
+                    <p
+                      className="font-semibold"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      USDP
+                    </p>
+                    <p
+                      className="text-lg font-semibold"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {profile?.usdp_balance?.toLocaleString() || "0.00"}
+                    </p>
+                  </div>
+                  <p
+                    className="text-sm"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    Pauv Stable Coin
+                  </p>
                 </div>
-                <div
-                  onClick={() => handleColumnSort("amount")}
-                  style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
-                >
-                  Amount{getSortIndicator("amount")}
-                </div>
-                <div
-                  onClick={() => handleColumnSort("current_price")}
-                  style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
-                >
-                  Price{getSortIndicator("current_price")}
-                </div>
-                <div
-                  onClick={() => handleColumnSort("total_holdings")}
-                  style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
-                >
-                  Total{getSortIndicator("total_holdings")}
-                </div>
-                <div
-                  onClick={() => handleColumnSort("pnl")}
-                  style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
-                >
-                  P/L{getSortIndicator("pnl")}
-                </div>
-                <div
-                  onClick={() => handleColumnSort("last_purchase")}
-                  style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
-                >
-                  Last Buy{getSortIndicator("last_purchase")}
-                </div>
-              </div>
-
-              {/* Table Rows */}
-              <div>
-                {sortedHoldings.map((holding, index) => renderRow(holding, index))}
               </div>
             </div>
-          )}
+
+            {/* PV Holdings */}
+            <div className="mt-6 space-y-4">
+              <h2
+                className="text-lg font-semibold"
+                style={{ color: colors.textPrimary }}
+              >
+                PV Holdings
+              </h2>
+
+              {portfolioLoading ? (
+                <div
+                  className="p-8 rounded-lg border text-center"
+                  style={{
+                    backgroundColor: colors.boxLight,
+                    borderColor: colors.boxOutline,
+                  }}
+                >
+                  <p style={{ color: colors.textSecondary }}>
+                    Loading portfolio...
+                  </p>
+                </div>
+              ) : holdings.length === 0 ? (
+                <div
+                  className="p-8 rounded-lg border text-center"
+                  style={{
+                    backgroundColor: colors.boxLight,
+                    borderColor: colors.boxOutline,
+                  }}
+                >
+                  <p style={{ color: colors.textSecondary }}>
+                    You don&apos;t own any PV tokens yet.
+                  </p>
+                  <p
+                    className="text-sm mt-2"
+                    style={{ color: colors.textMuted }}
+                  >
+                    Start trading to build your portfolio.
+                  </p>
+                </div>
+              ) : (
+                <div
+                  className="rounded-lg border overflow-hidden"
+                  style={{
+                    backgroundColor: colors.background,
+                    borderColor: colors.boxOutline,
+                  }}
+                >
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <div className="min-w-[800px]">
+                      {/* Table Header */}
+                      <div
+                        className="font-mono"
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1.2fr 1fr 1.2fr 1fr 1.2fr 1.5fr 1.2fr",
+                          gap: "12px",
+                          padding: "8px 20px",
+                          backgroundColor: colors.background,
+                          borderBottom: `1px solid ${colors.border}`,
+                          fontSize: "11px",
+                          color: colors.textPrimary,
+                          fontWeight: "600",
+                        }}
+                      >
+                        <div
+                          onClick={() => handleColumnSort("ticker")}
+                          style={{ cursor: "pointer", userSelect: "none" }}
+                        >
+                          Ticker{getSortIndicator("ticker")}
+                        </div>
+                        <div
+                          onClick={() => handleColumnSort("avg_cost")}
+                          style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
+                        >
+                          Avg Cost{getSortIndicator("avg_cost")}
+                        </div>
+                        <div
+                          onClick={() => handleColumnSort("amount")}
+                          style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
+                        >
+                          Amount{getSortIndicator("amount")}
+                        </div>
+                        <div
+                          onClick={() => handleColumnSort("current_price")}
+                          style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
+                        >
+                          Price{getSortIndicator("current_price")}
+                        </div>
+                        <div
+                          onClick={() => handleColumnSort("total_holdings")}
+                          style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
+                        >
+                          Total{getSortIndicator("total_holdings")}
+                        </div>
+                        <div
+                          onClick={() => handleColumnSort("pnl")}
+                          style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
+                        >
+                          P/L{getSortIndicator("pnl")}
+                        </div>
+                        <div
+                          onClick={() => handleColumnSort("last_purchase")}
+                          style={{ textAlign: "right", cursor: "pointer", userSelect: "none" }}
+                        >
+                          Last Buy{getSortIndicator("last_purchase")}
+                        </div>
+                      </div>
+
+                      {/* Table Rows */}
+                      <div>
+                        {sortedHoldings.map((holding, index) => renderRow(holding, index))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    </div>{/* end blur wrapper */}
     </div>
   );
 }

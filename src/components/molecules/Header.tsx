@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "../atoms/Logo";
 import { SearchDropdown } from "./SearchDropdown";
+import { MobileAccountSidebar } from "../organisms/MobileAccountSidebar";
 import { colors } from "@/lib/constants/colors";
 import { CachedIssuerStats } from "@/lib/hooks/useIssuerStats";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -39,8 +40,9 @@ export function Header({
   statsMap,
 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAccountSidebarOpen, setIsAccountSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, isIssuer } = useAuth();
   const { position: waitlistPosition } = useWaitlist();
 
   // Determine active link based on current pathname
@@ -134,17 +136,34 @@ export function Header({
               </Link>
             </>
           ) : (
-            <Link
-              href="/account"
-              className="px-4 py-2 rounded-lg text-sm font-semibold border whitespace-nowrap hover:opacity-90 transition-opacity"
-              style={{
-                background: colors.gold,
-                color: colors.textDark,
-                borderColor: colors.goldBorder,
-              }}
-            >
-              {username || "Account"}
-            </Link>
+            <>
+              {/* Desktop Account Link */}
+              <Link
+                href="/account"
+                className="hidden lg:flex px-4 py-2 rounded-lg text-sm font-semibold border whitespace-nowrap hover:opacity-90 transition-opacity"
+                style={{
+                  background: colors.gold,
+                  color: colors.textDark,
+                  borderColor: colors.goldBorder,
+                }}
+              >
+                {username || "Account"}
+              </Link>
+
+              {/* Mobile Account Button (Opens Sidebar) */}
+              <button
+                type="button"
+                onClick={() => setIsAccountSidebarOpen(true)}
+                className="lg:hidden px-4 py-2 rounded-lg text-sm font-semibold border whitespace-nowrap hover:opacity-90 transition-opacity"
+                style={{
+                  background: colors.gold,
+                  color: colors.textDark,
+                  borderColor: colors.goldBorder,
+                }}
+              >
+                {username || "Account"}
+              </button>
+            </>
           )}
 
           {/* Mobile menu button */}
@@ -204,6 +223,16 @@ export function Header({
           })}
         </nav>
       </div>
+
+      {/* Mobile Account Sidebar */}
+      {isAuthenticated && (
+        <MobileAccountSidebar
+          isOpen={isAccountSidebarOpen}
+          onClose={() => setIsAccountSidebarOpen(false)}
+          pathname={pathname || "/"}
+          isIssuer={isIssuer}
+        />
+      )}
     </header>
   );
 }

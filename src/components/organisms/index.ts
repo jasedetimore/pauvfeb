@@ -6,6 +6,7 @@ export { TradingMainContent } from "./TradingMainContent";
 export { TradingRightSidebar } from "./TradingRightSidebar";
 export { PriceChart } from "./PriceChart";
 export { WaitlistPanel } from "./WaitlistPanel";
+export { MobileAccountSidebar } from "./MobileAccountSidebar";
 export { Footer } from "./Footer";
 
 // About page sections

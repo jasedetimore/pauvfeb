@@ -152,6 +152,7 @@ export function HeroSection({
                   background: `linear-gradient(to right, ${colors.background}, transparent)`,
                   zIndex: 2,
                 }}
+                className="hidden md:block"
               />
               {/* Right fade — starts 10px outside the photo's right edge */}
               <div
@@ -164,8 +165,25 @@ export function HeroSection({
                   background: `linear-gradient(to left, ${colors.background}, transparent)`,
                   zIndex: 2,
                 }}
+                className="hidden md:block"
               />
             </div>
+          )}
+
+          {/* Mobile Overlay - Ensures text is readable on small screens where the 10/3 image overflows and hides its own edges */}
+          {selectedTag?.photoUrl && (
+            <div
+              className="md:hidden"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: `linear-gradient(to right, ${colors.background} 0%, rgba(0,0,0,0.8) 20%, rgba(0,0,0,0) 100%)`,
+                zIndex: 2,
+              }}
+            />
           )}
 
           {/* Left side — tag info */}
