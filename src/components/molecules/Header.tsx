@@ -7,6 +7,8 @@ import { Logo } from "../atoms/Logo";
 import { SearchDropdown } from "./SearchDropdown";
 import { colors } from "@/lib/constants/colors";
 import { CachedIssuerStats } from "@/lib/hooks/useIssuerStats";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useWaitlist } from "@/lib/hooks/useWaitlist";
 
 interface NavLink {
   href: string;
@@ -38,6 +40,8 @@ export function Header({
 }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useAuth();
+  const { position: waitlistPosition } = useWaitlist();
 
   // Determine active link based on current pathname
   const isLinkActive = (href: string) => {
@@ -88,6 +92,20 @@ export function Header({
           <div className="hidden lg:block">
             <SearchDropdown statsMap={statsMap} />
           </div>
+
+          {/* Waitlist Position Badge */}
+          {isAuthenticated && waitlistPosition !== null && (
+            <Link
+              href="/waitlist"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-base transition-colors hover:opacity-80"
+              style={{
+                color: colors.textPrimary,
+              }}
+            >
+              <span className="text-sm" style={{ color: colors.textSecondary }}>#</span>
+              <span className="font-bold tabular-nums text-[1.2rem]">{waitlistPosition}</span>
+            </Link>
+          )}
 
           {/* Auth Buttons */}
           {!isAuthenticated ? (
