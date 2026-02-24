@@ -17,6 +17,7 @@ export const colors = {
 
   // Accents
   red: '#EF4444',             // Red accent (errors, alerts, negative change)
+  blue: '#3B82F6',            // Blue accent (temporary debug highlight)
   logo: '#E5C68D',            // Logo/brand accent (gold)
   gold: '#E5C68D',            // Gold color (same as logo)
   goldBorder: '#C4A86A',      // Gold border
@@ -57,6 +58,7 @@ export const tailwindColors = {
   'box-outline': colors.boxOutline,
   accent: {
     red: colors.red,
+    blue: colors.blue,
     logo: colors.logo,
     green: colors.green,
   },

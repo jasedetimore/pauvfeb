@@ -51,7 +51,7 @@ const WaitlistRow: React.FC<WaitlistRowProps> = ({
   // Scale + opacity mapped by distance from center
   const scale = absOffset === 0 ? 1 : absOffset === 1 ? 0.88 : 0.74;
   const opacity = absOffset === 0 ? 1 : absOffset === 1 ? 0.5 : 0.25;
-  const fontSize = absOffset === 0 ? "1.125rem" : absOffset === 1 ? "1rem" : "0.85rem";
+  const fontSize = absOffset === 0 ? "1.2rem" : absOffset === 1 ? "1.05rem" : "0.9rem";
 
   return (
     <div
@@ -93,7 +93,7 @@ const WaitlistRow: React.FC<WaitlistRowProps> = ({
       {/* "YOU" badge */}
       {isCurrentUser && (
         <span
-          className="ml-1 font-mono text-xs font-bold tracking-widest px-2 py-0.5 rounded shrink-0"
+          className="ml-1 font-mono text-sm font-bold tracking-widest px-2 py-0.5 rounded shrink-0"
           style={{
             backgroundColor: `${colors.gold}22`,
             color: colors.gold,
@@ -112,16 +112,22 @@ const WaitlistRow: React.FC<WaitlistRowProps> = ({
 export interface WaitlistPanelProps {
   /** Chart area height – the panel fills this same space */
   height?: number;
+  /** When true, panel height is content-driven instead of fixed */
+  fitContent?: boolean;
   /** Show larger title + explanation (for standalone pages like assets/deposits) */
   expanded?: boolean;
   /** Override the position label (default: "Waitlist Position") */
   positionLabel?: string;
+  /** When true, hides the intro description paragraph (use when the page already provides that context) */
+  hideIntro?: boolean;
 }
 
 export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
   height = 400,
+  fitContent = false,
   expanded = false,
   positionLabel = "Waitlist Position",
+  hideIntro = false,
 }) => {
   const { user, isLoading: authLoading } = useAuth();
   const { position, referralCode, neighbors: apiNeighbors, isLoading: waitlistLoading } = useWaitlist();
@@ -150,22 +156,26 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
     });
   }, [referralLink]);
 
+  const panelStyle = fitContent
+    ? { backgroundColor: colors.background }
+    : { backgroundColor: colors.background, height };
+
   /* ── loading state ── */
   if (isLoading) {
     return (
       <div
         className="rounded-[10px] overflow-hidden relative"
-        style={{ backgroundColor: colors.background, height }}
+        style={panelStyle}
       >
-        <div className="relative z-[2] flex flex-col items-center justify-between h-full py-6 px-4">
-          {/* Top: position label + number */}
-          <div className="flex flex-col items-center gap-2">
-            <Skeleton width="140px" height="0.75rem" />
-            <Skeleton width="90px" height={expanded ? "3rem" : "2.25rem"} />
+        <div className="relative z-[2] flex flex-col items-center pt-2 pb-6 px-4">
+          {/* Top: intro text (only when not hidden) + position */}
+          <div className="flex flex-col items-center gap-2 mb-4 text-center max-w-md">
+            {!hideIntro && <Skeleton width="320px" height="0.85rem" />}
+            <Skeleton width="220px" height={expanded ? "2rem" : "1.5rem"} />
           </div>
 
           {/* Middle: neighbor rows */}
-          <div className="flex flex-col items-center gap-2 w-full max-w-md">
+          <div className="flex flex-col items-center gap-2 w-full max-w-md rounded-lg py-3 mb-5">
             {[0.74, 0.88, 1, 0.88, 0.74].map((scale, i) => (
               <div
                 key={i}
@@ -182,11 +192,11 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
             ))}
           </div>
 
-          {/* Bottom: share section */}
-          <div className="flex flex-col items-center gap-3 w-full max-w-md">
-            <Skeleton width="180px" height="0.85rem" />
+          {/* Bottom: referral section */}
+          <div className="flex flex-col items-center gap-2 w-full max-w-md">
+            <Skeleton width="220px" height="0.95rem" />
+            <Skeleton width="240px" height="0.8rem" />
             <Skeleton width="100%" height="44px" />
-            <Skeleton width="260px" height="0.7rem" />
           </div>
         </div>
       </div>
@@ -198,7 +208,7 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
     return (
       <div
         className="rounded-[10px] overflow-hidden relative"
-        style={{ backgroundColor: colors.background, height }}
+        style={panelStyle}
       >
         <div
           className="relative z-[2] flex flex-col items-center justify-center gap-6 h-full px-4"
@@ -225,7 +235,7 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
             style={{ color: colors.textSecondary }}
           >
             Create an account to reserve your spot.
-            First 100 users trade on launch day — 100 more unlock every day after.
+            First wave of users trade on launch day — more will unlock every day after.
           </p>
 
           {/* CTA */}
@@ -250,7 +260,7 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
   return (
     <div
       className="rounded-[10px] overflow-hidden relative select-none"
-      style={{ backgroundColor: colors.background, height }}
+      style={panelStyle}
     >
       {/* Radial glow behind the user's row */}
       <div
@@ -260,29 +270,28 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
         }}
       />
 
-      <div className="relative z-[2] flex flex-col items-center justify-between h-full py-6 px-4">
-        {/* ── Top label ── */}
-        <div className="flex flex-col items-center gap-1">
+      <div className="relative z-[2] flex flex-col items-center justify-center h-full pt-2 pb-6 px-4">
+        {/* ── Top message ── */}
+        <div className="flex flex-col items-center gap-2 mb-4 text-center max-w-md">
+          {!hideIntro && (
+            <p
+              className="font-mono text-sm leading-relaxed"
+              style={{ color: colors.textSecondary }}
+            >
+              To ensure stability at scale, we are granting access in waves throughout launch day
+            </p>
+          )}
           <span
-            className={`font-mono tracking-[0.35em] uppercase ${expanded ? "text-sm" : "text-xs"}`}
+            className={`font-mono font-bold tabular-nums ${expanded ? "text-[2rem]" : "text-[1.5rem]"}`}
             style={{ color: colors.textPrimary }}
           >
-            {positionLabel}
-          </span>
-          <span
-            className={`font-mono font-bold tabular-nums transition-all duration-150 ${expanded ? "text-5xl" : "text-4xl"}`}
-            style={{
-              color: colors.textPrimary,
-              textShadow: `0 0 20px ${colors.gold}40`,
-            }}
-          >
-            #{displayPos}
+            You are #{displayPos} in line
           </span>
         </div>
 
         {/* ── Scrolling names ── */}
         <div
-          className="flex flex-col items-center w-full max-w-md rounded-lg py-1"
+          className="mb-5 flex flex-col items-center w-full max-w-md rounded-lg py-1"
           style={{ border: `1px solid ${colors.boxOutline}` }}
         >
           {/* Top fade mask */}
@@ -333,46 +342,42 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
         </div>
 
         {/* ── Referral section ── */}
-        <div className="flex flex-col items-center gap-3 w-full max-w-md">
-          <div className="flex flex-col items-center gap-1">
-            <span
-              className="font-mono text-sm font-medium"
-              style={{ color: colors.textPrimary }}
-            >
-              Tell a friend about Pauv
-            </span>
-            <span
-              className="font-mono text-xs"
-              style={{ color: colors.textSecondary }}
-            >
-              Share the link below
-            </span>
-          </div>
+        <div className="flex flex-col gap-2 w-full max-w-md items-center text-center">
+          <span
+            className="font-mono text-base font-semibold"
+            style={{ color: colors.textPrimary }}
+          >
+            Want to move forward in line?
+          </span>
+          <span
+            className="font-mono text-sm"
+            style={{ color: colors.textSecondary }}
+          >
+            Refer a friend to move up 20 spaces:
+          </span>
 
           <button
             onClick={copyCode}
-            className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md font-mono text-base transition-all"
+            className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md font-mono text-sm transition-all mt-1"
             style={{
-              backgroundColor: `${colors.textPrimary}10`,
-              border: `1px solid ${colors.textPrimary}30`,
+              backgroundColor: `${colors.textPrimary}08`,
+              border: `1px solid ${colors.textPrimary}25`,
               color: colors.textPrimary,
               cursor: "pointer",
             }}
           >
-            {/* Code text */}
-            <span className="tracking-wide font-semibold text-sm truncate">
+            <span className="truncate text-center" style={{ color: codeCopied ? colors.green : colors.textPrimary }}>
               {codeCopied
-                ? "Link copied!"
+                ? "Copied!"
                 : referralCode
                   ? `pauv.com/register?ref=${referralCode}`
                   : "pauv.com/register"}
             </span>
 
-            {/* Copy icon */}
-            {!codeCopied && (
+            {!codeCopied ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
+                className="w-4 h-4 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -381,16 +386,19 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                 <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
               </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke={colors.green}
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             )}
           </button>
-
-          {/* Unlock info */}
-          <p
-            className="font-mono text-xs text-center leading-relaxed"
-            style={{ color: colors.textSecondary }}
-          >
-            First 100 trade on launch day &bull; 100 more unlock daily
-          </p>
         </div>
       </div>
 

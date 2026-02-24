@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { colors } from "@/lib/constants/colors";
 
 export default function ContactPage() {
@@ -70,6 +71,16 @@ export default function ContactPage() {
                 <br />
                 Austin, TX 78724
               </p>
+            </div>
+
+            <div className="pt-4">
+              <Link
+                href="/contact/careers"
+                className="inline-block text-lg font-semibold hover:underline transition-colors"
+                style={{ color: colors.gold }}
+              >
+                We&apos;re hiring → Careers
+              </Link>
             </div>
           </div>
         </div>

@@ -176,6 +176,9 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
     setSubmitStage("submitting");
     const submitStartTime = Date.now();
 
+    // Clear the input immediately so the user sees it reset
+    setAmount("");
+
     // Immediately notify parent so skeletons appear as soon as user confirms
     if (onOrderConfirmed) {
       onOrderConfirmed();
@@ -231,10 +234,9 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         setTimeout(() => onOrderComplete(), 1500);
       }
 
-      // After a short pause, reset the form completely
+      // After a short pause, reset the form stage
       setTimeout(() => {
         setSubmitStage("idle");
-        setAmount("");
       }, 1500);
     } catch (err) {
       console.error("Order submission error:", err);
@@ -429,7 +431,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
         )}
 
         {/* Submit Button / Status Box */}
-        {numericAmount > 0 && (
+        {(numericAmount > 0 || submitStage !== "idle") && (
           <div className="mb-2">
             {submitStage !== "idle" ? (
               <div

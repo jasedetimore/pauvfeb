@@ -38,12 +38,15 @@ export interface PriceChartProps {
 }
 
 const RANGE_OPTIONS = [
-  { label: "1h", value: "1h", interval: "1 minute", duration: "1 hour" },
-  { label: "24h", value: "24h", interval: "5 minutes", duration: "24 hours" },
-  { label: "7d", value: "7d", interval: "1 hour", duration: "7 days" },
-  { label: "30d", value: "30d", interval: "4 hours", duration: "30 days" },
-  { label: "All", value: "all", interval: "1 day", duration: "365 days" },
+  { label: "1h", value: "1h", duration: "1 hour" },
+  { label: "24h", value: "24h", duration: "24 hours" },
+  { label: "7d", value: "7d", duration: "7 days" },
+  { label: "30d", value: "30d", duration: "30 days" },
+  { label: "All", value: "all", duration: "3650 days" },
 ];
+
+/** Max raw data points before the DB starts downsampling */
+const MAX_CHART_POINTS = 200;
 
 /**
  * PriceChart - Displays historical price data using lightweight-charts
@@ -106,14 +109,15 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           throw new Error("Invalid range selected");
         }
 
-        // Call the get_ohlc_data function
-        const { data, error: fetchError } = await supabase.rpc("get_ohlc_data", {
+        // Call the adaptive chart data function (returns raw points when <= 200,
+        // otherwise auto-buckets to ~200 data points)
+        const { data, error: fetchError } = await supabase.rpc("get_chart_data_adaptive", {
           p_ticker: ticker.toUpperCase(),
-          p_interval: rangeConfig.interval,
           p_start_time: new Date(
             Date.now() - parseDuration(rangeConfig.duration)
           ).toISOString(),
           p_end_time: new Date().toISOString(),
+          p_max_points: MAX_CHART_POINTS,
         });
 
         if (fetchError) {
@@ -367,10 +371,42 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     setSelectedRange(range);
   };
 
-  // If issuer is not tradable, show the waitlist panel
+  // If issuer is not tradable, show the waitlist panel over a blurred chart image
   // TODO: Hook up to Supabase waitlist API. See docs/WAITLIST_API.md
   if (!isTradable) {
-    return <WaitlistPanel height={height} />;
+    return (
+      <div
+        className="relative rounded-[10px] overflow-hidden flex flex-col items-center justify-center"
+        style={{
+          backgroundColor: colors.background,
+          minHeight: height + 96,
+        }}
+      >
+        {/* Blurred chart background image */}
+        <img
+          src="/chartbackground.png"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
+          style={{ filter: "blur(5px)", opacity: 0.45 }}
+        />
+        {/* Dark overlay for legibility */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.45)" }}
+        />
+        {/* Waitlist panel on top */}
+        <div
+          className="relative z-10 w-full max-w-md rounded-lg px-6 py-10"
+          style={{
+            border: `1px solid ${colors.boxOutline}`,
+            backgroundColor: colors.background,
+          }}
+        >
+          <WaitlistPanel fitContent />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -378,6 +414,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
       className="rounded-[10px] overflow-hidden"
       style={{
         backgroundColor: "#000000",
+        border: `1px solid ${colors.boxOutline}`,
       }}
     >
       {/* Header with price info and range selector */}

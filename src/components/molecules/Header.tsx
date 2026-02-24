@@ -99,7 +99,7 @@ export function Header({
           {isAuthenticated && waitlistPosition !== null && (
             <Link
               href="/waitlist"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-base transition-colors hover:opacity-80"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md font-mono text-base transition-colors hover:opacity-80"
               style={{
                 color: colors.textPrimary,
               }}

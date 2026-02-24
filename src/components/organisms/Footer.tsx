@@ -64,6 +64,13 @@ export function Footer() {
             >
               Contact
             </Link>
+            <Link
+              href="/contact/careers"
+              className="text-sm hover:underline transition-colors"
+              style={{ color: colors.textSecondary }}
+            >
+              Careers
+            </Link>
           </div>
 
           {/* Column 3: Legal */}
