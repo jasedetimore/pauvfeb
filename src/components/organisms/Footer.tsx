@@ -136,14 +136,14 @@ export function Footer() {
           <p className="text-xs" style={{ color: colors.textMuted }}>
             &copy; 2026 Pauv Inc.
           </p>
-          <p
-            className="text-xs max-w-xl text-right"
+          <small
+            className="text-xs max-w-xl text-right block"
             style={{ color: colors.textMuted }}
           >
             USDP are platform-specific credits with no cash value. PVs are
             digital collectibles and do not represent ownership in any person or
             entity.
-          </p>
+          </small>
         </div>
       </div>
     </footer>
