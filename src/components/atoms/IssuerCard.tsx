@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { colors } from "@/lib/constants/colors";
+import { EXAMPLE_ISSUER_TICKERS } from "@/lib/constants";
 
 export interface IssuerCardProps {
   ticker: string;
@@ -70,6 +71,7 @@ export function IssuerCard({
 
   const isPositiveChange = priceChange >= 0;
   const changeColor = isPositiveChange ? colors.green : colors.red;
+  const isExample = EXAMPLE_ISSUER_TICKERS.has(ticker);
 
   return (
     <div
@@ -77,6 +79,7 @@ export function IssuerCard({
       style={{
         backgroundColor: isHovered ? hoverBackgroundColor : backgroundColor,
         overflow: "hidden",
+        position: "relative",
         display: "flex",
         alignItems: "center",
         height: "112px",
@@ -94,6 +97,23 @@ export function IssuerCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {isExample && (
+        <div
+          style={{
+            position: "absolute",
+            top: "6px",
+            right: "8px",
+            fontSize: "9px",
+            fontWeight: "500",
+            color: colors.textMuted,
+            letterSpacing: "0.02em",
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
+          Example Issuer
+        </div>
+      )}
       <div style={{ display: "flex", gap: "12px", flex: 1, alignItems: "stretch" }}>
         {/* Left side - Square image */}
         <div

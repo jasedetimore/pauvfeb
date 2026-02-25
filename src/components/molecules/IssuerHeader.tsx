@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { colors } from "@/lib/constants/colors";
 import { IssuerHeaderSkeleton, SocialMediaLinks } from "@/components/atoms";
 import { IssuerLinksDB } from "@/lib/types/issuer-links";
+import { EXAMPLE_ISSUER_TICKERS } from "@/lib/constants";
 
 import { AutoTextSize } from "auto-text-size";
 import { useIsMobile } from "@/lib/hooks/useIsMobile";
@@ -49,6 +50,8 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
     return (name?.charAt(0) || ticker?.charAt(0) || "?").toUpperCase();
   };
 
+  const isExample = EXAMPLE_ISSUER_TICKERS.has(ticker);
+
   if (isLoading) {
     return <IssuerHeaderSkeleton />;
   }
@@ -92,13 +95,23 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
               </AutoTextSize>
             </div>
           ) : (
-            <h1
-              className="font-mono font-bold truncate text-[3rem] leading-none text-white"
-              style={{ color: colors.textPrimary }}
-              title={name || ticker}
-            >
-              {name || ticker}
-            </h1>
+            <div className="flex items-baseline gap-3">
+              <h1
+                className="font-mono font-bold truncate text-[3rem] leading-none text-white"
+                style={{ color: colors.textPrimary }}
+                title={name || ticker}
+              >
+                {name || ticker}
+              </h1>
+              {isExample && (
+                <span
+                  className="text-sm font-light flex-shrink-0"
+                  style={{ color: colors.textMuted }}
+                >
+                  (example issuer)
+                </span>
+              )}
+            </div>
           )}
 
           {headline && (
