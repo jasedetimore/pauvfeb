@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "../atoms/Logo";
@@ -44,6 +44,26 @@ export function Header({
   const pathname = usePathname();
   const { user, isIssuer } = useAuth();
   const { position: waitlistPosition } = useWaitlist();
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    }
+
+    if (isMobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   // Determine active link based on current pathname
   const isLinkActive = (href: string) => {
@@ -54,7 +74,7 @@ export function Header({
   };
 
   return (
-    <header role="banner" className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md" style={{ backgroundColor: "rgba(0, 0, 0, 0.75)", borderBottom: `1px solid ${colors.boxOutline}` }}>
+    <header ref={headerRef} role="banner" className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md" style={{ backgroundColor: "rgba(0, 0, 0, 0.75)", borderBottom: `1px solid ${colors.boxOutline}` }}>
       <div className="relative flex items-center justify-between px-4 sm:px-6 lg:px-9 py-2 lg:py-3">
         {/* Left Section: Logo and Navigation */}
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">

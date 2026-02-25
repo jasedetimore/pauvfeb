@@ -14,6 +14,7 @@ import {
 import { colors } from "@/lib/constants/colors";
 import { createBrowserClient } from "@supabase/ssr";
 import { WaitlistPanel } from "@/components/organisms/WaitlistPanel";
+import { AutoTextSize } from "auto-text-size";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface OHLCDataPoint {
@@ -323,22 +324,22 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           filter: `ticker=eq.${ticker.toUpperCase()}`,
         },
         (payload) => {
-          
+
           // Immediately update the chart with the new price point
           const newPrice = payload.new?.current_price;
           if (newPrice && lineSeriesRef.current) {
             const now = Math.floor(Date.now() / 1000) as Time;
             const priceValue = Number(newPrice);
-            
+
             // Update the current price display immediately
             setCurrentPrice(priceValue);
-            
+
             // Add the new data point to the chart
             lineSeriesRef.current.update({
               time: now,
               value: priceValue,
             });
-            
+
             // Update price change using stored first price
             const firstPrice = firstPriceRef.current;
             if (firstPrice && firstPrice > 0) {
@@ -347,7 +348,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
               setPriceChange({ change, percent });
             }
           }
-          
+
           // Also refetch full data to ensure consistency (debounced)
           fetchChartData(selectedRange);
         }
@@ -419,18 +420,23 @@ export const PriceChart: React.FC<PriceChartProps> = ({
     >
       {/* Header with price info and range selector */}
       <div
-        className="flex items-center justify-between p-4 border-b"
+        className="flex items-center justify-between gap-3 p-4 border-b"
         style={{ borderColor: colors.boxOutline }}
       >
-        <div className="flex items-center gap-4 lg:hidden">
+        <div className="flex items-center min-w-0 flex-1 lg:hidden">
           {currentPrice !== null && (
-            <div className="flex flex-col">
-              <span
-                className="font-mono text-[2.8rem] leading-tight font-bold"
-                style={{ color: colors.textPrimary }}
-              >
-                ${currentPrice.toFixed(6)}
-              </span>
+            <div className="flex flex-col min-w-0 w-full">
+              <div className="w-full">
+                <AutoTextSize
+                  mode="oneline"
+                  minFontSizePx={24}
+                  maxFontSizePx={44}
+                  className="font-mono leading-tight font-bold"
+                  style={{ color: colors.textPrimary }}
+                >
+                  ${currentPrice.toFixed(6)}
+                </AutoTextSize>
+              </div>
               {priceChange && (
                 <span
                   className="font-mono text-xl"
@@ -446,8 +452,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           )}
         </div>
 
-        {/* Range Selector - desktop only (top right) */}
-        <div className="hidden lg:flex gap-1 ml-auto">
+        {/* Range Selector */}
+        <div className="flex gap-1 ml-auto shrink-0">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -462,11 +468,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                   selectedRange === option.value
                     ? colors.textDark
                     : colors.textSecondary,
-                border: `1px solid ${
-                  selectedRange === option.value
-                    ? colors.green
-                    : colors.boxOutline
-                }`,
+                border: `1px solid ${selectedRange === option.value
+                  ? colors.green
+                  : colors.boxOutline
+                  }`,
               }}
             >
               {option.label}
@@ -564,11 +569,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                 selectedRange === option.value
                   ? colors.textDark
                   : colors.textSecondary,
-              border: `1px solid ${
-                selectedRange === option.value
+              border: `1px solid ${selectedRange === option.value
                   ? colors.green
                   : colors.boxOutline
-              }`,
+                }`,
             }}
           >
             {option.label}
