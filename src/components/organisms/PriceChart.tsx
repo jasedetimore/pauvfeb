@@ -55,7 +55,7 @@ const MAX_CHART_POINTS = 200;
 export const PriceChart: React.FC<PriceChartProps> = ({
   ticker,
   height = 350,
-  initialRange = "24h",
+  initialRange = "7d",
   refreshTrigger,
   isTradable = true,
   forceLoading = false,
@@ -446,8 +446,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
           )}
         </div>
 
-        {/* Range Selector */}
-        <div className="flex gap-1 ml-auto">
+        {/* Range Selector - desktop only (top right) */}
+        <div className="hidden lg:flex gap-1 ml-auto">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -543,6 +543,37 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         )}
 
         <div ref={chartContainerRef} style={{ height: "100%", width: "100%" }} />
+      </div>
+
+      {/* Range Selector - mobile only (bottom left) */}
+      <div
+        className="flex lg:hidden gap-1 p-3"
+        style={{ borderTop: `1px solid ${colors.boxOutline}` }}
+      >
+        {RANGE_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            onClick={() => handleRangeChange(option.value)}
+            className="px-3 py-1 rounded font-mono text-xs transition-colors"
+            style={{
+              backgroundColor:
+                selectedRange === option.value
+                  ? colors.green
+                  : "transparent",
+              color:
+                selectedRange === option.value
+                  ? colors.textDark
+                  : colors.textSecondary,
+              border: `1px solid ${
+                selectedRange === option.value
+                  ? colors.green
+                  : colors.boxOutline
+              }`,
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
     </div>
   );
