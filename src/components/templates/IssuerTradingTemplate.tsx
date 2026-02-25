@@ -70,9 +70,9 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
 
   // Called IMMEDIATELY when user presses confirm — triggers skeletons only.
   // We do NOT refetch here because the order hasn't been processed yet.
+  // The chart keeps showing its current data (no skeleton / no stale refetch).
   const handleOrderConfirmed = useCallback(() => {
     setPostOrderRefreshing(true);
-    setChartRefreshTrigger((prev) => prev + 1);
   }, []);
 
   // Called AFTER the "Successful" message disappears (~3s after insert).
@@ -87,6 +87,8 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
       refetchHolders(),
       transactionRefetchRef.current ? transactionRefetchRef.current() : Promise.resolve(),
     ]);
+    // Re-trigger chart fetch now that the order is actually processed
+    setChartRefreshTrigger((prev) => prev + 1);
     setPostOrderRefreshing(false);
   }, [refetchMetrics, refetchHolders]);
 
@@ -108,9 +110,9 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     mobileTransactionRefetchRef.current = refetch;
   }, []);
   // Mobile: called IMMEDIATELY when user presses confirm — skeletons only
+  // Chart stays visible with old data until order is fully processed.
   const handleMobileOrderConfirmed = useCallback(() => {
     setPostOrderRefreshing(true);
-    setChartRefreshTrigger((prev) => prev + 1);
   }, []);
 
   // Mobile: called AFTER the "Successful" message disappears
@@ -121,6 +123,8 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
       refetchHolders(),
       mobileTransactionRefetchRef.current ? mobileTransactionRefetchRef.current() : Promise.resolve(),
     ]);
+    // Re-trigger chart fetch now that the order is actually processed
+    setChartRefreshTrigger((prev) => prev + 1);
     setPostOrderRefreshing(false);
   }, [refetchMetrics, refetchHolders]);
 
@@ -414,7 +418,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             {initialLoading && (metricsLoading || isTradable) ? (
               <ChartSkeleton height={420} />
             ) : (
-              <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
+              <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
             )}
           </div>
 
@@ -477,7 +481,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         {/* ── Desktop Layout ── 3-column with sidebars */}
         <div className="hidden lg:flex gap-6 px-4">
           {/* Left Sidebar - Pinned to left */}
-          <aside className="w-80 flex-shrink-0 sticky top-24 self-start">
+          <aside className="w-80 flex-shrink-0">
             <TradingLeftSidebar
               ticker={ticker}
               price={initialLoading ? null : currentPrice}
@@ -499,7 +503,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                   {(metricsLoading || isTradable) ? (
                     <ChartSkeleton height={420} />
                   ) : (
-                    <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
+                    <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
                   )}
                 </div>
               </>
@@ -509,13 +513,13 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                 issuerLinks={issuerLinks}
                 isLoading={false}
               >
-                <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} forceLoading={postOrderRefreshing} />
+                <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
               </TradingMainContent>
             )}
           </div>
 
           {/* Right Sidebar - Pinned to right */}
-          <aside className="w-80 flex-shrink-0 sticky top-24 self-start max-h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar pb-8">
+          <aside className="w-80 flex-shrink-0 pb-8">
             <TradingRightSidebar
               ticker={ticker}
               price={currentPrice}

@@ -32,7 +32,7 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!/^[A-Z]{2,10}$/i.test(ticker)) {
+        if (!/^[A-Z0-9]{2,10}$/i.test(ticker)) {
             return NextResponse.json({ error: "Invalid ticker format" }, { status: 400 });
         }
 

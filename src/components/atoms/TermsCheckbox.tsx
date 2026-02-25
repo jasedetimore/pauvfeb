@@ -78,7 +78,7 @@ export function TermsCheckbox({
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:no-underline transition-colors"
-          style={{ color: colors.gold }}
+          style={{ color: colors.textPrimary }}
           onClick={(e) => e.stopPropagation()}
         >
           Terms of Service
@@ -89,7 +89,7 @@ export function TermsCheckbox({
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:no-underline transition-colors"
-          style={{ color: colors.gold }}
+          style={{ color: colors.textPrimary }}
           onClick={(e) => e.stopPropagation()}
         >
           Privacy Policy
@@ -102,7 +102,7 @@ export function TermsCheckbox({
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:no-underline transition-colors"
-              style={{ color: colors.gold }}
+              style={{ color: colors.textPrimary }}
               onClick={(e) => e.stopPropagation()}
             >
               Issuer Terms

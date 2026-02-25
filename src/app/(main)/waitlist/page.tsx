@@ -28,7 +28,7 @@ export default function WaitlistPage() {
       <main className="pt-10 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
           {/* Page heading */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-2">
             <h1
               className="font-mono text-3xl sm:text-4xl font-bold mb-2"
               style={{ color: colors.textPrimary }}
@@ -40,15 +40,15 @@ export default function WaitlistPage() {
               style={{ color: colors.textSecondary }}
             >
               We&apos;re releasing access in waves so we can test at scale.
-              The first 500 users begin trading on launch day, then we&apos;ll
+              The first users begin trading on launch day, then we&apos;ll
               unlock more each day after. Refer a friend to increase your
-              position by 50.
+              position by 20.
             </p>
           </div>
 
           {/* Waitlist panel — large */}
           <div className="mb-10">
-            <WaitlistPanel height={480} expanded positionLabel="Your Position" />
+            <WaitlistPanel fitContent expanded hideIntro positionLabel="Your Position" />
           </div>
 
           {/* Referrals section */}

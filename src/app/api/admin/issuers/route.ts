@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate ticker format (uppercase letters only, 2-10 chars)
-    if (!/^[A-Z]{2,10}$/.test(ticker)) {
+    if (!/^[A-Z0-9]{2,10}$/.test(ticker)) {
       throw new AdminOperationError(
         "Ticker must be 2-10 uppercase letters",
         400,
