@@ -418,7 +418,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             {initialLoading && (metricsLoading || isTradable) ? (
               <ChartSkeleton height={420} />
             ) : (
-              <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+              <PriceChart ticker={ticker} height={420} initialRange="7d" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
             )}
           </div>
 
@@ -503,7 +503,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                   {(metricsLoading || isTradable) ? (
                     <ChartSkeleton height={420} />
                   ) : (
-                    <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+                    <PriceChart ticker={ticker} height={420} initialRange="7d" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
                   )}
                 </div>
               </>
@@ -513,7 +513,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
                 issuerLinks={issuerLinks}
                 isLoading={false}
               >
-                <PriceChart ticker={ticker} height={420} initialRange="24h" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+                <PriceChart ticker={ticker} height={420} initialRange="7d" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
               </TradingMainContent>
             )}
           </div>
