@@ -16,7 +16,7 @@ const cspHeader = `
     script-src ${scriptSrc};
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data: ${supabaseUrl};
-    connect-src 'self' ${supabaseUrl} https://*.supabase.co wss://*.supabase.co https://static.cloudflareinsights.com https://cloudflareinsights.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com;
+    connect-src 'self' ${supabaseUrl} https://*.supabase.co wss://*.supabase.co https://static.cloudflareinsights.com https://cloudflareinsights.com https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://api.emailjs.com;
     font-src 'self';
     object-src 'none';
     frame-src 'self' https://iframe.mediadelivery.net;

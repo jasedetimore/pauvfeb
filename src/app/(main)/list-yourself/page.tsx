@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import emailjs from "@emailjs/browser";
+import Link from "next/link";
 import { colors } from "@/lib/constants/colors";
 import { createClient } from "@/lib/supabase/client";
 import { TermsCheckbox } from "@/components/atoms/TermsCheckbox";
@@ -63,6 +64,10 @@ export default function ListYourselfPage() {
   const [authEmail, setAuthEmail] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  // Real-time Email validation state
+  const [emailExistsError, setEmailExistsError] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+
   // Detect if the user is already logged in
   useEffect(() => {
     const supabase = createClient();
@@ -80,6 +85,38 @@ export default function ListYourselfPage() {
 
     void hydrateAuthUser();
   }, []);
+
+  // Debounced email check
+  useEffect(() => {
+    // Skip if logged in (authEmail is set) or email is empty or invalid
+    if (authEmail || !form.email || !form.email.includes("@")) {
+      setEmailExistsError(false);
+      setIsCheckingEmail(false);
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/check-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: form.email }),
+        });
+
+        if (res.ok) {
+          const { exists } = await res.json();
+          setEmailExistsError(exists);
+        }
+      } catch (err) {
+        console.error("Failed to check email:", err);
+      } finally {
+        setIsCheckingEmail(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [form.email, authEmail]);
 
   useEffect(() => {
     if (!submitted) return;
@@ -123,6 +160,11 @@ export default function ListYourselfPage() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email.trim())) {
       setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (emailExistsError) {
+      setError("An account with this email already exists. Please log in.");
       return;
     }
 
@@ -409,10 +451,11 @@ export default function ListYourselfPage() {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium mb-1.5"
+                    className="flex justify-between items-center text-sm font-medium mb-1.5"
                     style={labelStyle}
                   >
-                    Email <span style={{ color: colors.red }}>*</span>
+                    <span>Email <span style={{ color: colors.red }}>*</span></span>
+                    {isCheckingEmail && <span className="text-xs opacity-60">Checking...</span>}
                   </label>
                   <input
                     id="email"
@@ -422,17 +465,30 @@ export default function ListYourselfPage() {
                     onChange={handleChange}
                     placeholder="you@example.com"
                     readOnly={!!authEmail}
-                    className="w-full px-4 py-3 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-colors"
+                    className={`w-full px-4 py-3 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-colors ${emailExistsError ? "border-red-500" : ""
+                      }`}
                     style={{
                       ...inputStyle,
+                      ...(emailExistsError ? { borderColor: colors.red } : {}),
                       ...(authEmail ? { opacity: 0.7, cursor: "default" } : {}),
                     }}
                   />
-                  {authEmail && (
+                  {authEmail ? (
                     <p className="text-xs mt-1" style={{ color: colors.green }}>
                       Auto-filled from your logged-in account
                     </p>
-                  )}
+                  ) : emailExistsError ? (
+                    <p className="text-xs mt-2" style={{ color: colors.red }}>
+                      An account with this email already exists.{" "}
+                      <Link
+                        href="/login?redirectTo=/list-yourself"
+                        className="underline font-semibold"
+                        style={{ color: colors.gold }}
+                      >
+                        Please log in to continue.
+                      </Link>
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Phone */}
@@ -562,7 +618,7 @@ export default function ListYourselfPage() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={isSubmitting || !termsAccepted}
+                  disabled={isSubmitting || isCheckingEmail || emailExistsError || !termsAccepted}
                   className="w-full py-3 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
                   style={{
                     backgroundColor: colors.gold,
