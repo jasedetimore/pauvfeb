@@ -453,7 +453,7 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         </div>
 
         {/* Range Selector */}
-        <div className="flex gap-1 ml-auto shrink-0">
+        <div className="hidden lg:flex gap-1 ml-auto shrink-0">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -570,8 +570,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
                   ? colors.textDark
                   : colors.textSecondary,
               border: `1px solid ${selectedRange === option.value
-                  ? colors.green
-                  : colors.boxOutline
+                ? colors.green
+                : colors.boxOutline
                 }`,
             }}
           >
