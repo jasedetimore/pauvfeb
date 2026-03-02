@@ -146,7 +146,7 @@ export function buildIssuerApprovalEmailHtml(confirmationUrl: string): string {
   <div class="email-wrapper">
     <div class="email-content">
       <div class="email-body">
-        <img src="https://bsrizjihqrywmukqsess.supabase.co/storage/v1/object/public/images/public-assets/pauv_logo_gold.png" alt="Pauv Logo" class="logo-img">
+        <img src="${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bsrizjihqrywmukqsess.supabase.co'}/storage/v1/object/public/images/public-assets/pauv_logo_gold.png" alt="Pauv Logo" class="logo-img">
         
         <h1>Your Issuer status is active.</h1>
         
