@@ -25,7 +25,14 @@ export default function SetPasswordPage() {
   useEffect(() => {
     // Use getUser() for session hydration (per project rules)
     const checkAuth = async () => {
-      // TEMPORARY: Bypassing auth check so you can view the UI locally without an invite link!
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        // No valid session — redirect to login
+        router.replace("/login?error=no_session");
+        return;
+      }
+
       setIsAuthenticated(true);
       setIsChecking(false);
     };
