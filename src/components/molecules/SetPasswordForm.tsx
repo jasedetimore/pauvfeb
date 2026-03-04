@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { colors } from "@/lib/constants/colors";
 import { Input } from "@/components/atoms/Input";
 import { PrimaryButton } from "@/components/atoms/PrimaryButton";
+import { TermsCheckbox } from "@/components/atoms/TermsCheckbox";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -22,6 +24,9 @@ export function SetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +39,10 @@ export function SetPasswordForm() {
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+    if (!termsAccepted) {
+      setError("You must agree to the Terms of Service");
       return;
     }
 
@@ -72,6 +81,9 @@ export function SetPasswordForm() {
         const result = await linkRes.json();
         console.error("Link issuer error:", result.error);
         // Don't block — the link can be fixed later by an admin
+      } else {
+        // Force token refresh so AuthProvider gets app_metadata.issuer = true
+        await supabase.auth.refreshSession();
       }
 
       // 4. Redirect to issuer dashboard
@@ -89,26 +101,45 @@ export function SetPasswordForm() {
       {/* Password */}
       <Input
         label="Password"
-        type="password"
+        type={showPassword ? "text" : "password"}
         placeholder="At least 8 characters"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
         minLength={8}
         autoComplete="new-password"
+        rightElement={
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="text-gray-400 hover:text-gray-300 focus:outline-none"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        }
       />
 
       {/* Confirm Password */}
-      <Input
-        label="Confirm Password"
-        type="password"
-        placeholder="Re-enter your password"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        required
-        minLength={8}
-        autoComplete="new-password"
-      />
+      <div className="space-y-1">
+        <Input
+          label="Confirm Password"
+          type="password"
+          placeholder="Re-enter your password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          disabled={password.length < 8}
+          error={confirmPassword.length >= password.length && password !== confirmPassword ? "Passwords do not match" : undefined}
+        />
+        {confirmPassword.length > 0 && password === confirmPassword && (
+          <p className="text-xs ml-1 font-medium" style={{ color: colors.green }}>
+            Passwords match ✓
+          </p>
+        )}
+      </div>
 
       {/* Error */}
       {error && (
@@ -124,8 +155,20 @@ export function SetPasswordForm() {
         </p>
       )}
 
+      {/* Terms & Conditions */}
+      <TermsCheckbox
+        checked={termsAccepted}
+        onChange={setTermsAccepted}
+        variant="issuer"
+      />
+
       {/* Submit */}
-      <PrimaryButton type="submit" isLoading={isLoading} fullWidth>
+      <PrimaryButton
+        type="submit"
+        isLoading={isLoading}
+        disabled={isLoading || !termsAccepted || password.length < 8 || password !== confirmPassword}
+        fullWidth
+      >
         {isLoading ? "Setting Password..." : "Set Password & Continue"}
       </PrimaryButton>
     </form>

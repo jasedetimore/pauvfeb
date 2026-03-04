@@ -52,7 +52,7 @@ export async function signUp(formData: FormData) {
     const { error: userError } = await supabase.from("users").insert({
       user_id: authData.user.id,
       username,
-      usdp_balance: 1000, // Give new users 1000 USDP to start
+      usdp_balance: 0,
       terms_accepted_at: new Date().toISOString(),
     });
 
@@ -96,10 +96,10 @@ export async function signUp(formData: FormData) {
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  
+
   // Revalidate all paths to clear cached data after logout
   revalidatePath("/", "layout");
-  
+
   redirect("/");
 }
 

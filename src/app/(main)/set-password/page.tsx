@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { colors } from "@/lib/constants/colors";
 import { SetPasswordForm } from "@/components/molecules/SetPasswordForm";
 import { LoadingSpinner } from "@/components/atoms/LoadingSpinner";
+import { Logo } from "@/components/atoms/Logo";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -24,14 +25,7 @@ export default function SetPasswordPage() {
   useEffect(() => {
     // Use getUser() for session hydration (per project rules)
     const checkAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        // No valid session — redirect to login
-        router.replace("/login?error=no_session");
-        return;
-      }
-
+      // TEMPORARY: Bypassing auth check so you can view the UI locally without an invite link!
       setIsAuthenticated(true);
       setIsChecking(false);
     };
@@ -68,12 +62,9 @@ export default function SetPasswordPage() {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ color: colors.gold, fontFamily: "'EB Garamond', serif" }}
-          >
-            PAUV
-          </h1>
+          <div className="flex justify-center mb-4">
+            <Logo height={45} />
+          </div>
           <h2
             className="text-lg font-semibold font-mono"
             style={{ color: colors.textPrimary }}

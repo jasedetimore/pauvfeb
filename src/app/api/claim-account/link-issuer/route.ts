@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       await adminClient.from("users").insert({
         user_id: userId,
         username,
-        usdp_balance: 1000,
+        usdp_balance: 0,
       });
     }
 

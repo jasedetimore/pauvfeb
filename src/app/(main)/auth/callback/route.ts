@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
           await supabase.from("users").insert({
             user_id: user.id,
             username,
-            usdp_balance: 1000, // Give new users 1000 USDP to start
+            usdp_balance: 0,
             terms_accepted_at: new Date().toISOString(),
           });
         }

@@ -413,7 +413,7 @@ BEGIN
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
-        1000  -- Starting USDP balance
+        0  -- Starting USDP balance
     )
     ON CONFLICT (user_id) DO NOTHING;
     
