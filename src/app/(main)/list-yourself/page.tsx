@@ -336,7 +336,7 @@ export default function ListYourselfPage() {
                     People Trade Your PV
                   </h3>
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    Once verified, your profile generates unique digital collectibles called PVs that allow your audience to trade and hold a speculative stake in your reputation.
+                    Once verified, your profile generates unique digital collectibles called PVs that allow your audience to trade and hold a digital piece of your reputation.
                   </p>
                 </div>
               </div>
@@ -351,10 +351,10 @@ export default function ListYourselfPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
-                    Passive Income for Life
+                    Royalty Earnings for Life
                   </h3>
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    You receive a 0.25% fee from every transaction involving your PV plus 1% annual interest on your total market cap, providing a lifelong income stream that grows alongside your success.
+                    You earn a 0.25% royalty from every transaction, plus monthly payouts from the Pauv Issuer Fund that increase as your community grows and fans maintain their collection.
                   </p>
                 </div>
               </div>
@@ -369,7 +369,7 @@ export default function ListYourselfPage() {
                 That&apos;s all.
               </p>
               <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                It really is that simple. You can complete your free listing in under ten minutes to start generating passive income and building a more committed community of fans.
+                It really is that simple. You can complete your free listing in under ten minutes to start earning lifelong royalties and building a more committed community of fans.
               </p>
             </div>
           </div>
