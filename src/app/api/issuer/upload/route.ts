@@ -53,69 +53,96 @@ async function verifyIssuerFromJWT(
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
-    await verifyIssuerFromJWT(authHeader);
+    const issuer = await verifyIssuerFromJWT(authHeader);
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "issuers";
+    const body = await request.json();
+    const { fileName, fileType, fileSize, folder = "issuers" } = body as {
+      fileName: string;
+      fileType: string;
+      fileSize: number;
+      folder?: string;
+    };
 
-    if (!file) {
-      throw new AdminOperationError("No file provided", 400, "VALIDATION_ERROR");
+    if (!fileName || !fileType || !fileSize) {
+      throw new AdminOperationError(
+        "Missing required fields: fileName, fileType, fileSize",
+        400,
+        "VALIDATION_ERROR"
+      );
     }
 
     if (folder !== "issuers") {
       throw new AdminOperationError("Invalid upload folder", 400, "VALIDATION_ERROR");
     }
 
+    // Validate file type
     const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(fileType)) {
       throw new AdminOperationError(
-        `Invalid file type: ${file.type}. Allowed: ${allowedTypes.join(", ")}`,
+        `Invalid file type: ${fileType}. Allowed: ${allowedTypes.join(", ")}`,
         400,
         "VALIDATION_ERROR"
       );
     }
 
+    // Validate file size (10MB max)
     const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (fileSize > maxSize) {
       throw new AdminOperationError(
-        `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max: 10MB`,
+        `File too large: ${(fileSize / 1024 / 1024).toFixed(1)}MB. Max: 10MB`,
         400,
         "VALIDATION_ERROR"
       );
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const sanitizedName = file.name
-      .replace(/\.[^/.]+$/, "")
-      .replace(/[^a-zA-Z0-9-_]/g, "-")
+    // Generate unique filename: folder/timestamp-originalname
+    const ext = fileName.split(".").pop()?.toLowerCase() || "jpg";
+    const sanitizedName = fileName
+      .replace(/\.[^/.]+$/, "") // remove extension
+      .replace(/[^a-zA-Z0-9-_]/g, "-") // sanitize
       .toLowerCase()
       .substring(0, 50);
     const timestamp = Date.now();
     const filePath = `${folder}/${timestamp}-${sanitizedName}.${ext}`;
 
     const adminClient = createAdminClient();
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
+    // Create a signed upload URL so the client can upload directly to Supabase Storage
     const { data, error } = await adminClient.storage
       .from("images")
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+      .createSignedUploadUrl(filePath);
 
     if (error) {
-      throw new AdminOperationError(`Upload failed: ${error.message}`, 500, "STORAGE_ERROR");
+      throw new AdminOperationError(
+        `Failed to create upload URL: ${error.message}`,
+        500,
+        "STORAGE_ERROR"
+      );
     }
 
+    // Get public URL for the path (will be valid after upload completes)
     const { data: urlData } = adminClient.storage
       .from("images")
-      .getPublicUrl(data.path);
+      .getPublicUrl(filePath);
+
+    // Auto-link the future logo URL to the current issuer's profile
+    const updateRes = await adminClient
+      .from("issuer_details")
+      .update({ logo_url: urlData.publicUrl, updated_at: new Date().toISOString() })
+      .eq("issuer_id", issuer.issuerId);
+
+    if (updateRes.error) {
+      console.error(
+        "[API Issuer Upload] Failed to auto-link logo:",
+        updateRes.error.message
+      );
+    }
 
     return NextResponse.json({
       success: true,
       data: {
+        signedUrl: data.signedUrl,
+        token: data.token,
         path: data.path,
         publicUrl: urlData.publicUrl,
       },
