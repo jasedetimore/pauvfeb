@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { colors } from "@/lib/constants/colors";
 import { IssuerHeaderSkeleton, SocialMediaLinks } from "@/components/atoms";
 import { IssuerLinksDB } from "@/lib/types/issuer-links";
@@ -61,9 +62,11 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
       <div className="flex items-center w-full justify-between gap-3">
         {/* Profile Image */}
         {imageUrl && !imageError ? (
-          <img
+          <Image
             src={imageUrl}
             alt={`${name} logo`}
+            width={90}
+            height={90}
             className="w-16 h-16 md:w-[90px] md:h-[90px] rounded-full object-cover flex-shrink-0"
             onError={() => setImageError(true)}
           />

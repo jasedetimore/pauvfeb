@@ -1,21 +1,11 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import WalletDepositsWithdrawalsSection from "@/components/organisms/WalletDepositsWithdrawalsSection";
 import { WalletDepositsWithdrawalsSkeleton } from "@/components/atoms/Skeleton";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { colors } from "@/lib/constants/colors";
 import { WaitlistPanel } from "@/components/organisms/WaitlistPanel";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 export default function DepositPage() {
   const { user, isLoading } = useAuth();
@@ -65,11 +55,9 @@ export default function DepositPage() {
 
       {/* Blurred background content */}
       <div className="pointer-events-none select-none" style={{ filter: "blur(6px)", opacity: 0.4 }}>
-        <QueryClientProvider client={queryClient}>
-          <Suspense fallback={<WalletDepositsWithdrawalsSkeleton />}>
-            <WalletDepositsWithdrawalsSection />
-          </Suspense>
-        </QueryClientProvider>
+        <Suspense fallback={<WalletDepositsWithdrawalsSkeleton />}>
+          <WalletDepositsWithdrawalsSection />
+        </Suspense>
       </div>
     </div>
   );

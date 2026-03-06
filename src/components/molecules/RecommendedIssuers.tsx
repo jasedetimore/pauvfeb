@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { colors } from "@/lib/constants/colors";
 import { IssuerCard, RecommendedIssuersSkeleton } from "@/components/atoms";
 import { IssuerCardData } from "@/lib/types/issuer";
-import { CachedIssuerStats } from "@/app/api/issuers/stats/route";
+import { useIssuers } from "@/lib/hooks/useIssuers";
+import { useIssuerStats } from "@/lib/hooks/useIssuerStats";
 
 interface RecommendedIssuersProps {
   /** Current issuer ticker to exclude from recommendations */
@@ -28,113 +29,62 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
   forceSkeleton = false,
   onLoadingChange,
 }) => {
-  const [issuers, setIssuers] = useState<Array<IssuerCardData & { isTradable?: boolean }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [fetchKey, setFetchKey] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
+  // Use SWR hooks to automatically deduplicate overlapping requests
+  const { issuers: tagIssuers, isLoading: tagLoading, refetch: refetchTag } = useIssuers({
+    tag: currentTag ?? undefined,
+    limit: 20
+  });
+  const { issuers: allIssuers, isLoading: allLoading, refetch: refetchAll } = useIssuers({
+    limit: 50
+  });
+  const { statsMap, isLoading: statsLoading, refetch: refetchStats } = useIssuerStats();
 
-    const fetchRecommendations = async () => {
-      try {
-        setIsLoading(true);
+  const isDataLoading = forceSkeleton || tagLoading || allLoading || statsLoading || isRefreshing;
 
-        // Fetch issuers and stats in parallel
-        const tagParam = currentTag ? `?tag=${encodeURIComponent(currentTag)}&limit=20` : "?limit=20";
-        const [issuersRes, statsRes] = await Promise.all([
-          fetch(`/api/issuers${tagParam}`),
-          fetch("/api/issuers/stats"),
-        ]);
+  // Reactively compute recommendations
+  const issuers = useMemo(() => {
+    // 1. Filter out the current issuer
+    let candidates = tagIssuers.filter(i => i.ticker.toUpperCase() !== currentTicker.toUpperCase());
 
-        if (cancelled) return;
+    // 2. If we have fewer than 3 same-tag issuers, fetch all issuers to fill
+    if (candidates.length < 3 && allIssuers.length > 0) {
+      const existingTickers = new Set(candidates.map(c => c.ticker.toUpperCase()));
+      const extras = allIssuers.filter(
+        i => i.ticker.toUpperCase() !== currentTicker.toUpperCase() && !existingTickers.has(i.ticker.toUpperCase())
+      );
+      candidates = [...candidates, ...extras];
+    }
 
-        const issuersData = await issuersRes.json();
-        const statsData = await statsRes.json();
+    // 3. Take up to 3 in deterministic API order
+    const selected = candidates.slice(0, 3);
 
-        if (cancelled) return;
-
-        // Build a stats lookup map
-        const statsMap = new Map<string, CachedIssuerStats>();
-        if (statsData.stats) {
-          for (const s of statsData.stats) {
-            statsMap.set(s.ticker, s);
-          }
-        }
-
-        // Filter out the current issuer
-        let candidates: IssuerCardData[] = (issuersData.issuers || [])
-          .filter((i: IssuerCardData) => i.ticker.toUpperCase() !== currentTicker.toUpperCase());
-
-        // If we have fewer than 3 same-tag issuers, fetch all issuers to fill
-        if (candidates.length < 3) {
-          const allRes = await fetch("/api/issuers?limit=50");
-          if (!cancelled) {
-            const allData = await allRes.json();
-            const existingTickers = new Set(candidates.map((c: IssuerCardData) => c.ticker.toUpperCase()));
-            const extras = (allData.issuers || []).filter(
-              (i: IssuerCardData) =>
-                i.ticker.toUpperCase() !== currentTicker.toUpperCase() &&
-                !existingTickers.has(i.ticker.toUpperCase())
-            );
-            candidates = [...candidates, ...extras];
-          }
-        }
-
-        // Take up to 3 in deterministic API order
-        const selected = candidates.slice(0, 3);
-
-        // Enrich with price data from stats
-        const enriched = selected.map((issuer: IssuerCardData) => {
-          const stat = statsMap.get(issuer.ticker);
-          return {
-            ...issuer,
-            currentPrice: stat?.currentPrice ?? issuer.currentPrice ?? 0,
-            priceChange: stat?.price24hChange ?? issuer.priceChange ?? 0,
-            isTradable: Boolean(stat),
-          };
-        });
-
-        if (!cancelled) {
-          setIssuers(enriched);
-        }
-      } catch (err) {
-        console.error("[RecommendedIssuers] Error fetching recommendations:", err);
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchRecommendations();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentTicker, currentTag, fetchKey]);
+    // 4. Enrich with price data from stats
+    return selected.map(issuer => {
+      const stat = statsMap.get(issuer.ticker);
+      return {
+        ...issuer,
+        currentPrice: stat?.currentPrice ?? issuer.currentPrice ?? 0,
+        priceChange: stat?.price24hChange ?? issuer.priceChange ?? 0,
+        isTradable: Boolean(stat),
+      };
+    });
+  }, [tagIssuers, allIssuers, statsMap, currentTicker]);
 
   useEffect(() => {
     if (onLoadingChange) {
-      onLoadingChange(isLoading);
+      onLoadingChange(isDataLoading);
     }
-  }, [isLoading, onLoadingChange]);
+  }, [isDataLoading, onLoadingChange]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    setFetchKey((k) => k + 1);
+    await Promise.all([refetchTag(), refetchAll(), refetchStats()]);
+    setIsRefreshing(false);
   };
 
-  // Clear refreshing state when loading finishes
-  useEffect(() => {
-    if (!isLoading && isRefreshing) {
-      setIsRefreshing(false);
-    }
-  }, [isLoading, isRefreshing]);
-
-  const effectiveLoading = forceSkeleton || isLoading || isRefreshing;
-
-  if (effectiveLoading) {
+  if (isDataLoading && issuers.length === 0) {
     return <RecommendedIssuersSkeleton />;
   }
 

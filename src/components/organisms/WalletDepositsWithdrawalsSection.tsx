@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { mutate as swrMutate } from 'swr';
 import { CheckCircle, XCircle, Clock, Ban } from 'lucide-react';
 import { WalletDepositsWithdrawalsSkeleton } from '@/components/atoms/Skeleton';
 import { Button } from '@/components/atoms/Button';
@@ -12,7 +12,7 @@ import { getWalletTransactions, WalletTransactionRow } from '@/lib/services/wall
 import { initiateDeposit, initiateWithdrawal, getPaymentTransactions } from '@/lib/services/payment-api';
 import { PaymentTransaction, PaginationMeta, PaymentUpdateEvent } from '@/lib/types/payment';
 import { getPendingAmount, getPendingType, clearCheckoutState } from '@/lib/utils/payment-storage';
-import { useMyWalletBalance } from '@/lib/hooks/useWalletBalance';
+import { useMyWalletBalance, WALLET_BALANCE_KEY } from '@/lib/hooks/useWalletBalance';
 import { usePaymentWebSocket } from '@/lib/hooks/usePaymentWebSocket';
 import { colors } from '@/lib/constants/colors';
 
@@ -33,7 +33,6 @@ interface Transfer {
 export default function WalletDepositsWithdrawalsSection() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [action, setAction] = useState<'deposit' | 'withdraw'>('deposit');
@@ -273,8 +272,10 @@ export default function WalletDepositsWithdrawalsSection() {
       lastProcessedEventRef.current = eventId;
       setNotificationEvent(event);
 
+      // Optimistic cache update — the WebSocket already tells us the new balance,
+      // so we write it directly into SWR's cache without a Supabase round-trip.
       if (event.balance_after !== undefined && typeof event.balance_after === 'number') {
-        queryClient.setQueryData(['my-wallet-balance'], { balance: event.balance_after });
+        swrMutate(WALLET_BALANCE_KEY, { balance: event.balance_after }, { revalidate: false });
       }
 
       if (event.status === 'succeeded') {

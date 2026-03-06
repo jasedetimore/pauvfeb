@@ -66,8 +66,10 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
 
-  // Image optimization domains (add Supabase storage domain when needed)
+  // Cache optimized images for 1h so Next.js doesn't re-fetch originals from
+  // Supabase Storage on every request. Issuer photos and tag images rarely change.
   images: {
+    minimumCacheTTL: 3600,
     remotePatterns: [
       {
         protocol: "https",

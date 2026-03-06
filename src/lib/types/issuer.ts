@@ -2,6 +2,21 @@
  * Issuer types - Database models and UI data structures
  */
 
+// Single source of truth for issuer stats shape — previously duplicated in
+// useIssuerStats.ts, stats/route.ts, and lib/server/issuers.ts.
+export interface CachedIssuerStats {
+  ticker: string;
+  currentPrice: number;
+  price1hChange: number | null;
+  price24hChange: number | null;
+  price7dChange: number | null;
+  volume24h: number;
+  holders: number;
+  marketCap: number;
+  circulatingSupply: number;
+  cachedAt: string;
+}
+
 // Database model matching Supabase issuer_details table
 export interface IssuerDetailsDB {
   id: string;

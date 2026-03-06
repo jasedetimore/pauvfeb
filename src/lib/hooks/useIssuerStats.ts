@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React from "react";
+import { CachedIssuerStats } from "@/lib/types";
 
-export interface CachedIssuerStats {
-  ticker: string;
-  currentPrice: number;
-  price1hChange: number | null;
-  price24hChange: number | null;
-  price7dChange: number | null;
-  volume24h: number;
-  holders: number;
-  marketCap: number;
-  circulatingSupply: number;
-  cachedAt: string;
-}
+// Re-export so existing consumers (SearchDropdown, Header) don't need to change imports
+export type { CachedIssuerStats };
 
 interface CacheInfo {
   count: number;
@@ -29,73 +20,50 @@ interface UseIssuerStatsResult {
   refetch: () => Promise<void>;
 }
 
+import useSWR from "swr";
+
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  return data;
+};
+
 /**
  * Hook to fetch cached issuer statistics for all issuers
- * Uses the pre-computed cache from /api/issuers/stats
+ * Uses SWR for built-in caching and request deduplication
  * Cache is refreshed every 5 minutes on the server
- * 
- * Returns:
- * - stats: Array of all issuer stats
- * - statsMap: Map keyed by ticker for O(1) lookup
- * - cacheInfo: Metadata about the cache (count, last updated)
- * - isLoading: Loading state
- * - error: Error message if any
- * - refetch: Function to manually refetch
  */
 export function useIssuerStats(): UseIssuerStatsResult {
-  const [stats, setStats] = useState<CachedIssuerStats[]>([]);
-  const [statsMap, setStatsMap] = useState<Map<string, CachedIssuerStats>>(new Map());
-  const [cacheInfo, setCacheInfo] = useState<CacheInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 60s dedupe: stats are shared across Navbar, Hero, IssuerCards — SWR
+  // collapses all of them into a single network request per minute.
+  const { data, error, isLoading, mutate } = useSWR("/api/issuers/stats", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
+  });
 
-  const fetchStats = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const stats: CachedIssuerStats[] = data?.stats || [];
 
-    try {
-      const response = await fetch("/api/issuers/stats");
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      const fetchedStats: CachedIssuerStats[] = data.stats || [];
-      setStats(fetchedStats);
-      
-      // Build a map for O(1) lookups by ticker
-      const map = new Map<string, CachedIssuerStats>();
-      fetchedStats.forEach((stat) => {
-        map.set(stat.ticker, stat);
-      });
-      setStatsMap(map);
-      
-      setCacheInfo(data.cacheInfo || null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch stats";
-      setError(message);
-      console.error("[useIssuerStats] Error:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  // Memoize the map creation so it doesn't recalculate on every render
+  const statsMap = React.useMemo(() => {
+    const map = new Map<string, CachedIssuerStats>();
+    stats.forEach((stat) => {
+      map.set(stat.ticker, stat);
+    });
+    return map;
+  }, [stats]);
 
   return {
     stats,
     statsMap,
-    cacheInfo,
+    cacheInfo: data?.cacheInfo || null,
     isLoading,
-    error,
-    refetch: fetchStats,
+    error: error instanceof Error ? error.message : error ? String(error) : null,
+    refetch: async () => { await mutate(); },
   };
 }

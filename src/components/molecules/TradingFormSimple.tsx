@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
+import useSWR from "swr";
 import { sendGAEvent } from "@next/third-parties/google";
 import { colors } from "@/lib/constants/colors";
 import { TradingFormSkeleton } from "@/components/atoms";
@@ -47,8 +48,6 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitStage, setSubmitStage] = useState<"idle" | "submitting" | "success">("idle");
-  const [tickerHoldings, setTickerHoldings] = useState<number>(0);
-  const [holdingsLoading, setHoldingsLoading] = useState(false);
   const [sellAllClicked, setSellAllClicked] = useState(false);
 
   // Track whether trade intent has been fired this session to avoid duplicate events
@@ -74,40 +73,25 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
   const { user, profile, isLoading: authLoading, refreshProfile } = useAuth();
   const usdpBalance = profile?.usdp_balance ?? 0;
 
-  // Fetch user's holdings for this ticker
-  const fetchHoldings = React.useCallback(async () => {
-    if (!user) {
-      setTickerHoldings(0);
-      return;
-    }
-
-    setHoldingsLoading(true);
-    try {
+  // SWR replaces the old useEffect+useState loop — deduplicates across
+  // re-renders and caches the result. Refetched after order via mutate().
+  const { data: holdingsData, isLoading: holdingsLoading, mutate: refetchHoldings } = useSWR(
+    user && ticker ? ["ticker-holdings", ticker.toUpperCase(), user.id] : null,
+    async () => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("portfolio")
         .select("pv_amount")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .eq("ticker", ticker.toUpperCase())
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching holdings:", error);
-        setTickerHoldings(0);
-      } else {
-        setTickerHoldings(data?.pv_amount ?? 0);
-      }
-    } catch (err) {
-      console.error("Error fetching holdings:", err);
-      setTickerHoldings(0);
-    } finally {
-      setHoldingsLoading(false);
-    }
-  }, [user, ticker]);
-
-  React.useEffect(() => {
-    fetchHoldings();
-  }, [fetchHoldings]);
+      if (error) throw error;
+      return data?.pv_amount ?? 0;
+    },
+    { revalidateOnFocus: false, dedupingInterval: 5000 }
+  );
+  const tickerHoldings = holdingsData ?? 0;
 
   // Reset sellAllClicked when switching actions
   React.useEffect(() => {
@@ -224,7 +208,7 @@ export const TradingFormSimple: React.FC<TradingFormSimpleProps> = ({
       }
 
       // Refresh holdings in the form
-      fetchHoldings();
+      refetchHoldings();
       if (refreshProfile) {
         refreshProfile();
       }

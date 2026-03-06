@@ -2,22 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import {
     IssuerDetailsDB,
     IssuerCardData,
+    CachedIssuerStats,
     transformIssuerDetailsToCard,
 } from "@/lib/types";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-
-export interface CachedIssuerStats {
-    ticker: string;
-    currentPrice: number;
-    price1hChange: number | null;
-    price24hChange: number | null;
-    price7dChange: number | null;
-    volume24h: number;
-    holders: number;
-    marketCap: number;
-    circulatingSupply: number;
-    cachedAt: string;
-}
 
 export interface GetIssuersOptions {
     tag?: string;
@@ -42,10 +30,10 @@ export async function getIssuersAndStats(options: GetIssuersOptions = {}): Promi
     const { tag, search, limit = 50, offset = 0 } = options;
     const supabase = await createClient();
 
-    // 1. Fetch Issuers
+    // Egress optimization: only columns consumed by transformIssuerDetailsToCard
     let query = supabase
         .from("issuer_details")
-        .select("*", { count: "exact" })
+        .select("ticker, name, photo, tag, bio, headline, created_at", { count: "exact" })
         .eq("is_hidden", false);
 
     if (tag) {
@@ -115,10 +103,10 @@ export async function getIssuersAndStats(options: GetIssuersOptions = {}): Promi
 export async function getTags() {
     const supabase = await createClient();
 
-    // 1. Fetch all tags
+    // Egress optimization: exclude created_at, updated_at (unused by UI)
     const tagsPromise = supabase
         .from("tags")
-        .select("*")
+        .select("id, tag, description, photo_url")
         .order("tag");
 
     // 2. Fetch all issuer tags to calculate specific counts

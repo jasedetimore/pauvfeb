@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import {
   createChart,
   ColorType,
@@ -15,7 +16,6 @@ import { colors } from "@/lib/constants/colors";
 import { createBrowserClient } from "@supabase/ssr";
 import { WaitlistPanel } from "@/components/organisms/WaitlistPanel";
 import { AutoTextSize } from "auto-text-size";
-import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface OHLCDataPoint {
   bucket: string;
@@ -64,8 +64,8 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const lineSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
-  const channelRef = useRef<RealtimeChannel | null>(null);
   const firstPriceRef = useRef<number | null>(null);
+  const fetchedRangesRef = useRef<Set<string>>(new Set());
   const hasFetchedRef = useRef(false);
 
   const [chartData, setChartData] = useState<LineData<Time>[]>([]);
@@ -307,64 +307,24 @@ export const PriceChart: React.FC<PriceChartProps> = ({
   useEffect(() => {
     if (!ticker) return;
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    let intervalId: NodeJS.Timeout;
 
-    // Subscribe to changes on issuer_trading table for this ticker
-    const channel = supabase
-      .channel(`price-chart-${ticker.toUpperCase()}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "issuer_trading",
-          filter: `ticker=eq.${ticker.toUpperCase()}`,
-        },
-        (payload) => {
-
-          // Immediately update the chart with the new price point
-          const newPrice = payload.new?.current_price;
-          if (newPrice && lineSeriesRef.current) {
-            const now = Math.floor(Date.now() / 1000) as Time;
-            const priceValue = Number(newPrice);
-
-            // Update the current price display immediately
-            setCurrentPrice(priceValue);
-
-            // Add the new data point to the chart
-            lineSeriesRef.current.update({
-              time: now,
-              value: priceValue,
-            });
-
-            // Update price change using stored first price
-            const firstPrice = firstPriceRef.current;
-            if (firstPrice && firstPrice > 0) {
-              const change = priceValue - firstPrice;
-              const percent = (change / firstPrice) * 100;
-              setPriceChange({ change, percent });
-            }
-          }
-
-          // Also refetch full data to ensure consistency (debounced)
+    const startPolling = () => {
+      // 30s interval reduces direct Supabase RPC egress by 3x vs the original 10s.
+      // Chart still updates instantly after trades via the refreshTrigger prop.
+      intervalId = setInterval(() => {
+        if (document.visibilityState === "visible") {
           fetchChartData(selectedRange);
         }
-      )
-      .subscribe();
-
-    channelRef.current = channel;
-
-    // Cleanup subscription on unmount
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      }, 30000);
     };
-  }, [ticker, selectedRange, fetchChartData]);
+
+    startPolling();
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [selectedRange, fetchChartData]);
 
   // Handle range change - show loading when switching ranges
   const handleRangeChange = (range: string) => {
@@ -384,11 +344,12 @@ export const PriceChart: React.FC<PriceChartProps> = ({
         }}
       >
         {/* Blurred chart background image */}
-        <img
+        <Image
           src="/chartbackground.png"
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
+          fill
+          className="pointer-events-none absolute inset-0 object-fill"
           style={{ filter: "blur(5px)", opacity: 0.45 }}
         />
         {/* Dark overlay for legibility */}

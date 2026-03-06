@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { CachedIssuerStats } from "@/lib/types";
 
-export interface CachedIssuerStats {
-  ticker: string;
-  currentPrice: number;
-  price1hChange: number | null;
-  price24hChange: number | null;
-  price7dChange: number | null;
-  volume24h: number;
-  holders: number;
-  marketCap: number;
-  circulatingSupply: number;
-  cachedAt: string;
-}
+// This route has no dynamic request.url reads, so revalidate works correctly.
+// Serves cached stats for 60s across all users, reducing Supabase RPC calls.
+export const revalidate = 60;
 
 /**
  * GET /api/issuers/stats
@@ -53,14 +45,14 @@ export async function GET() {
     }) => ({
       ticker: row.out_ticker,
       currentPrice: parseFloat(String(row.out_current_price)) || 0,
-      price1hChange: row.out_price_1h_change != null 
-        ? parseFloat(String(row.out_price_1h_change)) 
+      price1hChange: row.out_price_1h_change != null
+        ? parseFloat(String(row.out_price_1h_change))
         : null,
-      price24hChange: row.out_price_24h_change != null 
-        ? parseFloat(String(row.out_price_24h_change)) 
+      price24hChange: row.out_price_24h_change != null
+        ? parseFloat(String(row.out_price_24h_change))
         : null,
-      price7dChange: row.out_price_7d_change != null 
-        ? parseFloat(String(row.out_price_7d_change)) 
+      price7dChange: row.out_price_7d_change != null
+        ? parseFloat(String(row.out_price_7d_change))
         : null,
       volume24h: parseFloat(String(row.out_volume_24h)) || 0,
       holders: row.out_holders || 0,
@@ -70,11 +62,11 @@ export async function GET() {
     }));
 
     // Get the most recent cache timestamp
-    const latestCacheTime = stats.length > 0 
+    const latestCacheTime = stats.length > 0
       ? stats.reduce((latest, s) => {
-          const time = new Date(s.cachedAt).getTime();
-          return time > latest ? time : latest;
-        }, 0)
+        const time = new Date(s.cachedAt).getTime();
+        return time > latest ? time : latest;
+      }, 0)
       : null;
 
     return NextResponse.json({
