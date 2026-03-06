@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import Cropper from "react-easy-crop";
 import type { Area } from "react-easy-crop";
 import { colors } from "@/lib/constants/colors";
@@ -9,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 // ── Crop utility ────────────────────────────────────────────────
 function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const img = new Image();
+    const img = new window.Image();
     img.addEventListener("load", () => resolve(img));
     img.addEventListener("error", (err) => reject(err));
     img.crossOrigin = "anonymous";
@@ -450,11 +451,12 @@ export function ImageUpload({
         }}
       >
         {displayUrl ? (
-          <div className="relative group">
-            <img
+          <div className="relative group min-h-[192px]">
+            <Image
               src={displayUrl}
               alt="Preview"
-              className="w-full max-h-48 object-contain rounded"
+              fill
+              className="object-contain rounded"
               style={{ backgroundColor: colors.backgroundDark }}
               onError={() => {
                 if (!previewUrl) setError("Failed to load image preview");

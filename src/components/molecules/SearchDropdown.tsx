@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { sendGAEvent } from "@next/third-parties/google";
@@ -211,15 +212,15 @@ export function SearchDropdown({ statsMap }: SearchDropdownProps) {
                 (() => {
                   const stat = getStats(issuer.ticker);
                   return (
-                <SearchResultItem
-                  key={issuer.ticker}
-                  issuer={issuer}
-                  price={stat?.currentPrice ?? 0}
-                  isTradable={Boolean(stat)}
-                  formatPrice={formatPrice}
-                  capitalizeFirstLetter={capitalizeFirstLetter}
-                  onClick={() => handleSelect(issuer)}
-                />
+                    <SearchResultItem
+                      key={issuer.ticker}
+                      issuer={issuer}
+                      price={stat?.currentPrice ?? 0}
+                      isTradable={Boolean(stat)}
+                      formatPrice={formatPrice}
+                      capitalizeFirstLetter={capitalizeFirstLetter}
+                      onClick={() => handleSelect(issuer)}
+                    />
                   );
                 })()
               ))}
@@ -291,9 +292,11 @@ function SearchResultItem({
         }}
       >
         {issuer.imageUrl && !imageError ? (
-          <img
+          <Image
             src={issuer.imageUrl}
             alt={`${issuer.ticker} logo`}
+            width={44}
+            height={44}
             style={{
               width: "100%",
               height: "100%",

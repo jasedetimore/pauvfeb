@@ -29,9 +29,10 @@ export async function GET(
 
     const supabase = await createClient();
 
+    // Egress optimization: only columns consumed by transformIssuerDetailsToCard
     const { data, error } = await supabase
       .from("issuer_details")
-      .select("*")
+      .select("ticker, name, photo, tag, bio, headline")
       .ilike("ticker", ticker)
       .eq("is_hidden", false)
       .single();

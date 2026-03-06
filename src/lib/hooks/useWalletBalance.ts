@@ -1,14 +1,16 @@
 'use client';
 
-// Wallet balance hook using React Query for caching/reactivity
-
-import { useQuery } from '@tanstack/react-query';
+import useSWR from 'swr';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { createClient } from '@/lib/supabase/client';
 
 interface WalletBalance {
   balance: number;
 }
+
+// Exported so WalletDepositsWithdrawalsSection can optimistically update the
+// cached balance via SWR's global mutate() without a refetch round-trip.
+export const WALLET_BALANCE_KEY = 'wallet-balance';
 
 async function fetchWalletBalance(): Promise<WalletBalance> {
   const supabase = createClient();
@@ -33,17 +35,25 @@ async function fetchWalletBalance(): Promise<WalletBalance> {
 
 /**
  * Hook to get the current user's wallet balance.
- * Uses React Query for caching and automatic refetching.
- * Balance can be updated via queryClient.setQueryData(['my-wallet-balance'], { balance: newVal })
+ * Uses SWR for caching, deduplication, and automatic revalidation.
+ * Balance can be optimistically updated via: mutate(WALLET_BALANCE_KEY, { balance: newVal }, { revalidate: false })
  */
 export function useMyWalletBalance() {
   const { user } = useAuth();
 
-  return useQuery<WalletBalance>({
-    queryKey: ['my-wallet-balance'],
-    queryFn: fetchWalletBalance,
-    enabled: !!user,
-    staleTime: 30_000, // 30 seconds
-    refetchOnWindowFocus: true,
-  });
+  const { data, error, isLoading, mutate } = useSWR<WalletBalance>(
+    user ? WALLET_BALANCE_KEY : null,
+    fetchWalletBalance,
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 30000,
+    }
+  );
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: async () => { await mutate(); },
+  };
 }

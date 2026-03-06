@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
 import { TagItemData } from "@/components/atoms/TagItem";
 import { TagsApiResponse } from "@/lib/types";
 
@@ -12,53 +12,35 @@ interface UseTagsResult {
   refetch: () => Promise<void>;
 }
 
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`HTTP error! status: ${res.status}`);
+  }
+  const data: TagsApiResponse = await res.json();
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  return data;
+};
+
 /**
  * Hook to fetch tags from the API
- * Handles loading state, error handling, and caching
+ * Uses SWR for built-in caching and request deduplication
  */
 export function useTags(): UseTagsResult {
-  const [tags, setTags] = useState<TagItemData[]>([]);
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchTags = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/tags");
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: TagsApiResponse = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setTags(data.tags);
-      setTotal(data.total);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch tags";
-      setError(message);
-      console.error("Error fetching tags:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTags();
-  }, [fetchTags]);
+  // 60s dedupe: tags are static metadata shared across the main page
+  // sidebar and hero — a single request serves all consumers.
+  const { data, error, isLoading, mutate } = useSWR<TagsApiResponse>("/api/tags", fetcher, {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
+  });
 
   return {
-    tags,
-    total,
+    tags: data?.tags || [],
+    total: data?.total || 0,
     isLoading,
-    error,
-    refetch: fetchTags,
+    error: error instanceof Error ? error.message : error ? String(error) : null,
+    refetch: async () => { await mutate(); },
   };
 }

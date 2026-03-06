@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { TagDB, TagData, TagsApiResponse } from "@/lib/types";
+
+// Tags rarely change — cache at the edge for 1 hour to avoid repeated Supabase queries.
+export const revalidate = 3600;
 
 /**
  * GET /api/tags
@@ -9,12 +12,15 @@ import { TagDB, TagData, TagsApiResponse } from "@/lib/types";
  */
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    // Fetch all tags
+    // Egress optimization: exclude created_at, updated_at which the UI never reads
     const { data: tagsData, error: tagsError, count } = await supabase
       .from("tags")
-      .select("*", { count: "exact" })
+      .select("id, tag, description, photo_url, number_of_issuers", { count: "exact" })
       .order("tag", { ascending: true });
 
     if (tagsError) {

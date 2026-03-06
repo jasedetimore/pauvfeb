@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { 
-  IssuerDetailsDB, 
-  IssuerCardData, 
+import { createClient } from "@supabase/supabase-js";
+import {
+  IssuerDetailsDB,
+  IssuerCardData,
   transformIssuerDetailsToCard,
-  IssuersApiResponse 
+  IssuersApiResponse
 } from "@/lib/types";
 
 /**
  * GET /api/issuers
  * Fetches all issuers from the issuer_details table
- * 
+ *
+ * NOTE: No `export const revalidate` here — this route reads dynamic query
+ * params from request.url, which forces Next.js to treat it as dynamic.
+ * Client-side deduplication is handled by SWR in useIssuers instead.
+ *
  * Query params:
  * - tag: Filter by tag (optional)
  * - limit: Limit number of results (optional, default 50)
@@ -24,12 +28,16 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const supabase = await createClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    // Build query
+    // Egress optimization: only fetch columns consumed by transformIssuerDetailsToCard.
+    // Avoids transferring id, is_hidden, updated_at etc. on every request.
     let query = supabase
       .from("issuer_details")
-      .select("*", { count: "exact" })
+      .select("ticker, name, photo, tag, bio, headline, created_at", { count: "exact" })
       .eq("is_hidden", false);
 
     // Apply tag filter if provided
@@ -59,10 +67,10 @@ export async function GET(request: Request) {
     if (error) {
       console.error("Error fetching issuers:", error);
       return NextResponse.json(
-        { 
-          issuers: [], 
-          total: 0, 
-          error: "Failed to fetch issuers" 
+        {
+          issuers: [],
+          total: 0,
+          error: "Failed to fetch issuers"
         } as IssuersApiResponse,
         { status: 500 }
       );
@@ -82,10 +90,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Error in issuers API:", error);
     return NextResponse.json(
-      { 
-        issuers: [], 
-        total: 0, 
-        error: "Internal server error" 
+      {
+        issuers: [],
+        total: 0,
+        error: "Internal server error"
       } as IssuersApiResponse,
       { status: 500 }
     );

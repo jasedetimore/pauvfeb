@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import useSWR from "swr";
 import { sendGAEvent } from "@next/third-parties/google";
 import { colors } from "@/lib/constants/colors";
 import {
@@ -41,12 +42,59 @@ interface IssuerTradingTemplateProps {
 export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   ticker,
 }) => {
-  const [issuerData, setIssuerData] = useState<IssuerDetailsDB | null>(null);
-  const [issuerLinks, setIssuerLinks] = useState<IssuerLinksDB | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const isMobile = useIsMobile();
+
+  // SWR deduplicates and caches this across remounts. The non-session Supabase
+  // client (persistSession: false) prevents blocking on auth token restore,
+  // ensuring public issuer data loads instantly regardless of login state.
+  const { data: issuerFetchData, error: issuerFetchError, isLoading } = useSWR(
+    ticker ? `issuer-detail-${ticker}` : null,
+    async () => {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+        }
+      );
+
+      // Egress optimization: only columns rendered by IssuerHeader + breadcrumbs
+      const { data, error: fetchError } = await supabase
+        .from("issuer_details")
+        .select("ticker, name, photo, headline, bio, tag")
+        .eq("ticker", ticker.toUpperCase())
+        .single();
+
+      if (fetchError) {
+        if (fetchError.code === "PGRST116") {
+          throw new Error("Issuer not found");
+        }
+        throw new Error(`Failed to load issuer data: ${fetchError.message}`);
+      }
+
+      if (!data) {
+        throw new Error("No data returned from database");
+      }
+
+      // Egress optimization: only platform columns used by SocialMediaLinks — excludes id, created_at, updated_at
+      const { data: linksData } = await supabase
+        .from("issuer_links")
+        .select("ticker, instagram, tiktok, youtube, linkedin, x, threads, facebook, telegram, reddit, twitch, linktree")
+        .eq("ticker", ticker.toUpperCase())
+        .single();
+
+      return { issuerData: data as IssuerDetailsDB, issuerLinks: (linksData as IssuerLinksDB) || null };
+    },
+    { revalidateOnFocus: false, dedupingInterval: 30000 }
+  );
+
+  const issuerData = issuerFetchData?.issuerData ?? null;
+  const issuerLinks = issuerFetchData?.issuerLinks ?? null;
+  const error = issuerFetchError instanceof Error ? issuerFetchError.message : issuerFetchError ? String(issuerFetchError) : null;
 
   // Fetch real metrics from the API
   const { metrics, isLoading: metricsLoading, isTradable, refetch: refetchMetrics } = useIssuerMetrics(ticker);
@@ -129,91 +177,6 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   }, [refetchMetrics, refetchHolders]);
 
 
-
-  // Fetch issuer data from Supabase
-  useEffect(() => {
-    let isCancelled = false;
-
-    const fetchIssuer = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Create a local client that ignores the user's session.
-        // This prevents any "waiting for session restore" delays when logged in,
-        // ensuring the public data loads immediately regardless of auth state.
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          {
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false,
-              detectSessionInUrl: false,
-            },
-          }
-        );
-
-        const { data, error: fetchError } = await supabase
-          .from("issuer_details")
-          .select("*")
-          .eq("ticker", ticker.toUpperCase())
-          .single();
-
-        if (isCancelled) {
-          return;
-        }
-
-        if (fetchError) {
-          if (fetchError.code === "PGRST116") {
-            setError("Issuer not found");
-          } else {
-            setError(`Failed to load issuer data: ${fetchError.message}`);
-          }
-          console.error("[IssuerTradingTemplate] Supabase error:", fetchError);
-          return;
-        }
-
-        if (!data) {
-          setError("No data returned from database");
-          return;
-        }
-
-        setIssuerData(data);
-
-        // Fetch social links (non-blocking, optional data)
-        const { data: linksData } = await supabase
-          .from("issuer_links")
-          .select("*")
-          .eq("ticker", ticker.toUpperCase())
-          .single();
-
-        if (!isCancelled && linksData) {
-          setIssuerLinks(linksData);
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          console.error("[IssuerTradingTemplate] Error fetching issuer:", err);
-          const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
-          setError(errorMessage.includes("aborted") ? "Request timeout - please try again" : errorMessage);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (ticker) {
-      fetchIssuer();
-    } else {
-      setIsLoading(false);
-    }
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [ticker]);
 
   // Track mount time so we can compute seconds_on_page on unmount
   const mountTimeRef = useRef<number>(0);

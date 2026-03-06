@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { colors } from "@/lib/constants/colors";
 import { AdminSearchBar } from "@/components/atoms/AdminSearchBar";
 
@@ -176,9 +177,11 @@ export default function AdminHideIssuerPage() {
                     <td style={tdStyle}>
                       <div className="flex items-center gap-2">
                         {issuer.photo ? (
-                          <img
+                          <Image
                             src={issuer.photo}
                             alt={issuer.name}
+                            width={28}
+                            height={28}
                             className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                             style={{
                               border: `1px solid ${colors.boxOutline}`,

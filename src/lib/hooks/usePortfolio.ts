@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "./useAuth";
 
@@ -20,33 +20,21 @@ interface UsePortfolioResult {
 }
 
 /**
- * Hook to fetch the current user's portfolio holdings
- * Includes average cost basis and last purchase date from transactions
+ * Hook to fetch the current user's portfolio holdings.
+ * Uses SWR for caching and request deduplication.
  */
 export function usePortfolio(): UsePortfolioResult {
   const { user } = useAuth();
-  const [holdings, setHoldings] = useState<PortfolioHolding[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchPortfolio = useCallback(async () => {
-    if (!user) {
-      setHoldings([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const { data, error, isLoading, mutate } = useSWR(
+    user ? ["portfolio", user.id] : null,
+    async () => {
       const supabase = createClient();
 
-      // Fetch portfolio holdings for the current user
       const { data: portfolioData, error: portfolioError } = await supabase
         .from("portfolio")
         .select("ticker, pv_amount, avg_cost_basis")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .gt("pv_amount", 0);
 
       if (portfolioError) {
@@ -54,68 +42,54 @@ export function usePortfolio(): UsePortfolioResult {
       }
 
       if (!portfolioData || portfolioData.length === 0) {
-        setHoldings([]);
-        setIsLoading(false);
-        return;
+        return [];
       }
 
-      // Get all tickers to fetch current prices in bulk
       const tickers = portfolioData.map((h: { ticker: string }) => h.ticker);
-      
-      // Fetch current prices from issuer_trading
+
       const { data: pricesData } = await supabase
         .from("issuer_trading")
         .select("ticker, current_price")
         .in("ticker", tickers);
-      
+
       const priceMap = new Map<string, number>();
       pricesData?.forEach((p: { ticker: string; current_price: number }) => {
         priceMap.set(p.ticker, Number(p.current_price));
       });
 
-      // For each holding, get the last purchase date from transactions
-      const holdingsWithDates: PortfolioHolding[] = await Promise.all(
-        portfolioData.map(async (holding: { ticker: string; pv_amount: number; avg_cost_basis: number }) => {
-          // Get the most recent BUY transaction for this ticker
-          const { data: lastTx } = await supabase
-            .from("transactions")
-            .select("date")
-            .eq("user_id", user.id)
-            .eq("ticker", holding.ticker)
-            .eq("order_type", "buy")
-            .eq("status", "completed")
-            .order("date", { ascending: false })
-            .limit(1)
-            .single();
+      // Batched into one query instead of N separate queries per holding.
+      // Ordered desc so the first occurrence per ticker is the most recent.
+      const { data: allBuyTxs } = await supabase
+        .from("transactions")
+        .select("ticker, date")
+        .eq("user_id", user!.id)
+        .in("ticker", tickers)
+        .eq("order_type", "buy")
+        .eq("status", "completed")
+        .order("date", { ascending: false });
 
-          return {
-            ticker: holding.ticker,
-            pvAmount: Number(holding.pv_amount),
-            avgCostBasis: Number(holding.avg_cost_basis),
-            currentPrice: priceMap.get(holding.ticker) ?? 0,
-            lastPurchaseDate: lastTx?.date ?? null,
-          };
-        })
-      );
+      const lastBuyDateMap = new Map<string, string>();
+      allBuyTxs?.forEach((tx: { ticker: string; date: string }) => {
+        if (!lastBuyDateMap.has(tx.ticker)) {
+          lastBuyDateMap.set(tx.ticker, tx.date);
+        }
+      });
 
-      setHoldings(holdingsWithDates);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch portfolio";
-      setError(message);
-      console.error("Error fetching portfolio:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchPortfolio();
-  }, [fetchPortfolio]);
+      return portfolioData.map((holding: { ticker: string; pv_amount: number; avg_cost_basis: number }) => ({
+        ticker: holding.ticker,
+        pvAmount: Number(holding.pv_amount),
+        avgCostBasis: Number(holding.avg_cost_basis),
+        currentPrice: priceMap.get(holding.ticker) ?? 0,
+        lastPurchaseDate: lastBuyDateMap.get(holding.ticker) ?? null,
+      }));
+    },
+    { revalidateOnFocus: false, dedupingInterval: 10000 }
+  );
 
   return {
-    holdings,
+    holdings: data || [],
     isLoading,
-    error,
-    refetch: fetchPortfolio,
+    error: error instanceof Error ? error.message : error ? String(error) : null,
+    refetch: async () => { await mutate(); },
   };
 }
