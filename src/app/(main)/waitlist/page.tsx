@@ -52,6 +52,7 @@ export default function WaitlistPage() {
           </div>
 
           {/* Referrals section */}
+          {user && (
           <div
             className="rounded-[10px] p-6"
             style={{
@@ -142,6 +143,7 @@ export default function WaitlistPage() {
             </div>
             )}
           </div>
+          )}
         </div>
       </main>
     </div>

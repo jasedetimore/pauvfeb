@@ -234,11 +234,11 @@ function LoginContent() {
           >
             Don&apos;t have an account?{" "}
             <Link
-              href="/register"
+              href="/waitlist"
               className="font-semibold hover:underline"
               style={{ color: colors.gold }}
             >
-              Sign Up
+              Sign up for Waitlist
             </Link>
           </p>
         </div>

@@ -144,7 +144,7 @@ export function Header({
                 Login
               </Link>
               <Link
-                href="/register"
+                href="/waitlist"
                 className="px-3 sm:px-4 py-2 rounded-lg text-sm border whitespace-nowrap"
                 style={{
                   background: colors.gold,
@@ -152,7 +152,7 @@ export function Header({
                   borderColor: colors.goldBorder,
                 }}
               >
-                Sign Up
+                Sign up for Waitlist
               </Link>
             </>
           ) : (
