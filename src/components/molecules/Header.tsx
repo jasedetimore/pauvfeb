@@ -30,7 +30,7 @@ interface HeaderProps {
  */
 export function Header({
   navigationLinks = [
-    { href: "/", label: "Issuers", active: true },
+    { href: "/", label: "Talent", active: true },
     { href: "/list-yourself", label: "List Yourself" },
     { href: "/about", label: "About" },
   ],

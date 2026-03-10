@@ -314,7 +314,7 @@ export function IssuerListView({
           padding: "40px 20px",
         }}
       >
-        No issuers found
+        No talent found
       </div>
     );
   }

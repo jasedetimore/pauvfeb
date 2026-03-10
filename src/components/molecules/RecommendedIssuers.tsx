@@ -95,7 +95,7 @@ export const RecommendedIssuers: React.FC<RecommendedIssuersProps> = ({
           className="font-mono text-lg font-semibold"
           style={{ color: colors.textPrimary }}
         >
-          Recommended Issuers
+          Recommended Talent
         </h2>
         <button
           onClick={handleRefresh}

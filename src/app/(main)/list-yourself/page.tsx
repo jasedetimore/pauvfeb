@@ -152,7 +152,7 @@ export default function ListYourselfPage() {
     if (!form.desiredTicker.trim()) { setError("Desired ticker is required."); return; }
 
     if (!termsAccepted) {
-      setError("You must agree to the Terms of Service, Privacy Policy, and Issuer Terms.");
+      setError("You must agree to the Terms of Service, Privacy Policy, and Talent Terms.");
       return;
     }
 
@@ -261,7 +261,7 @@ export default function ListYourselfPage() {
               className="text-3xl sm:text-4xl font-bold mb-5"
               style={{ color: colors.textPrimary }}
             >
-              Why should I be an Issuer?
+              Why should I list myself?
             </h1>
 
             {/* Video */}
@@ -336,7 +336,7 @@ export default function ListYourselfPage() {
                     People Trade Your PV
                   </h3>
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    Once verified, your profile generates unique digital collectibles called PVs that allow your audience to trade and hold a digital piece of your reputation.
+                    Once verified, your brand becomes a tradable profile. This allows your audience to back your trajectory by opening a position on your public sentiment.
                   </p>
                 </div>
               </div>
@@ -354,7 +354,7 @@ export default function ListYourselfPage() {
                     Royalty Earnings for Life
                   </h3>
                   <p className="text-sm mt-1" style={{ color: colors.textSecondary }}>
-                    You earn a 0.25% royalty from every transaction, plus monthly payouts from the Pauv Issuer Fund that increase as your community grows and fans maintain their collection.
+                    You earn a 0.25% royalty from every transaction, plus monthly payouts from the Pauv Talent Fund that increase as your community grows and fans maintain their collection.
                   </p>
                 </div>
               </div>
@@ -415,7 +415,7 @@ export default function ListYourselfPage() {
                     className="text-xl sm:text-2xl font-bold"
                     style={{ color: colors.textPrimary }}
                   >
-                    Request to be an Issuer
+                    Request to List Yourself
                   </h2>
                   <p className="mt-1 text-sm" style={{ color: colors.textSecondary }}>
                     Our team will review and get back to you as soon as possible.

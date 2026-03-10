@@ -155,7 +155,7 @@ export function SearchDropdown({ statsMap }: SearchDropdownProps) {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search issuers..."
+          placeholder="Search talent..."
           value={query}
           onChange={handleChange}
           onFocus={handleFocus}
@@ -192,7 +192,7 @@ export function SearchDropdown({ statsMap }: SearchDropdownProps) {
               className="px-4 py-3 text-sm text-center"
               style={{ color: colors.textMuted }}
             >
-              No issuers found
+              No talent found
             </div>
           ) : (
             <>
@@ -204,7 +204,7 @@ export function SearchDropdown({ statsMap }: SearchDropdownProps) {
                   borderBottom: `1px solid ${colors.boxOutline}`,
                 }}
               >
-                {query.trim() ? "Results" : "Recent Issuers"}
+                {query.trim() ? "Results" : "Recent Talent"}
               </div>
 
               {/* Issuer Results */}

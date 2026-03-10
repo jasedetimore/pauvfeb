@@ -111,7 +111,7 @@ export const IssuerHeader: React.FC<IssuerHeaderProps> = ({
                   className="text-sm font-light flex-shrink-0"
                   style={{ color: colors.textMuted }}
                 >
-                  (example issuer)
+                  (example talent)
                 </span>
               )}
             </div>

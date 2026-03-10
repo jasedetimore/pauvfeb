@@ -32,11 +32,11 @@ const ebGaramond = EB_Garamond({
 export const metadata: Metadata = {
   title: "Pauv | The Market for Human Potential",
   description:
-    "Invest in the people you care about. Pauv is the world's first marketplace for individual potential. Buy, sell, and trade digital collectibles tied to the success of your favorite athletes and creators.",
+    "Pauv enables rising talent to turn their personal brand into a tradable profile, allowing anyone to open a position on their public sentiment.",
   openGraph: {
     title: "Pauv | The Market for Human Potential",
     description:
-      "Invest in the people you care about. Pauv is the world's first marketplace for individual potential. Buy, sell, and trade digital collectibles tied to the success of your favorite athletes and creators.",
+      "Pauv enables rising talent to turn their personal brand into a tradable profile, allowing anyone to open a position on their public sentiment.",
     url: "https://www.pauv.com",
     siteName: "Pauv",
     type: "website",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Pauv | The Market for Human Potential",
     description:
-      "Invest in the people you care about. Pauv is the world's first marketplace for individual potential. Buy, sell, and trade digital collectibles tied to the success of your favorite athletes and creators.",
+      "Pauv enables rising talent to turn their personal brand into a tradable profile, allowing anyone to open a position on their public sentiment.",
   },
 };
 

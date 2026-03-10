@@ -71,7 +71,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
 
       if (fetchError) {
         if (fetchError.code === "PGRST116") {
-          throw new Error("Issuer not found");
+          throw new Error("Talent not found");
         }
         throw new Error(`Failed to load issuer data: ${fetchError.message}`);
       }
@@ -269,13 +269,13 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               className="text-xl font-bold font-mono mb-2"
               style={{ color: colors.textPrimary }}
             >
-              {error || "Issuer Not Found"}
+              {error || "Talent Not Found"}
             </h1>
             <p
               className="font-mono"
               style={{ color: colors.textSecondary }}
             >
-              The issuer &quot;{ticker}&quot; could not be found.
+              The talent &quot;{ticker}&quot; could not be found.
             </p>
             <button
               onClick={() => window.history.back()}
@@ -338,7 +338,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
           <nav className="px-4 mb-4" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2 text-sm" style={{ color: colors.textSecondary }}>
               <li>
-                <a href="/" className="hover:text-white transition-colors">Issuers</a>
+                <a href="/" className="hover:text-white transition-colors">Talent</a>
               </li>
               {issuerData?.tag && (
                 <>

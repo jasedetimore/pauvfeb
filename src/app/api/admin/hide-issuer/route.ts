@@ -110,7 +110,7 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (fetchError || !existing) {
-      throw new AdminOperationError("Issuer not found", 404, "NOT_FOUND");
+      throw new AdminOperationError("Talent not found", 404, "NOT_FOUND");
     }
 
     // Update the flag
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data,
-      message: `Issuer ${existing.ticker} ${is_hidden ? "hidden" : "unhidden"} successfully`,
+      message: `Talent ${existing.ticker} ${is_hidden ? "hidden" : "unhidden"} successfully`,
     });
   } catch (error) {
     if (error instanceof AdminOperationError) {

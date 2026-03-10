@@ -198,7 +198,7 @@ export async function PATCH(request: NextRequest) {
       .single();
 
     if (fetchError || !existingIssuer) {
-      throw new AdminOperationError("Issuer not found", 404, "NOT_FOUND");
+      throw new AdminOperationError("Talent not found", 404, "NOT_FOUND");
     }
 
     // Update issuer with only whitelisted fields
@@ -275,7 +275,7 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (fetchError || !existingIssuer) {
-      throw new AdminOperationError("Issuer not found", 404, "NOT_FOUND");
+      throw new AdminOperationError("Talent not found", 404, "NOT_FOUND");
     }
 
     // Delete issuer

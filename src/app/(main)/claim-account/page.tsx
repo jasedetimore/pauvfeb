@@ -77,7 +77,7 @@ function ClaimAccountContent() {
             className="text-xs font-mono mt-2"
             style={{ color: colors.textSecondary }}
           >
-            Set your password to claim your Issuer account
+            Set your password to claim your Talent account
           </p>
         </div>
 
