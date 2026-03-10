@@ -18,7 +18,7 @@ export default function WaitlistPage() {
     <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
       <AuthHeader
         navigationLinks={[
-          { href: "/", label: "Issuers" },
+          { href: "/", label: "Talent" },
           { href: "/list-yourself", label: "List Yourself" },
           { href: "/about", label: "About" },
         ]}

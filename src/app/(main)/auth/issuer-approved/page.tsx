@@ -124,7 +124,7 @@ export default function IssuerApprovedPage() {
               className="text-sm font-mono"
               style={{ color: colors.textSecondary }}
             >
-              Opening your Issuer Dashboard...
+              Opening your Talent Dashboard...
             </p>
           </div>
         )}

@@ -37,7 +37,7 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
 
   // Build full sidebar links including conditional issuer dashboard
   const allLinks = showIssuerLink
-    ? [...sidebarLinks, { href: "/account/issuer-dashboard", label: "Issuer Dashboard", icon: "issuer" }]
+    ? [...sidebarLinks, { href: "/account/issuer-dashboard", label: "Talent Dashboard", icon: "issuer" }]
     : sidebarLinks;
 
   if (!isLoading && !user) {

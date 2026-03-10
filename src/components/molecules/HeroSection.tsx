@@ -230,7 +230,7 @@ export function HeroSection({
                 textShadow: "0px 1px 4px rgba(0, 0, 0, 0.9), 0px 2px 8px rgba(0, 0, 0, 0.8)",
               }}
             >
-              {displayIssuerCount.toLocaleString()} Issuers
+              {displayIssuerCount.toLocaleString()} Talent
             </div>
           </div>
 
@@ -288,7 +288,7 @@ export function HeroSection({
               lineHeight: "1.1",
             }}
           >
-            Invest in people.
+            Trade on Talent.
           </div>
           <div
             style={{
@@ -297,7 +297,7 @@ export function HeroSection({
               fontWeight: "400",
             }}
           >
-            {displayIssuerCount.toLocaleString()} Issuers
+            {displayIssuerCount.toLocaleString()} Talent
           </div>
         </div>
       </div>

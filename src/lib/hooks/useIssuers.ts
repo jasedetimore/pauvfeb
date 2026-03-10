@@ -28,7 +28,7 @@ const fetchIssuersData = async (url: string) => {
 const fetchSingleIssuer = async (url: string) => {
   const response = await fetch(url);
   if (!response.ok) {
-    if (response.status === 404) throw new Error("Issuer not found");
+    if (response.status === 404) throw new Error("Talent not found");
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();

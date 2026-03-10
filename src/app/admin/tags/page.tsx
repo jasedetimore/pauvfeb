@@ -495,8 +495,7 @@ export default function AdminTagsPage() {
                                 color: colors.textSecondary,
                               }}
                             >
-                              {tag.number_of_issuers} issuer
-                              {tag.number_of_issuers !== 1 ? "s" : ""}
+                              {tag.number_of_issuers} talent
                             </span>
                           </div>
                           <p

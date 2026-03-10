@@ -210,7 +210,7 @@ export default function AdminEditIssuerPage() {
               ))}
               {filteredIssuers.length === 0 && (
                 <p className="text-sm text-center py-4" style={{ color: colors.textSecondary }}>
-                  {issuers.length === 0 ? "No issuers yet" : "No matches"}
+                  {issuers.length === 0 ? "No talent yet" : "No matches"}
                 </p>
               )}
             </div>

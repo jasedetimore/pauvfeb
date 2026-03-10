@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
     if (!terms_accepted) {
       return NextResponse.json(
-        { error: "You must agree to the Terms of Service, Privacy Policy, and Issuer Terms." },
+        { error: "You must agree to the Terms of Service, Privacy Policy, and Talent Terms." },
         { status: 400 }
       );
     }

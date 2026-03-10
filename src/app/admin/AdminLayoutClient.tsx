@@ -11,13 +11,13 @@ interface AdminLayoutClientProps {
 }
 
 const NAV_ITEMS = [
-  { href: "/admin/issuer-requests", label: "Issuer Requests", icon: "📋" },
-  { href: "/admin/create-issuer", label: "Create Issuer", icon: "+" },
+  { href: "/admin/issuer-requests", label: "Talent Requests", icon: "📋" },
+  { href: "/admin/create-issuer", label: "Create Talent", icon: "+" },
   { href: "/admin/list-trading", label: "List for Trading", icon: "📈" },
-  { href: "/admin/edit-issuer", label: "Edit Issuer", icon: "✏️" },
-  { href: "/admin/hide-issuer", label: "Hide Issuer", icon: "🚫" },
+  { href: "/admin/edit-issuer", label: "Edit Talent", icon: "✏️" },
+  { href: "/admin/hide-issuer", label: "Hide Talent", icon: "🚫" },
   { href: "/admin/tags", label: "Tags", icon: "🏷️" },
-  { href: "/admin/issuer-links", label: "Issuer Links", icon: "🔗" },
+  { href: "/admin/issuer-links", label: "Talent Links", icon: "🔗" },
 ] as const;
 
 /**

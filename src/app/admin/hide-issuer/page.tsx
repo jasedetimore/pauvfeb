@@ -106,16 +106,16 @@ export default function AdminHideIssuerPage() {
     <div>
       {/* Header */}
       <h1 className="text-2xl font-bold mb-1" style={{ color: colors.gold }}>
-        Hide Issuers
+        Hide Talent
       </h1>
       <p className="text-sm mb-6" style={{ color: colors.textSecondary }}>
-        Toggle visibility to hide issuers from the main page and search bar.
+        Toggle visibility to hide talent from the main page and search bar.
       </p>
 
       {/* Search */}
       <AdminSearchBar
         onSearch={setSearchQuery}
-        placeholder="Search issuers by name, ticker, or tag…"
+        placeholder="Search talent by name, ticker, or tag…"
       />
 
       {/* Error */}
@@ -131,11 +131,11 @@ export default function AdminHideIssuerPage() {
       {/* Loading */}
       {loading ? (
         <p className="text-sm" style={{ color: colors.textMuted }}>
-          Loading issuers…
+          Loading talent…
         </p>
       ) : filtered.length === 0 ? (
         <p className="text-sm" style={{ color: colors.textMuted }}>
-          {searchQuery ? "No issuers match your search." : "No issuers found."}
+          {searchQuery ? "No talent matches your search." : "No talent found."}
         </p>
       ) : (
         /* Table */
@@ -155,7 +155,7 @@ export default function AdminHideIssuerPage() {
                     borderBottom: `1px solid ${colors.boxOutline}`,
                   }}
                 >
-                  <th style={thStyle}>Issuer</th>
+                  <th style={thStyle}>Talent</th>
                   <th style={thStyle}>Ticker</th>
                   <th style={thStyle}>Tag</th>
                   <th style={thStyle}>Details</th>

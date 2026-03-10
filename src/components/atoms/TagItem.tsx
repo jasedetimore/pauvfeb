@@ -94,7 +94,7 @@ export function TagItem({
             fontSize: "12px",
           }}
         >
-          {tag.issuerCount} Issuers
+          {tag.issuerCount} Talent
         </div>
 
         {/* Market cap */}

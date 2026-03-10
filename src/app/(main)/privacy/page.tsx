@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
               <li>Account Registration: Name, email address, username, and password.</li>
-              <li>Issuer Profile: If you list yourself as an Issuer, we collect the profile image, social media handles, and bio information you choose to display publicly.</li>
+              <li>Talent Profile: If you list yourself as Talent, we collect the profile image, social media handles, and bio information you choose to display publicly.</li>
               <li>Verification Data: Information required for identity verification, which may include government ID numbers or dates of birth (facilitated via our partner, Soap).</li>
               <li>Support: Information sent to us when you contact customer support.</li>
             </ul>
@@ -195,10 +195,10 @@ export default function PrivacyPolicyPage() {
             collect personal information from children under 18 for the purpose of creating trading accounts.
           </p>
           <p className="font-semibold" style={{ color: colors.textPrimary }}>
-            Minor Issuers (COPPA Notice):
+            Minor Talent (COPPA Notice):
           </p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
-            <li>Pauv allows individuals under the age of 13 to be listed as &quot;Issuers&quot; only with verifiable parental consent.</li>
+            <li>Pauv allows individuals under the age of 13 to be listed as &quot;Talent&quot; only with verifiable parental consent.</li>
             <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Collection:</span> We collect the Minor’s name, image (headshot), and biographical details solely for the purpose of creating their public profile.</li>
             <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Consent:</span> We require the parent or legal guardian to sign a legal agreement (Letter of Intent and Custodial Agreement) and provide their own government ID to verify their authority before we collect or publish any data regarding the Minor.</li>
             <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Rights:</span> The parent/guardian has the right to review the Minor’s information, request its deletion, and revoke consent at any time by contacting support@pauv.com.</li>

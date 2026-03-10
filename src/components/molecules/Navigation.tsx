@@ -69,7 +69,7 @@ export function Navigation({
           height: ITEM_HEIGHT,
         }}
       >
-        Request to be an Issuer
+        Request to List Yourself
       </Link>
 
       {/* Sort Label */}

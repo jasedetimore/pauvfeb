@@ -40,7 +40,7 @@ export async function GET(
     if (error) {
       if (error.code === "PGRST116") {
         return NextResponse.json(
-          { error: "Issuer not found" },
+          { error: "Talent not found" },
           { status: 404 }
         );
       }

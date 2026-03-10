@@ -212,7 +212,7 @@ export default function AdminIssuerLinksPage() {
     <div>
       {/* Page Header */}
       <h1 className="text-2xl font-bold mb-6" style={{ color: colors.gold }}>
-        Issuer Links
+        Talent Links
       </h1>
 
       {/* Search Section */}
@@ -229,7 +229,7 @@ export default function AdminIssuerLinksPage() {
             className="text-lg font-semibold mb-4"
             style={{ color: colors.textPrimary }}
           >
-            Search Issuers
+            Search Talent
           </h2>
 
           <AdminSearchBar
@@ -250,7 +250,7 @@ export default function AdminIssuerLinksPage() {
             </div>
           ) : issuerList.length === 0 ? (
             <div className="text-center py-8" style={{ color: colors.textMuted }}>
-              <p className="text-sm">No issuers found</p>
+              <p className="text-sm">No talent found</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
