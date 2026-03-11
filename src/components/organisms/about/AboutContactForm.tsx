@@ -105,7 +105,7 @@ const AboutContactForm = () => {
             className="text-sm mb-8"
             style={{ color: `${colors.textDark}B3` }}
           >
-            Be among the first issuers.
+            Be among the first talent.
           </p>
 
           {submitted ? (

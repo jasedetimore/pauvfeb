@@ -2,7 +2,7 @@ export * from './colors';
 
 /**
  * Tickers that are example/demo issuers.
- * These display an "Example Issuer" label on their cards and trading pages.
+ * These display an "Example Talent" label on their cards and trading pages.
  */
 export const EXAMPLE_ISSUER_TICKERS = new Set([
   "ARLOFN",

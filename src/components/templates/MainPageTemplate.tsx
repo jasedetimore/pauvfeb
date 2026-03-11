@@ -226,7 +226,7 @@ export function MainPageTemplate({
                     </div>
                     <div className="flex items-end justify-between gap-3 text-xs pt-1">
                       <span style={{ color: colors.textMuted }}>
-                        {tag.issuerCount} Issuers
+                        {tag.issuerCount} Talent
                       </span>
                       <span style={{ color: colors.green, fontWeight: 600 }}>
                         {formatMarketCap(tag.marketCap)}

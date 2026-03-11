@@ -211,7 +211,7 @@ export default function AdminCreateIssuerPage() {
                 className="w-full px-3 py-2 rounded border focus:outline-none focus:ring-1"
                 style={{ ...inputStyle, "--tw-ring-color": colors.gold } as React.CSSProperties}
                 rows={3}
-                placeholder="A brief bio about the issuer..."
+                placeholder="A brief bio about the talent..."
               />
             </div>
 
@@ -278,7 +278,7 @@ export default function AdminCreateIssuerPage() {
               className="w-full py-3 rounded font-semibold transition-colors disabled:opacity-50"
               style={{ backgroundColor: colors.gold, color: colors.textDark }}
             >
-              {issuerLoading ? "Creating..." : "Create Issuer"}
+              {issuerLoading ? "Creating..." : "Create Talent"}
             </button>
           </form>
         </div>
@@ -289,10 +289,10 @@ export default function AdminCreateIssuerPage() {
           style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}
         >
           <h2 className="text-lg font-semibold mb-4" style={{ color: colors.textPrimary }}>
-            All Issuers ({issuers.length})
+            All Talent ({issuers.length})
           </h2>
 
-          <AdminSearchBar onSearch={handleSearch} placeholder="Search issuers by name or ticker…" />
+          <AdminSearchBar onSearch={handleSearch} placeholder="Search talent by name or ticker…" />
 
           {loadingIssuers ? (
             <p style={{ color: colors.textSecondary }}>Loading...</p>
@@ -332,7 +332,7 @@ export default function AdminCreateIssuerPage() {
                   {filteredIssuers.length === 0 && (
                     <tr>
                       <td colSpan={3} className="py-4 text-center" style={{ color: colors.textSecondary }}>
-                        {issuers.length === 0 ? "No issuers yet" : "No matches"}
+                        {issuers.length === 0 ? "No talent yet" : "No matches"}
                       </td>
                     </tr>
                   )}

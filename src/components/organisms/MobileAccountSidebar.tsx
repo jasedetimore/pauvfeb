@@ -33,7 +33,7 @@ export function MobileAccountSidebar({ isOpen, onClose, pathname, isIssuer }: Mo
 
     // Combine links
     const allLinks = isIssuer
-        ? [...sidebarLinks, { href: "/account/issuer-dashboard", label: "Issuer Dashboard", icon: "issuer" }]
+        ? [...sidebarLinks, { href: "/account/issuer-dashboard", label: "Talent Dashboard", icon: "issuer" }]
         : sidebarLinks;
 
     if (!mounted) return null;

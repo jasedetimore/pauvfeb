@@ -271,7 +271,7 @@ export default function IssuerDashboardPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold" style={{ color: colors.gold }}>
-          Issuer Dashboard
+          Talent Dashboard
         </h1>
         <span
           className="px-3 py-1 rounded-full text-xs font-medium"

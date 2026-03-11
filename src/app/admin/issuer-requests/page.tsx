@@ -399,7 +399,7 @@ function RequestCard({
                 ? `Approval email sent to ${request.email}.`
                 : approvalResult.emailError
                   ? `⚠ Approval email failed: ${approvalResult.emailError}`
-                  : "Issuer access granted immediately."}
+                  : "Talent access granted immediately."}
             </p>
           ) : approvalResult.emailSent ? (
             <p style={{ color: colors.green }}>
@@ -424,7 +424,7 @@ function RequestCard({
               ? "Approving..."
               : request.user_id
                 ? "Approve & Link Account"
-                : "Approve Issuer"}
+                : "Approve Talent"}
           </PrimaryButton>
         </div>
       )}

@@ -82,7 +82,7 @@ export default function SetPasswordPage() {
             className="text-xs font-mono mt-2"
             style={{ color: colors.textSecondary }}
           >
-            Choose a secure password for your Issuer account
+            Choose a secure password for your Talent account
           </p>
         </div>
 

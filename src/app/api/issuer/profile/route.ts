@@ -60,12 +60,12 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (detailsError || !details) {
-      throw new AdminOperationError("Issuer profile not found", 404, "NOT_FOUND");
+      throw new AdminOperationError("Talent profile not found", 404, "NOT_FOUND");
     }
 
     // Verify the user_id matches (extra security)
     if (details.user_id !== issuer.userId) {
-      throw new AdminOperationError("Issuer profile mismatch", 403, "FORBIDDEN");
+      throw new AdminOperationError("Talent profile mismatch", 403, "FORBIDDEN");
     }
 
     // Fetch issuer links

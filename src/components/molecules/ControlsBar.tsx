@@ -67,7 +67,7 @@ export function ControlsBar({
             height: "26px",
           }}
         >
-          Request to be an Issuer
+          Request to List Yourself
         </Link>
 
         {/* Sort Label */}

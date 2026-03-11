@@ -156,7 +156,7 @@ export default function AdminListTradingPage() {
           <form onSubmit={handleCreateTrading} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1" style={labelStyle}>
-                Select Issuer * {loadingData && "(Loading...)"}
+                Select Talent * {loadingData && "(Loading...)"}
               </label>
               <select
                 required
@@ -168,10 +168,10 @@ export default function AdminListTradingPage() {
               >
                 <option value="">
                   {loadingData
-                    ? "Loading issuers..."
+                    ? "Loading talent..."
                     : unlistedIssuers.length === 0
-                    ? "No unlisted issuers"
-                    : "Select an unlisted issuer..."}
+                    ? "No unlisted talent"
+                    : "Select unlisted talent..."}
                 </option>
                 {unlistedIssuers.map((issuer) => (
                   <option key={issuer.id} value={issuer.ticker}>
@@ -181,12 +181,12 @@ export default function AdminListTradingPage() {
               </select>
               {unlistedIssuers.length === 0 && !loadingData && issuers.length === 0 && (
                 <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-                  No issuers found. Create an issuer first.
+                  No talent found. Create talent first.
                 </p>
               )}
               {unlistedIssuers.length === 0 && !loadingData && issuers.length > 0 && (
                 <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
-                  All issuers are already listed for trading.
+                  All talent is already listed for trading.
                 </p>
               )}
             </div>

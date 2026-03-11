@@ -111,7 +111,7 @@ export function IssuerCard({
             userSelect: "none",
           }}
         >
-          Example Issuer
+          Example Talent
         </div>
       )}
       <div style={{ display: "flex", gap: "12px", flex: 1, alignItems: "stretch" }}>

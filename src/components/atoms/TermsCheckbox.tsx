@@ -105,7 +105,7 @@ export function TermsCheckbox({
               style={{ color: colors.textPrimary }}
               onClick={(e) => e.stopPropagation()}
             >
-              Issuer Terms
+              Talent Terms
             </Link>
           </>
         )}

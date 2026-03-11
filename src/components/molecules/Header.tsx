@@ -30,7 +30,7 @@ interface HeaderProps {
  */
 export function Header({
   navigationLinks = [
-    { href: "/", label: "Issuers", active: true },
+    { href: "/", label: "Talent", active: true },
     { href: "/list-yourself", label: "List Yourself" },
     { href: "/about", label: "About" },
   ],
@@ -144,7 +144,7 @@ export function Header({
                 Login
               </Link>
               <Link
-                href="/register"
+                href="/waitlist"
                 className="px-3 sm:px-4 py-2 rounded-lg text-sm border whitespace-nowrap"
                 style={{
                   background: colors.gold,
@@ -152,7 +152,7 @@ export function Header({
                   borderColor: colors.goldBorder,
                 }}
               >
-                Sign Up
+                Join the Waitlist
               </Link>
             </>
           ) : (

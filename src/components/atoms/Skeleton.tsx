@@ -740,6 +740,242 @@ export const HomePageSkeleton: React.FC = () => {
 };
 
 /**
+ * MobileIssuerPageSkeleton
+ * Single unified skeleton for the entire mobile issuer trading page.
+ * Matches the real mobile layout: IssuerHeader → Chart → TradingForm → Summary → Holdings → Recommended → Holders
+ */
+export const MobileIssuerPageSkeleton: React.FC = () => {
+  return (
+    <div className="space-y-4">
+      {/* ── 1. Issuer Header ── */}
+      <div className="flex flex-col min-w-0">
+        <div className="flex items-center w-full gap-3">
+          {/* Profile photo (w-28 h-28 = 112px) */}
+          <Skeleton width={112} height={112} rounded />
+          {/* Name + headline */}
+          <div className="flex-1 min-w-0 space-y-2">
+            <Skeleton width="75%" height="2rem" />
+            <Skeleton width="50%" height="1.125rem" />
+          </div>
+        </div>
+        {/* Bio */}
+        <div className="pl-1 mt-3 space-y-1.5">
+          <Skeleton width="100%" height="0.875rem" />
+          <Skeleton width="90%" height="0.875rem" />
+          <Skeleton width="55%" height="0.875rem" />
+        </div>
+        {/* Social icons row */}
+        <div className="mt-3 flex gap-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="flex items-center justify-center rounded-lg flex-shrink-0"
+              style={{
+                width: "56px",
+                height: "36px",
+                backgroundColor: colors.box,
+                border: `1px solid ${colors.boxOutline}`,
+              }}
+            >
+              <Skeleton width={24} height={24} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 2. Chart ── */}
+      <div className="mt-1">
+        <div
+          className="rounded-[10px] overflow-hidden"
+          style={{ backgroundColor: "#000000" }}
+        >
+          {/* Chart header bar */}
+          <div
+            className="flex items-center justify-between p-4 border-b"
+            style={{ borderColor: colors.boxOutline }}
+          >
+            <div className="flex items-center gap-2">
+              <Skeleton width="110px" height="1.25rem" />
+              <Skeleton width="52px" height="0.85rem" />
+            </div>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} width="38px" height="26px" />
+              ))}
+            </div>
+          </div>
+          {/* Chart body */}
+          <div style={{ height: 420 }} className="relative">
+            <div className="absolute inset-0 flex flex-col justify-between py-6 px-4 opacity-20">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  style={{ height: "1px", backgroundColor: colors.boxOutline }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. Place Order ── */}
+      <div className="space-y-3">
+        {/* Buy/Sell toggle */}
+        <div className="flex gap-1">
+          <div
+            className="flex-1 py-2.5 rounded-md"
+            style={{ border: `1px solid ${colors.boxOutline}` }}
+          >
+            <Skeleton width="36px" height="1rem" className="mx-auto" />
+          </div>
+          <div
+            className="flex-1 py-2.5 rounded-md"
+            style={{ border: `1px solid ${colors.boxOutline}` }}
+          >
+            <Skeleton width="32px" height="1rem" className="mx-auto" />
+          </div>
+        </div>
+        {/* Input */}
+        <div
+          className="w-full px-4 py-3 rounded-md"
+          style={{ backgroundColor: colors.background, border: `1px solid ${colors.boxOutline}` }}
+        >
+          <Skeleton width="110px" height="0.85rem" />
+        </div>
+        {/* Balance lines */}
+        <div className="space-y-1">
+          <div className="flex justify-between">
+            <Skeleton width="90px" height="0.8rem" />
+            <Skeleton width="70px" height="0.8rem" />
+          </div>
+          <div className="flex justify-between">
+            <Skeleton width="130px" height="0.8rem" />
+            <Skeleton width="60px" height="0.8rem" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── 4. Trading Summary ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton width="155px" height="1.25rem" />
+          <Skeleton width="58px" height="1.5rem" />
+        </div>
+        <div
+          className="p-4 rounded-[10px]"
+          style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i}>
+                <Skeleton width="70%" height="0.75rem" className="mb-1.5" />
+                <Skeleton width="60%" height="1.4rem" />
+              </div>
+            ))}
+          </div>
+          <div
+            className="mt-3 pt-3 flex justify-between"
+            style={{ borderTop: `1px solid ${colors.boxOutline}` }}
+          >
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="text-center flex flex-col items-center">
+                <Skeleton width="24px" height="0.75rem" className="mb-1.5" />
+                <Skeleton width="52px" height="1.15rem" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. Transaction History ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton width="170px" height="1.25rem" />
+          <Skeleton width="58px" height="1.5rem" />
+        </div>
+        <div
+          className="px-4 py-2 rounded-[10px]"
+          style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}
+        >
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="py-2 grid items-center justify-center grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)]"
+              style={{ borderBottom: i === 3 ? "none" : `1px solid ${colors.boxOutline}` }}
+            >
+              <Skeleton width="48px" height="1.4rem" className="justify-self-center rounded" />
+              <Skeleton width="60%" height="0.85rem" className="mx-auto" />
+              <Skeleton width="55%" height="0.85rem" className="mx-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 6. Recommended ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton width="190px" height="1.25rem" />
+          <Skeleton width="58px" height="1.5rem" />
+        </div>
+        <div
+          className="rounded-[10px] overflow-hidden"
+          style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}
+        >
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 p-3"
+              style={{ borderBottom: i === 3 ? "none" : `1px solid ${colors.boxOutline}` }}
+            >
+              <Skeleton width={48} height={48} rounded />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton width="40%" height="0.7rem" />
+                <Skeleton width="65%" height="0.9rem" />
+              </div>
+              <div className="flex-shrink-0 text-right space-y-1.5">
+                <Skeleton width="60px" height="0.85rem" className="ml-auto" />
+                <Skeleton width="44px" height="0.7rem" className="ml-auto" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── 7. Top Holders ── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton width="120px" height="1.25rem" />
+          <Skeleton width="58px" height="1.5rem" />
+        </div>
+        <div
+          className="p-3 rounded-[10px] overflow-hidden"
+          style={{ backgroundColor: colors.box, border: `1px solid ${colors.boxOutline}` }}
+        >
+          <table className="min-w-full table-fixed">
+            <thead>
+              <tr>
+                <th className="text-left px-3 py-2"><Skeleton width="32px" height="0.75rem" /></th>
+                <th className="text-right px-3 py-2"><Skeleton width="52px" height="0.75rem" className="ml-auto" /></th>
+                <th className="text-right px-3 py-2"><Skeleton width="40px" height="0.75rem" className="ml-auto" /></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} style={{ backgroundColor: i % 2 === 0 ? "transparent" : colors.boxLight }}>
+                  <td className="px-2 py-2"><Skeleton width="70%" height="0.75rem" /></td>
+                  <td className="px-3 py-2"><Skeleton width="50%" height="0.75rem" className="ml-auto" /></td>
+                  <td className="px-3 py-2"><Skeleton width="40%" height="0.75rem" className="ml-auto" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
  * WalletDepositsWithdrawalsSkeleton - Skeleton for the deposits/withdrawals section
  */
 export const WalletDepositsWithdrawalsSkeleton: React.FC = () => {

@@ -83,10 +83,10 @@ export function buildClaimEmailHtml(claimUrl: string, issuerName: string): strin
         <h1 style="color: #E5C68D; font-size: 28px; margin: 0;">PAUV</h1>
       </div>
       <h2 style="color: #FFFFFF; font-size: 20px; margin-bottom: 16px;">
-        Your Issuer Profile is Ready
+        Your Talent Profile is Ready
       </h2>
       <p style="color: #A3A3A3; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-        Congratulations, <strong style="color: #FFFFFF;">${safeName}</strong>! Your application to become a Pauv Issuer has been approved.
+        Congratulations, <strong style="color: #FFFFFF;">${safeName}</strong>! Your application to become Pauv Talent has been approved.
       </p>
       <p style="color: #A3A3A3; font-size: 14px; line-height: 1.6; margin-bottom: 32px;">
         Click the button below to set up your account password and claim your profile. This link expires in 72 hours.
@@ -107,7 +107,7 @@ export function buildClaimEmailHtml(claimUrl: string, issuerName: string): strin
         </a>
       </div>
       <p style="color: #999999; font-size: 12px; line-height: 1.6;">
-        If you didn&apos;t apply to become a Pauv Issuer, you can safely ignore this email.
+        If you didn&apos;t apply to become Pauv Talent, you can safely ignore this email.
       </p>
       <hr style="border: none; border-top: 1px solid #333333; margin: 24px 0;" />
       <p style="color: #999999; font-size: 11px; text-align: center;">
@@ -148,13 +148,13 @@ export function buildIssuerApprovalEmailHtml(confirmationUrl: string): string {
       <div class="email-body">
         <img src="${process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bsrizjihqrywmukqsess.supabase.co'}/storage/v1/object/public/images/public-assets/pauv_logo_gold.png" alt="Pauv Logo" class="logo-img">
         
-        <h1>Your Issuer status is active.</h1>
+        <h1>Your Talent status is active.</h1>
         
-        <p>Congratulations. Your request to become a Pauv Issuer has been approved. Your account has been upgraded, and your ticker symbol is now live on the marketplace.</p>
+        <p>Congratulations. Your request to become Pauv Talent has been approved. Your account has been upgraded, and your ticker symbol is now live on the marketplace.</p>
         
-        <p>You now have full access to your <strong>Issuer Dashboard</strong>. This is where you will monitor your PV market performance, view shareholder analytics, and manage your USDP distributions.</p>
+        <p>You now have full access to your <strong>Talent Dashboard</strong>. This is where you will monitor your PV market performance, view shareholder analytics, and manage your USDP distributions.</p>
 
-        <a href="${safeUrl}" class="button">Go to Issuer Dashboard</a>
+        <a href="${safeUrl}" class="button">Go to Talent Dashboard</a>
 
         <div class="highlight-box">
           <p style="margin-bottom: 0; font-size: 14px;"><strong>Next Step:</strong> Review your listing details and ensure your bio and social links are up to date.</p>
