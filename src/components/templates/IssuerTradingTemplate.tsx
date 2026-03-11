@@ -43,6 +43,8 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   ticker,
 }) => {
   const isMobile = useIsMobile();
+  const mobilePvDisclaimerText = "*PVs are digital collectibles that trade on public perception and do not represent ownership in any person or entity.";
+  const desktopPvDisclaimerText = "PVs are digital collectibles based on public sentiment. They do not constitute an investment, debt, or any legal ownership interest in any person or entity";
 
   // SWR deduplicates and caches this across remounts. The non-session Supabase
   // client (persistSession: false) prevents blocking on auth token restore,
@@ -402,6 +404,17 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
             />
           </div>
 
+          <div
+            className="mt-2"
+            style={{
+              color: colors.textMuted,
+              fontSize: "9px",
+              lineHeight: "1.2",
+            }}
+          >
+            {mobilePvDisclaimerText}
+          </div>
+
           {/* 5. Trading summary */}
           <div className="mt-4">
             <TradingSummarySection
@@ -487,6 +500,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               ticker={ticker}
               price={currentPrice}
               priceStep={priceStep}
+              desktopDisclaimerText={desktopPvDisclaimerText}
               isLoading={initialLoading}
               isTradable={isTradable}
               onBuy={handleBuy}
