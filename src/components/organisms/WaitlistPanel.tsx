@@ -339,19 +339,19 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
           className="relative z-[2] flex flex-col items-center justify-center gap-6 h-full px-4"
         >
           {/* Title */}
-          <div className="flex flex-col items-center gap-2">
-            <span
-              className="font-mono text-xs tracking-[0.3em] uppercase"
+          <div className="flex flex-col items-center gap-2 mb-2">
+            <h1
+              className="font-mono text-3xl sm:text-4xl font-bold uppercase tracking-widest text-center"
               style={{ color: colors.gold }}
             >
               Early Access
-            </span>
-            <span
-              className="font-mono text-2xl font-bold"
+            </h1>
+            <h2
+              className="font-mono text-xl sm:text-2xl font-semibold"
               style={{ color: colors.textPrimary }}
             >
               Join the Waitlist
-            </span>
+            </h2>
           </div>
 
           {/* Info */}

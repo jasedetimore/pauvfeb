@@ -152,7 +152,7 @@ export function Header({
                   borderColor: colors.goldBorder,
                 }}
               >
-                Sign up for Waitlist
+                Join the Waitlist
               </Link>
             </>
           ) : (

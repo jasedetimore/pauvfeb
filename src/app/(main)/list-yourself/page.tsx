@@ -264,17 +264,7 @@ export default function ListYourselfPage() {
               Why should I list myself?
             </h1>
 
-            {/* Video */}
-            <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: "56.25%" }}>
-              <iframe
-                src="https://iframe.mediadelivery.net/embed/579822/2e8fa410-9325-4e21-9c64-0d7e1b8e2b63?autoplay=true&loop=false&muted=true&preload=true&responsive=true"
-                loading="lazy"
-                title="Pauv listing walkthrough"
-                className="absolute top-0 h-full w-full border-0"
-                allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
-                allowFullScreen
-              />
-            </div>
+
 
             {/* ── 3 Steps ── */}
             <p className="mt-8 text-base font-semibold" style={{ color: colors.textSecondary }}>

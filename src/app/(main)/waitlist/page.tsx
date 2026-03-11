@@ -27,25 +27,6 @@ export default function WaitlistPage() {
       {/* Main content */}
       <main className="pt-10 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
-          {/* Page heading */}
-          <div className="text-center mb-2">
-            <h1
-              className="font-mono text-3xl sm:text-4xl font-bold mb-2"
-              style={{ color: colors.textPrimary }}
-            >
-              Waitlist
-            </h1>
-            <p
-              className="font-mono text-sm sm:text-base leading-relaxed"
-              style={{ color: colors.textSecondary }}
-            >
-              We&apos;re releasing access in waves so we can test at scale.
-              The first users begin trading on launch day, then we&apos;ll
-              unlock more each day after. Refer a friend to increase your
-              position by 20.
-            </p>
-          </div>
-
           {/* Waitlist panel — large */}
           <div className="mb-10">
             <WaitlistPanel fitContent expanded hideIntro positionLabel="Your Position" />

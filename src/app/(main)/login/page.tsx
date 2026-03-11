@@ -238,7 +238,7 @@ function LoginContent() {
               className="font-semibold hover:underline"
               style={{ color: colors.gold }}
             >
-              Sign up for Waitlist
+              Join the Waitlist
             </Link>
           </p>
         </div>
