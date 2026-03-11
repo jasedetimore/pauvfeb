@@ -29,14 +29,32 @@ html {
 
 body {
   color: var(--foreground);
-  background-color: var(--background);
-  /* A subtle, premium radial glow at the top-center */
-  background-image: radial-gradient(ellipse at 50% -20%, rgba(30, 41, 59, 0.8) 0%, rgba(0, 0, 0, 1) 60%);
-  background-attachment: fixed;
+  background-color: #040000;
   font-family: var(--font-fira-code), "Fira Code", monospace;
 }
 
 /* Custom utility classes */
 @utility text-balance {
   text-wrap: balance;
+}
+
+/* ── Ambient Gold Aura keyframes ── */
+@keyframes aura-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  25%      { transform: translate3d(120px, 80px, 0) scale(1.15); }
+  50%      { transform: translate3d(40px, 160px, 0) scale(0.95); }
+  75%      { transform: translate3d(-80px, 60px, 0) scale(1.1); }
+}
+@keyframes aura-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  30%      { transform: translate3d(-150px, -80px, 0) scale(1.2); }
+  60%      { transform: translate3d(-60px, 100px, 0) scale(0.9); }
+}
+@keyframes aura-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  35%      { transform: translate3d(100px, -120px, 0) scale(1.1); }
+  70%      { transform: translate3d(-80px, 60px, 0) scale(0.85); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aura-orb { animation: none !important; }
 }

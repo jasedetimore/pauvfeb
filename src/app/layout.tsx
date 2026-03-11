@@ -6,6 +6,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { AuthHeader } from "@/components/molecules/AuthHeader";
 import { Footer } from "@/components/organisms/Footer";
+import { AnimatedBackground } from "@/components/atoms/AnimatedBackground";
 
 const firaCode = Fira_Code({
   variable: "--font-fira-code",
@@ -64,11 +65,14 @@ export default async function RootLayout({
         className={`${firaCode.variable} ${instrumentSerif.variable} ${ebGaramond.variable} antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          {!isAdmin && <AuthHeader />}
-          {children}
-          {!isAdmin && <Footer />}
-        </AuthProvider>
+        <AnimatedBackground />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <AuthProvider>
+            {!isAdmin && <AuthHeader />}
+            {children}
+            {!isAdmin && <Footer />}
+          </AuthProvider>
+        </div>
         <GoogleAnalytics gaId="G-BCL77Q2MXW" />
       </body>
     </html>

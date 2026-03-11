@@ -95,7 +95,6 @@ export default function ConfirmInvitePage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <div
         className="w-full max-w-md rounded-xl p-8 text-center"

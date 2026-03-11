@@ -44,7 +44,6 @@ export default function SetPasswordPage() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: colors.backgroundDark }}
       >
         <LoadingSpinner />
       </div>
@@ -58,7 +57,6 @@ export default function SetPasswordPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4 py-16"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <div
         className="w-full max-w-md rounded-xl p-8"

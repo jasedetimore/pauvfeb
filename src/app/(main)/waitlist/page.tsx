@@ -15,7 +15,7 @@ export default function WaitlistPage() {
   const isLoading = authLoading || waitlistLoading;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
+    <div className="min-h-screen">
       <AuthHeader
         navigationLinks={[
           { href: "/", label: "Talent" },

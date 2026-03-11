@@ -67,7 +67,6 @@ export default function RegisterPage() {
   return (
     <div
       className="flex flex-col"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <div className="flex justify-center px-4 py-16">
         <div className="w-full max-w-md">

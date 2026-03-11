@@ -244,7 +244,6 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
       <>
         <div
           className="min-h-screen flex items-center justify-center"
-          style={{ backgroundColor: colors.background }}
         >
           <div className="text-center">
             <div
@@ -331,7 +330,6 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
     <>
       <div
         className="min-h-screen pt-4 pb-16"
-        style={{ backgroundColor: colors.background }}
       >
         {/* Breadcrumb Navigation - Mobile Only */}
         {isMobile && (

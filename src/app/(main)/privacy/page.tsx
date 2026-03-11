@@ -6,7 +6,7 @@ import { colors } from "@/lib/constants/colors";
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: colors.background }}>
+    <div className="min-h-screen">
       <main
         className="max-w-4xl mx-auto px-6 py-16 space-y-10"
         style={{ fontFamily: "var(--font-fira-code)" }}

@@ -6,7 +6,7 @@ import { colors } from "@/lib/constants/colors";
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
+    <div className="min-h-screen">
       <main className="max-w-4xl mx-auto px-6 py-16 space-y-6">
         <div style={{ position: "relative", paddingTop: "56.25%" }}>
           <iframe

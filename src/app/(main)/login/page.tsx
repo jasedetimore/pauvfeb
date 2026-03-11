@@ -14,7 +14,6 @@ export default function LoginPage() {
       fallback={
         <div
           className="min-h-screen flex items-center justify-center"
-          style={{ backgroundColor: colors.backgroundDark }}
         >
           <div
             className="animate-spin rounded-full h-8 w-8 border-b-2"
@@ -81,7 +80,6 @@ function LoginContent() {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: colors.backgroundDark }}
       >
         <div
           className="animate-spin rounded-full h-8 w-8 border-b-2"
@@ -99,7 +97,6 @@ function LoginContent() {
   return (
     <div
       className="flex flex-col"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <div className="flex justify-center px-4 py-16">
         <div className="w-full max-w-md">

@@ -9,7 +9,6 @@ export default function CareersPage() {
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <main className="max-w-4xl mx-auto px-6 py-16 space-y-8">
         {/* Logo + Title block */}

@@ -98,8 +98,7 @@ function PaymentFailedPageContent() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: colors.background }}
+        className="min-h-screen flex items-center justify-center p-4"
     >
       <div
         className="max-w-md w-full rounded-lg p-8 text-center space-y-6"
@@ -172,8 +171,7 @@ export default function PaymentFailedPage() {
     <Suspense
       fallback={
         <div
-          className="min-h-screen flex items-center justify-center p-4"
-          style={{ backgroundColor: colors.background }}
+        className="min-h-screen flex items-center justify-center p-4"
         >
           <div
             className="max-w-md w-full rounded-lg p-8 text-center"

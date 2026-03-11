@@ -154,7 +154,6 @@ export function MainPageTemplate({
   return (
     <div
       className="min-h-screen"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       {/* Main Container with Max Width */}
       <div style={{ maxWidth: "1250px", margin: "0 auto", width: "100%" }}>

@@ -47,7 +47,6 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
   return (
     <div
       className="min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-3.5rem)] flex flex-col"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <div className="flex flex-1">
         {/* Sidebar */}

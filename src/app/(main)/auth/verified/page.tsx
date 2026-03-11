@@ -5,7 +5,6 @@ export default function EmailVerifiedPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ backgroundColor: colors.backgroundDark }}
     >
       <div
         className="w-full max-w-lg rounded-lg border p-8 text-center"

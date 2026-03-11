@@ -240,7 +240,7 @@ export default function ListYourselfPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
+    <div className="min-h-screen">
       {/* Carousel animation */}
       <style>{`
         @keyframes carousel-scroll {

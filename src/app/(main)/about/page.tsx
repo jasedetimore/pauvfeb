@@ -13,7 +13,7 @@ import AboutContactForm from "@/components/organisms/about/AboutContactForm";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: colors.backgroundDark }}>
+    <div className="min-h-screen">
       <main className="overflow-x-hidden">
         <AboutHero />
         <AboutVideo />

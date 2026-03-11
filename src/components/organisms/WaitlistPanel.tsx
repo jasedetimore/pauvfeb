@@ -212,8 +212,8 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
   }, [referralLink]);
 
   const panelStyle = fitContent
-    ? { backgroundColor: colors.background }
-    : { backgroundColor: colors.background, height };
+    ? {}
+    : { height };
 
   /* ── loading state ── */
   if (isLoading) {
