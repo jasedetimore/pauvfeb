@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import useSWR from "swr";
 import { sendGAEvent } from "@next/third-parties/google";
+import { motion } from "framer-motion";
 import { colors } from "@/lib/constants/colors";
 import {
   IssuerHeaderSkeleton,
@@ -43,6 +44,8 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
   ticker,
 }) => {
   const isMobile = useIsMobile();
+  const mobilePvDisclaimerText = "*PVs are digital collectibles that trade on public perception and do not represent ownership in any person or entity.";
+  const desktopPvDisclaimerText = "PVs are digital collectibles based on public sentiment. They do not constitute an investment, debt, or any legal ownership interest in any person or entity";
 
   // SWR deduplicates and caches this across remounts. The non-session Supabase
   // client (persistSession: false) prevents blocking on auth token restore,
@@ -63,11 +66,21 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
       );
 
       // Egress optimization: only columns rendered by IssuerHeader + breadcrumbs
-      const { data, error: fetchError } = await supabase
-        .from("issuer_details")
-        .select("ticker, name, photo, headline, bio, tag")
-        .eq("ticker", ticker.toUpperCase())
-        .single();
+      // Run both queries in parallel to minimize load time
+      const [issuerResult, linksResult] = await Promise.all([
+        supabase
+          .from("issuer_details")
+          .select("ticker, name, photo, headline, bio, tag")
+          .eq("ticker", ticker.toUpperCase())
+          .single(),
+        supabase
+          .from("issuer_links")
+          .select("ticker, instagram, tiktok, youtube, linkedin, x, threads, facebook, telegram, reddit, twitch, linktree")
+          .eq("ticker", ticker.toUpperCase())
+          .single(),
+      ]);
+
+      const { data, error: fetchError } = issuerResult;
 
       if (fetchError) {
         if (fetchError.code === "PGRST116") {
@@ -80,14 +93,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         throw new Error("No data returned from database");
       }
 
-      // Egress optimization: only platform columns used by SocialMediaLinks — excludes id, created_at, updated_at
-      const { data: linksData } = await supabase
-        .from("issuer_links")
-        .select("ticker, instagram, tiktok, youtube, linkedin, x, threads, facebook, telegram, reddit, twitch, linktree")
-        .eq("ticker", ticker.toUpperCase())
-        .single();
-
-      return { issuerData: data as IssuerDetailsDB, issuerLinks: (linksData as IssuerLinksDB) || null };
+      return { issuerData: data as IssuerDetailsDB, issuerLinks: (linksResult.data as IssuerLinksDB) || null };
     },
     { revalidateOnFocus: false, dedupingInterval: 30000 }
   );
@@ -333,14 +339,14 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
         className="min-h-screen pt-4 pb-16"
         style={{ backgroundColor: colors.background }}
       >
-        {/* Breadcrumb Navigation - Mobile Only */}
-        {isMobile && (
-          <nav className="px-4 mb-4" aria-label="Breadcrumb">
+        {/* Breadcrumb Navigation - Mobile Only (wait for data so tag is ready) */}
+        {!isLoading && issuerData && (
+          <nav className="lg:hidden px-4 mb-4" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2 text-sm" style={{ color: colors.textSecondary }}>
               <li>
                 <a href="/" className="hover:text-white transition-colors">Talent</a>
               </li>
-              {issuerData?.tag && (
+              {issuerData.tag && (
                 <>
                   <li><span style={{ color: colors.boxOutline }}>/</span></li>
                   <li>
@@ -352,7 +358,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               )}
               <li><span style={{ color: colors.boxOutline }}>/</span></li>
               <li style={{ color: colors.textPrimary }} className="font-medium" aria-current="page">
-                {issuerData?.name || ticker}
+                {issuerData.name || ticker}
               </li>
             </ol>
           </nav>
@@ -360,85 +366,99 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
 
         {/* ── Mobile Layout ── */}
         <div className="lg:hidden px-4">
-          {/* 1. Big heading (name, bio, links) — price is shown on the chart */}
-          {initialLoading ? (
-            <IssuerHeaderSkeleton />
+          {isLoading ? (
+            /* Plain black space while issuer data loads — no skeletons */
+            <div className="min-h-[60vh]" />
           ) : (
-            <IssuerHeader
-              ticker={issuer.ticker}
-              name={issuer.name}
-              imageUrl={issuer.imageUrl}
-              headline={issuer.headline}
-              bio={issuer.bio}
-              tags={issuer.tags}
-              issuerLinks={issuerLinks}
-              isLoading={false}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {/* 1. Big heading (name, bio, links) — price is shown on the chart */}
+              <IssuerHeader
+                ticker={issuer.ticker}
+                name={issuer.name}
+                imageUrl={issuer.imageUrl}
+                headline={issuer.headline}
+                bio={issuer.bio}
+                tags={issuer.tags}
+                issuerLinks={issuerLinks}
+                isLoading={false}
+                forceMobile
+              />
+
+              {/* 3. Chart — tight gap from social links */}
+              <div className="mt-1">
+                <PriceChart ticker={ticker} height={420} initialRange="7d" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
+              </div>
+
+              {/* 4. Place order */}
+              <div className="mt-4">
+                <TradingFormSimple
+                  ticker={ticker}
+                  price={currentPrice}
+                  priceStep={priceStep}
+                  onBuy={handleBuy}
+                  onSell={handleSell}
+                  onOrderConfirmed={handleMobileOrderConfirmed}
+                  onOrderComplete={handleMobileOrderComplete}
+                  isLoading={mobileHoldingsLoading}
+                  disabled={!currentPrice || !isTradable}
+                  isTradable={isTradable}
+                  hideTitle={true}
+                />
+              </div>
+
+              <div
+                className="mt-2"
+                style={{
+                  color: colors.textMuted,
+                  fontSize: "9px",
+                  lineHeight: "1.2",
+                }}
+              >
+                {mobilePvDisclaimerText}
+              </div>
+
+              {/* 5. Trading summary */}
+              <div className="mt-4">
+                <TradingSummarySection
+                  data={tradingData}
+                  isLoading={postOrderRefreshing}
+                  isTradable={isTradable}
+                  onRefresh={refetchMetrics}
+                />
+              </div>
+
+              {/* 6. Transaction history */}
+              <div className="mt-4">
+                <UserHoldings
+                  ticker={ticker}
+                  onRefetchRef={handleMobileTransactionRefetchRef}
+                  forceSkeleton={mobileHoldingsLoading || postOrderRefreshing}
+                  onLoadingChange={handleMobileHoldingsLoading}
+                />
+              </div>
+
+              {/* 7. Recommended */}
+              <div className="mt-4">
+                <RecommendedIssuers
+                  currentTicker={ticker}
+                  currentTag={issuerData?.tag}
+                />
+              </div>
+
+              {/* 8. Top holders */}
+              <div className="mt-4">
+                <HoldersSection
+                  holders={holders}
+                  isLoading={postOrderRefreshing}
+                  onRefresh={refetchHolders}
+                />
+              </div>
+            </motion.div>
           )}
-
-          {/* 3. Chart — tight gap from social links */}
-          <div className="mt-1">
-            {initialLoading && (metricsLoading || isTradable) ? (
-              <ChartSkeleton height={420} />
-            ) : (
-              <PriceChart ticker={ticker} height={420} initialRange="7d" refreshTrigger={chartRefreshTrigger} isTradable={isTradable} />
-            )}
-          </div>
-
-          {/* 4. Place order */}
-          <div className="mt-4">
-            <TradingFormSimple
-              ticker={ticker}
-              price={currentPrice}
-              priceStep={priceStep}
-              onBuy={handleBuy}
-              onSell={handleSell}
-              onOrderConfirmed={handleMobileOrderConfirmed}
-              onOrderComplete={handleMobileOrderComplete}
-              isLoading={initialLoading || mobileHoldingsLoading}
-              disabled={!currentPrice || !isTradable}
-              isTradable={isTradable}
-              hideTitle={true}
-            />
-          </div>
-
-          {/* 5. Trading summary */}
-          <div className="mt-4">
-            <TradingSummarySection
-              data={initialLoading ? null : tradingData}
-              isLoading={initialLoading || postOrderRefreshing}
-              isTradable={isTradable}
-              onRefresh={refetchMetrics}
-            />
-          </div>
-
-          {/* 6. Transaction history */}
-          <div className="mt-4">
-            <UserHoldings
-              ticker={ticker}
-              onRefetchRef={handleMobileTransactionRefetchRef}
-              forceSkeleton={initialLoading || mobileHoldingsLoading || postOrderRefreshing}
-              onLoadingChange={handleMobileHoldingsLoading}
-            />
-          </div>
-
-          {/* 7. Recommended */}
-          <div className="mt-4">
-            <RecommendedIssuers
-              currentTicker={ticker}
-              currentTag={issuerData?.tag}
-              forceSkeleton={initialLoading}
-            />
-          </div>
-
-          {/* 8. Top holders */}
-          <div className="mt-4">
-            <HoldersSection
-              holders={initialLoading ? [] : holders}
-              isLoading={initialLoading || postOrderRefreshing}
-              onRefresh={refetchHolders}
-            />
-          </div>
         </div>
 
         {/* ── Desktop Layout ── 3-column with sidebars */}
@@ -487,6 +507,7 @@ export const IssuerTradingTemplate: React.FC<IssuerTradingTemplateProps> = ({
               ticker={ticker}
               price={currentPrice}
               priceStep={priceStep}
+              desktopDisclaimerText={desktopPvDisclaimerText}
               isLoading={initialLoading}
               isTradable={isTradable}
               onBuy={handleBuy}

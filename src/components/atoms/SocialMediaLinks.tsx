@@ -2,8 +2,11 @@
 
 import React from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { colors } from "@/lib/constants/colors";
 import { IssuerLinksDB, SocialPlatform } from "@/lib/types/issuer-links";
+
+const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 /** Map each platform to its PNG logo in /public */
 const PLATFORM_LOGO: Record<SocialPlatform, string> = {
@@ -53,6 +56,7 @@ const PLATFORM_ORDER: SocialPlatform[] = [
 interface SocialMediaLinksProps {
   links: IssuerLinksDB | null;
   className?: string;
+  animate?: boolean;
 }
 
 /**
@@ -63,6 +67,7 @@ interface SocialMediaLinksProps {
 export const SocialMediaLinks: React.FC<SocialMediaLinksProps> = ({
   links,
   className = "",
+  animate = false,
 }) => {
   if (!links) return null;
 
@@ -78,28 +83,62 @@ export const SocialMediaLinks: React.FC<SocialMediaLinksProps> = ({
       className={`flex items-center gap-2 overflow-x-auto pb-1 flex-nowrap ${className}`}
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
-      {activePlatforms.map((platform) => (
-        <a
-          key={platform}
-          href={links[platform]!}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center px-7 py-1 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0"
-          style={{
-            backgroundColor: colors.box,
-            border: `1px solid ${colors.boxOutline}`,
-          }}
-          aria-label={PLATFORM_LABEL[platform]}
-        >
+      {activePlatforms.map((platform, index) => {
+        const linkContent = (
           <Image
             src={PLATFORM_LOGO[platform]}
             alt={PLATFORM_LABEL[platform]}
-            width={18}
-            height={18}
-            className="w-[18px] h-[18px] object-contain rounded"
+            width={24}
+            height={24}
+            className="w-6 h-6 md:w-[18px] md:h-[18px] object-contain rounded"
           />
-        </a>
-      ))}
+        );
+
+        if (animate) {
+          return (
+            <motion.a
+              key={platform}
+              href={links[platform]!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center px-8 py-2 md:px-7 md:py-1 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0"
+              style={{
+                backgroundColor: colors.box,
+                border: `1px solid ${colors.boxOutline}`,
+              }}
+              aria-label={PLATFORM_LABEL[platform]}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.4,
+                delay: 0.5 + index * 0.05,
+                ease: EASE_OUT,
+              }}
+              whileHover={{ scale: 1.15, y: -3 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {linkContent}
+            </motion.a>
+          );
+        }
+
+        return (
+          <a
+            key={platform}
+            href={links[platform]!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center px-8 py-2 md:px-7 md:py-1 rounded-lg hover:opacity-80 transition-opacity flex-shrink-0"
+            style={{
+              backgroundColor: colors.box,
+              border: `1px solid ${colors.boxOutline}`,
+            }}
+            aria-label={PLATFORM_LABEL[platform]}
+          >
+            {linkContent}
+          </a>
+        );
+      })}
     </div>
   );
 };

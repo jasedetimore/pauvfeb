@@ -259,46 +259,70 @@ export function HeroSection({
           border: `1px solid ${colors.border}`,
           borderRadius: "10px",
           padding: "20px",
+          paddingBottom: "34px",
+          position: "relative",
           display: "flex",
           alignItems: "center",
           gap: "20px",
           minHeight: "177px",
         }}
       >
-        <div
-          style={{
-            maxHeight: "65px",
-            width: "auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <Logo height={50} variant="dark" />
+        <div className="flex items-center gap-5 translate-y-3">
+          <div
+            style={{
+              maxHeight: "65px",
+              width: "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Logo height={50} variant="dark" />
+          </div>
+
+          <div className="font-mono" style={{ transform: "translateY(-6px)" }}>
+            <div
+              style={{
+                color: colors.textDark,
+                fontSize: "clamp(16px, 5vw, 23px)",
+                fontWeight: "500",
+                marginBottom: "1px",
+                lineHeight: "1.1",
+              }}
+            >
+              Trade on Talent.
+            </div>
+            <div
+              className="hidden lg:block"
+              style={{
+                color: colors.border,
+                fontSize: "14px",
+                fontWeight: "400",
+                lineHeight: "1",
+              }}
+            >
+              {displayIssuerCount.toLocaleString()} Talent
+            </div>
+          </div>
         </div>
 
-        <div className="font-mono">
-          <div
-            style={{
-              color: colors.textDark,
-              fontSize: "clamp(16px, 5vw, 23px)",
-              fontWeight: "500",
-              marginBottom: "6px",
-              lineHeight: "1.1",
-            }}
-          >
-            Trade on Talent.
-          </div>
-          <div
-            style={{
-              color: colors.border,
-              fontSize: "14px",
-              fontWeight: "400",
-            }}
-          >
-            {displayIssuerCount.toLocaleString()} Talent
-          </div>
+        <div
+          className="hide-scrollbar-mobile"
+          style={{
+            position: "absolute",
+            left: "10px",
+            right: "20px",
+            bottom: "4px",
+            color: colors.textDark,
+            fontSize: "8px",
+            lineHeight: "1.1",
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span className="lg:hidden">PVs are digital collectibles based on public sentiment. They do not constitute an investment, debt, or any legal ownership interest in any person or entity</span>
+          <span className="hidden lg:inline">*PVs are digital collectibles that trade on public perception and do not represent ownership in any person or entity.</span>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ interface TradingRightSidebarProps {
   ticker: string;
   price?: number;
   priceStep?: number;
+  desktopDisclaimerText?: string;
   isLoading?: boolean;
   /** When false the issuer has no issuer_trading row yet */
   isTradable?: boolean;
@@ -37,6 +38,7 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
   ticker,
   price,
   priceStep,
+  desktopDisclaimerText,
   isLoading = false,
   isTradable = true,
   onBuy,
@@ -88,6 +90,18 @@ export const TradingRightSidebar: React.FC<TradingRightSidebarProps> = ({
         disabled={!price || !isTradable}
         isTradable={isTradable}
       />
+
+      {desktopDisclaimerText && (
+        <div
+          style={{
+            color: colors.textMuted,
+            fontSize: "9px",
+            lineHeight: "1.2",
+          }}
+        >
+          {desktopDisclaimerText}
+        </div>
+      )}
 
       {/* User Holdings */}
       <UserHoldings

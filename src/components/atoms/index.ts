@@ -28,6 +28,7 @@ export {
   FullPageSkeleton,
   TagPageSkeleton,
   HomePageSkeleton,
+  MobileIssuerPageSkeleton,
 } from "./Skeleton";
 export { PriceDisplay } from "./PriceDisplay";
 export { SocialMediaLinks } from "./SocialMediaLinks";
