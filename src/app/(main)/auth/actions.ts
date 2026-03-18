@@ -47,19 +47,23 @@ export async function signUp(formData: FormData) {
     await supabase.auth.signOut();
   }
 
-  // If sign up was successful, create a user record in the users table
+  // Since Supabase often employs an auth trigger to auto-create the public user row,
+  // we use update() matching the new user_id to populate the extra fields,
+  // avoiding the 23505 unique constraint violation.
   if (authData.user) {
-    const { error: userError } = await supabase.from("users").insert({
-      user_id: authData.user.id,
-      username,
-      usdp_balance: 0,
-      terms_accepted_at: new Date().toISOString(),
-    });
+    const adminClient = createAdminClient();
+    const { error: userError } = await adminClient
+      .from("users")
+      .update({
+        username,
+        usdp_balance: 0,
+        terms_accepted_at: new Date().toISOString(),
+      })
+      .eq("user_id", authData.user.id);
 
     if (userError) {
-      console.error("Error creating user record:", userError);
-      // Don't fail the signup if user record creation fails
-      // The user can still log in and we can create the record later
+      console.error("Error updating user record:", userError);
+      // Don't fail the signup if user record update fails
     }
 
     // Process referral if a code was provided
