@@ -172,7 +172,11 @@ export default function RegisterPage() {
                 id="email"
                 name="email"
                 required
-                className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
+                defaultValue={searchParams?.get("email") || ""}
+                readOnly={!!searchParams?.get("email")}
+                className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 transition-colors ${
+                  searchParams?.get("email") ? "opacity-60 cursor-not-allowed" : ""
+                }`}
                 style={{
                   backgroundColor: colors.box,
                   borderColor: colors.boxOutline,
@@ -275,7 +279,7 @@ export default function RegisterPage() {
 
           {/* Google Sign Up - OUTSIDE BOX */}
           <div className="mt-2.5">
-            <GoogleSignInButton label="Sign up with Google" />
+            <GoogleSignInButton label={searchParams?.get("email") ? "Sign up with Google" : "Join Waitlist via Google"} />
           </div>
 
           {/* Sign In Link - OUTSIDE BOX */}

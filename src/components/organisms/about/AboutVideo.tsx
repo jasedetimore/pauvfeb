@@ -25,28 +25,14 @@ const AboutVideo = () => {
             See How It <span className="italic">Works</span>
           </h2>
 
-          {/* Video Embed */}
-          <div
-            className="shadow-xl mb-10"
-            style={{
-              position: "relative",
-              paddingTop: "56.25%",
-              width: "100%",
-              overflow: "hidden",
-              minHeight: "200px",
-              backgroundColor: colors.textDark,
-              border: `1px solid ${colors.border}`,
-              borderRadius: "0.75rem",
-            }}
-          >
-            <iframe
-              src="https://iframe.mediadelivery.net/embed/579822/e55b8e03-c4b7-4c5b-b298-6b898243ea30?autoplay=true&loop=false&muted=true&preload=true"
-              className="absolute inset-0 h-full w-full z-10"
-              style={{ position: "absolute", top: 0, left: 0, border: 0 }}
-              allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer;"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Pauv Promo Video"
-            />
+          {/* Platform Summary */}
+          <div className="max-w-3xl mx-auto mt-8 mb-10">
+            <p
+              className="font-serif text-lg md:text-xl leading-relaxed"
+              style={{ color: colors.textSecondary }}
+            >
+              Pauv is the first true market for human potential. We transform influence into a tradable asset, allowing fans and early believers to back the creators, athletes, and visionaries they support. Instead of just consuming content, you can now own a stake in their success and trade on their trajectory.
+            </p>
           </div>
         </motion.div>
       </div>

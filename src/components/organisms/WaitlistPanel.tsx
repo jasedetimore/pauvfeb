@@ -135,6 +135,61 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
   const isLoading = authLoading || waitlistLoading;
 
   const [codeCopied, setCodeCopied] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailWaitlistData, setEmailWaitlistData] = useState<{
+    referralCode: string;
+    position?: number;
+    isExisting?: boolean;
+  } | null>(null);
+  const [submitError, setSubmitError] = useState("");
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailInput || !emailInput.includes("@")) {
+      setSubmitError("Please enter a valid email");
+      return;
+    }
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    // Grab possible referral code from URL
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+
+    try {
+      const res = await fetch("/api/waitlist/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput, referredBy: ref }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to join waitlist");
+      }
+
+      setEmailWaitlistData({
+        referralCode: data.data.referralCode,
+        position: data.data.position,
+        isExisting: data.data.isExisting,
+      });
+    } catch (err: any) {
+      setSubmitError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyEmailCode = useCallback(() => {
+    if (!emailWaitlistData?.referralCode) return;
+    const link = `https://pauv.com/register?ref=${emailWaitlistData.referralCode}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    });
+  }, [emailWaitlistData]);
 
   // Map API neighbors to the shape the UI expects
   const neighbors = apiNeighbors.map((n) => ({
@@ -203,8 +258,59 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
     );
   }
 
-  /* ── not logged in ── */
+  /* ── not logged in — Email Input Flow ── */
   if (!user) {
+    if (emailWaitlistData) {
+      // SUCCESS STATE (Email Submitted)
+      return (
+        <div
+          className="rounded-[10px] overflow-hidden relative"
+          style={panelStyle}
+        >
+          {/* Subtle glow */}
+          <div
+            className="absolute inset-0 pointer-events-none z-0"
+            style={{
+              background: `radial-gradient(ellipse 60% 30% at 50% 42%, ${colors.gold}08 0%, transparent 100%)`,
+            }}
+          />
+          <div className="relative z-[2] flex flex-col items-center justify-center gap-5 h-full px-4 text-center">
+
+            <div className="flex flex-col items-center gap-4 mb-6 mt-2 text-center w-full max-w-[420px]">
+              <span className="font-mono text-xl sm:text-2xl font-bold tracking-wide" style={{ color: colors.textPrimary }}>
+                Your position in line:
+              </span>
+              <span className="font-mono text-5xl sm:text-5xl font-bold tracking-tight" style={{ color: colors.gold }}>
+                {emailWaitlistData.position ? `#${emailWaitlistData.position.toLocaleString()}` : "Waitlisted"}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-[420px]">
+              <p className="font-mono text-base sm:text-lg text-center leading-relaxed" style={{ color: colors.textPrimary }}>
+                Why a line? We&apos;re launching in waves to ensure stability at scale.
+              </p>
+
+              <p className="font-mono text-xl sm:text-2xl text-center leading-snug" style={{ color: colors.textPrimary }}>
+                Complete your account to move up your spots
+              </p>
+            </div>
+
+            <a
+              href={`/register?email=${encodeURIComponent(emailInput)}`}
+              className="flex items-center justify-center w-full max-w-[420px] px-8 py-3 rounded-md font-mono text-base font-semibold transition-all hover:brightness-110"
+              style={{
+                backgroundColor: colors.gold,
+                color: colors.textDark,
+              }}
+            >
+              Complete Account Setup
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    // INPUT STATE (Not Submitted Yet)
     return (
       <div
         className="rounded-[10px] overflow-hidden relative"
@@ -213,42 +319,65 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
         <div
           className="relative z-[2] flex flex-col items-center justify-center gap-6 h-full px-4"
         >
-          {/* Title */}
-          <div className="flex flex-col items-center gap-2">
-            <span
-              className="font-mono text-xs tracking-[0.3em] uppercase"
-              style={{ color: colors.gold }}
-            >
-              Early Access
-            </span>
-            <span
-              className="font-mono text-2xl font-bold"
+          {/* Title & Info Grouping */}
+          <div className="flex flex-col items-center gap-4 text-center w-full">
+            {/* Title */}
+            <div className="flex flex-col items-center gap-1">
+              <h2
+                className="font-mono text-xl sm:text-2xl font-bold"
+                style={{ color: colors.gold }}
+              >
+                Early Access
+              </h2>
+              <h1
+                className="font-mono text-4xl sm:text-4xl font-bold tracking-tight"
+                style={{ color: colors.textPrimary }}
+              >
+                Join the waitlist
+              </h1>
+            </div>
+
+            {/* Info */}
+            <p
+              className="font-mono text-base sm:text-lg text-center max-w-[420px] leading-relaxed"
               style={{ color: colors.textPrimary }}
             >
-              Join the Waitlist
-            </span>
+              Enter your email to reserve your spot. First wave of users trade on launch day — more will unlock every day after.
+            </p>
           </div>
 
-          {/* Info */}
-          <p
-            className="font-mono text-base text-center max-w-sm leading-relaxed"
-            style={{ color: colors.textSecondary }}
-          >
-            Create an account to reserve your spot.
-            First wave of users trade on launch day — more will unlock every day after.
-          </p>
+          <form onSubmit={handleEmailSubmit} className="w-full max-w-[420px] flex flex-col gap-3">
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              placeholder="Enter your email address"
+              className="w-full px-4 py-3 rounded-md font-mono text-sm outline-none transition-all"
+              style={{
+                backgroundColor: colors.boxLight,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.boxOutline}`,
+              }}
+              required
+            />
+            {submitError && (
+              <span className="font-mono text-xs text-red-400 text-center">
+                {submitError}
+              </span>
+            )}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-8 py-3 rounded-md font-mono text-base font-semibold transition-all hover:brightness-110 disabled:opacity-50"
+              style={{
+                backgroundColor: colors.gold,
+                color: colors.textDark,
+              }}
+            >
+              {isSubmitting ? "Submitting..." : "Join Waitlist"}
+            </button>
+          </form>
 
-          {/* CTA */}
-          <a
-            href="/register"
-            className="px-8 py-3 rounded-md font-mono text-base font-semibold transition-all hover:brightness-110"
-            style={{
-              backgroundColor: colors.gold,
-              color: colors.textDark,
-            }}
-          >
-            Create Account
-          </a>
         </div>
       </div>
     );
@@ -270,95 +399,53 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
         }}
       />
 
-      <div className="relative z-[2] flex flex-col items-center justify-center h-full pt-2 pb-6 px-4">
+      <div className="relative z-[2] flex flex-col items-center justify-center gap-5 h-full px-4 text-center">
         {/* ── Top message ── */}
-        <div className="flex flex-col items-center gap-2 mb-4 text-center max-w-md">
+        <div className="flex flex-col items-center gap-4 mb-6 mt-2 text-center w-full max-w-[420px]">
           {!hideIntro && (
-            <p
-              className="font-mono text-sm leading-relaxed"
-              style={{ color: colors.textSecondary }}
+            <span
+              className="font-mono text-xl sm:text-2xl font-bold tracking-wide"
+              style={{ color: colors.textPrimary }}
             >
-              To ensure stability at scale, we are granting access in waves throughout launch day
-            </p>
+              Your position in line:
+            </span>
           )}
           <span
-            className={`font-mono font-bold tabular-nums ${expanded ? "text-[2rem]" : "text-[1.5rem]"}`}
-            style={{ color: colors.textPrimary }}
+            className="font-mono text-5xl sm:text-6xl font-bold tracking-tight"
+            style={{ color: colors.gold }}
           >
-            You are #{displayPos} in line
+            {displayPos > 0 ? `#${displayPos.toLocaleString()}` : "Waitlisted"}
           </span>
         </div>
 
-        {/* ── Scrolling names ── */}
-        <div
-          className="mb-5 flex flex-col items-center w-full max-w-md rounded-lg py-1"
-          style={{ border: `1px solid ${colors.boxOutline}` }}
-        >
-          {/* Top fade mask */}
-          <div
-            className="w-full h-4 pointer-events-none"
-            style={{
-              background: `linear-gradient(to bottom, ${colors.background}, transparent)`,
-            }}
-          />
+        {!hideIntro && (
+          <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-[420px]">
+            <p
+              className="font-mono text-base sm:text-lg text-center leading-relaxed"
+              style={{ color: colors.textPrimary }}
+            >
+              Why a line? We're launching in waves to ensure stability at scale.
+            </p>
+          </div>
+        )}
 
-          {(() => {
-            // Divider widths between rows (index = gap after row i).
-            // Center gap is widest; outermost gaps are narrowest.
-            const dividerWidths = ["30%", "62%", "62%", "30%"];
-            // Find the index of the current user in the neighbors list
-            const selfIdx = neighbors.findIndex((n) => n.isCurrentUser);
-            return neighbors.map((n, i) => (
-              <React.Fragment key={i}>
-                <WaitlistRow
-                  username={n.username}
-                  position={n.position}
-                  offset={i - (selfIdx >= 0 ? selfIdx : 2)}
-                  isCurrentUser={!!n.isCurrentUser}
-                />
-                {i < neighbors.length - 1 && (
-                  <div
-                    className="pointer-events-none"
-                    style={{
-                      width: dividerWidths[i],
-                      height: "1px",
-                      backgroundColor: "#404040",
-                      opacity: 0.45,
-                      transition: "width 0.3s",
-                    }}
-                  />
-                )}
-              </React.Fragment>
-            ));
-          })()}
-
-          {/* Bottom fade mask */}
-          <div
-            className="w-full h-4 pointer-events-none"
-            style={{
-              background: `linear-gradient(to top, ${colors.background}, transparent)`,
-            }}
-          />
-        </div>
-
-        {/* ── Referral section ── */}
-        <div className="flex flex-col gap-2 w-full max-w-md items-center text-center">
+        {/* ── Referral Block (Simplified) ── */}
+        <div className="flex flex-col items-center gap-2 mt-4 w-full max-w-[420px]">
           <span
-            className="font-mono text-base font-semibold"
+            className="font-mono text-base font-medium"
             style={{ color: colors.textPrimary }}
           >
             Want to move forward in line?
           </span>
           <span
-            className="font-mono text-sm"
+            className="font-mono text-sm mb-2"
             style={{ color: colors.textSecondary }}
           >
-            Refer a friend to move up 20 spaces:
+            Refer a friend to move up in line:
           </span>
-
           <button
             onClick={copyCode}
-            className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md font-mono text-sm transition-all mt-1"
+            className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md font-mono text-sm transition-all"
             style={{
               backgroundColor: `${colors.textPrimary}08`,
               border: `1px solid ${colors.textPrimary}25`,
@@ -366,18 +453,16 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
               cursor: "pointer",
             }}
           >
-            <span className="truncate text-center" style={{ color: codeCopied ? colors.green : colors.textPrimary }}>
-              {codeCopied
-                ? "Copied!"
-                : referralCode
-                  ? `pauv.com/register?ref=${referralCode}`
-                  : "pauv.com/register"}
+            <span
+              className="truncate text-center"
+              style={{ color: codeCopied ? colors.green : colors.textPrimary }}
+            >
+              {codeCopied ? "Copied!" : referralLink}
             </span>
-
             {!codeCopied ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity"
+                className="w-4 h-4 shrink-0 opacity-50 group-hover:opacity-100"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -395,33 +480,17 @@ export const WaitlistPanel: React.FC<WaitlistPanelProps> = ({
                 stroke={colors.green}
                 strokeWidth={2.5}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             )}
           </button>
         </div>
       </div>
-
-      {/* ── CSS keyframes injected via style tag (only once) ── */}
-      <style jsx global>{`
-        @keyframes pulse-ring {
-          0% {
-            transform: scale(1);
-            opacity: 0.25;
-          }
-          50% {
-            transform: scale(1.04);
-            opacity: 0.08;
-          }
-          100% {
-            transform: scale(1);
-            opacity: 0.25;
-          }
-        }
-        .animate-pulse-ring {
-          animation: pulse-ring 2.5s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };
+
