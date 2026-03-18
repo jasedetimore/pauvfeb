@@ -26,7 +26,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Call the Postgres function to get position + neighbors
+  // Fetch position + neighbors from Postgres
   const { data, error } = await supabase.rpc("get_waitlist_neighbors", {
     p_user_id: user.id,
     p_radius: 2,
