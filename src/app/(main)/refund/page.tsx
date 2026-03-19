@@ -40,10 +40,10 @@ export default function RefundPolicyPage() {
               className="text-4xl font-semibold"
               style={{ color: colors.textPrimary }}
             >
-              Refund Policy (Phase 1)
+              Refund Policy
             </h1>
             <p className="text-sm" style={{ color: colors.textSecondary }}>
-              Last Updated: February 18, 2026
+              Last Updated: March 08, 2026
             </p>
           </div>
         </div>
@@ -53,18 +53,35 @@ export default function RefundPolicyPage() {
             className="text-lg font-semibold"
             style={{ color: colors.textPrimary }}
           >
+            Withdrawals vs. Refunds
+          </h2>
+          <p style={{ color: colors.textSecondary }}>
+            Pauv is a fully liquid, closed-loop platform. Because you have the ability to sell your
+            PVs at the current algorithmic market price and withdraw your USDP balance to your linked
+            bank account at any time, Pauv does not offer traditional &quot;refunds&quot; for platform activity
+            or market-driven losses.
+          </p>
+          <p style={{ color: colors.textSecondary }}>
+            If you wish to retrieve your funds, you may simply trade your PVs back for USDP and
+            initiate a withdrawal via the Platform interface.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2
+            className="text-lg font-semibold"
+            style={{ color: colors.textPrimary }}
+          >
             No "Change of Mind" Refunds
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            Due to the nature of the Pauv Platform as a closed-loop system during Phase 1,
-            all purchases of USDP credits are final and non-refundable.
+            We do not offer refunds or transaction reversals for:
           </p>
-          <p style={{ color: colors.textSecondary }}>We do not offer refunds for:</p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
-            <li>Changing your mind after purchasing USDP.</li>
-            <li>Poor performance of PVs (i.e., if the "value" of a person drops).</li>
-            <li>Inability to withdraw funds (as clearly disclosed in our Terms of Service).</li>
+            <li>Changing your mind after opening a position on a Talent's sentiment.</li>
+            <li>Poor performance or dropping market demand of a Talent's PV.</li>
             <li>Dissatisfaction with the Platform features.</li>
+            <li>Standard withdrawal processing times (1 to 2 business days for ledger-to-blockchain reconciliation).</li>
           </ul>
         </section>
 
@@ -76,28 +93,29 @@ export default function RefundPolicyPage() {
             Exceptions (Bona Fide Errors)
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            Pauv Inc. may, at its sole discretion, process a refund only in the following
-            specific scenarios ("Bona Fide Errors"):
+            Pauv Inc. may, at its sole discretion, process a direct refund to your payment method
+            only in the following specific scenarios ("Bona Fide Errors"):
           </p>
           <ol className="list-decimal pl-6 space-y-2" style={{ color: colors.textSecondary }}>
             <li>
               <span className="font-semibold" style={{ color: colors.textPrimary }}>
                 Technical Duplication:
               </span>{" "}
-              If a technical error causes your payment method to be charged twice for a single transaction.
+              If a technical error causes your payment method to be charged twice for a single USDP
+              deposit transaction.
             </li>
             <li>
               <span className="font-semibold" style={{ color: colors.textPrimary }}>
                 Unauthorized Activity:
               </span>{" "}
-              If we verify that the charge was made due to fraudulent use of your credit card
-              or bank account (subject to investigation).
+              If we verify that a deposit was made due to fraudulent use of your credit card
+              or bank account (subject to a formal AML/fraud investigation).
             </li>
             <li>
               <span className="font-semibold" style={{ color: colors.textPrimary }}>
                 Failure to Deliver:
               </span>{" "}
-              If you were charged but the corresponding USDP credits were never delivered to your Pauv account
+              If you were charged but the corresponding USDP credits were never delivered to your Pauv wallet
               due to a system failure.
             </li>
           </ol>
@@ -111,13 +129,13 @@ export default function RefundPolicyPage() {
             How to Request a Refund for an Error
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            To request a refund for a Bona Fide Error, you must contact support@pauv.com within
-            7 days of the transaction. You must include:
+            To request a refund for a Bona Fide Error, you must contact support@pauv.com within 7
+            days of the transaction. You must include:
           </p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
             <li>Your username.</li>
-            <li>Transaction ID/Date.</li>
-            <li>Evidence of the error (e.g., screenshot of double charge).</li>
+            <li>Transaction ID and Date.</li>
+            <li>Evidence of the error (e.g., screenshot of a double bank charge).</li>
           </ul>
         </section>
 
@@ -129,9 +147,11 @@ export default function RefundPolicyPage() {
             Chargebacks
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            Initiating a chargeback with your bank or credit card issuer without first
-            contacting Pauv support will result in the immediate and permanent suspension
-            of your Pauv account.
+            Initiating a chargeback with your bank or credit card issuer without first contacting
+            Pauv support constitutes a violation of our Terms of Service. Because USDP and PVs are
+            digital assets, unwarranted chargebacks are treated as friendly fraud. Initiating an
+            unjustified chargeback will result in the immediate and permanent suspension of your
+            Pauv account, and we may report the incident to our payment partners.
           </p>
         </section>
       </main>

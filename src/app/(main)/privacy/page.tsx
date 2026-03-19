@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
               Privacy Policy
             </h1>
             <p className="text-sm" style={{ color: colors.textSecondary }}>
-              Last Updated: February 18, 2026
+              Last Updated: March 08, 2026
             </p>
           </div>
         </div>
@@ -51,11 +51,8 @@ export default function PrivacyPolicyPage() {
         <p style={{ color: colors.textSecondary }}>
           Pauv Inc. (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) respects your privacy. This Privacy Policy describes
           how we collect, use, and share your personal information when you visit pauv.com (the
-          &quot;Platform&quot;) or use our services.
-        </p>
-        <p style={{ color: colors.textSecondary }}>
-          By using the Platform, you agree to the collection and use of information in accordance
-          with this policy.
+          &quot;Platform&quot;) or use our services. By using the Platform, you agree to the collection and use
+          of information in accordance with this policy.
         </p>
 
         <section className="space-y-3">
@@ -75,7 +72,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
               <li>Account Registration: Name, email address, username, and password.</li>
               <li>Talent Profile: If you list yourself as Talent, we collect the profile image, social media handles, and bio information you choose to display publicly.</li>
-              <li>Verification Data: Information required for identity verification, which may include government ID numbers or dates of birth (facilitated via our partner, Soap).</li>
+              <li>Verification Data (KYC/KYB): Information required for strict identity verification as mandated by federal anti-money laundering laws. This includes government ID numbers, physical addresses, and dates of birth (facilitated securely via our partner, Soap Payments).</li>
               <li>Support: Information sent to us when you contact customer support.</li>
             </ul>
           </div>
@@ -86,7 +83,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
               <li>Device &amp; Usage: IP address, browser type, device type, operating system, and time stamps.</li>
               <li>Activity: Pages viewed, time spent on the Platform, and interactions with the interface.</li>
-              <li>Cookies: We use cookies and local storage to maintain your login session and ensure platform security.</li>
+              <li>Cookies: We use cookies and local storage to maintain your login session and ensure platform security (e.g., 3DS authentication).</li>
             </ul>
           </div>
           <div className="space-y-3">
@@ -94,8 +91,8 @@ export default function PrivacyPolicyPage() {
               C. Transaction Data
             </p>
             <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
-              <li>Financial History: Records of USDP credit purchases, PV trades, and account balances.</li>
-              <li>Blockchain Records: While our ledger is private/hybrid, transaction metadata (wallet addresses and trade amounts) is recorded immutably on our internal ledger system.</li>
+              <li>Financial History: Records of fiat deposits, USDP credit balances, PV trades, royalty disbursements, and fiat withdrawals.</li>
+              <li>Ledger Records: Transaction metadata (wallet balances, timestamps, and trade amounts) is recorded immutably on our internal hybrid database and private ledger systems to ensure auditability.</li>
             </ul>
           </div>
         </section>
@@ -105,15 +102,16 @@ export default function PrivacyPolicyPage() {
             className="text-lg font-semibold"
             style={{ color: colors.textPrimary }}
           >
-            2. Third-Party Service Providers (Soap Payments)
+            2. Third-Party Service Providers
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            We utilize Soap Payments for payment processing and identity verification.
+            To safely provide our services and comply with financial regulations, we share necessary
+            data with trusted partners:
           </p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Payment Information:</span> Pauv does not store your full credit card number or bank account details on our servers. This sensitive financial data is transmitted directly to Soap Payments for processing.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Identity Verification:</span> Soap Payments processes your personal data to verify your identity and prevent fraud.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Soap’s Policy:</span> By using our Platform, you acknowledge that your data will be processed by Soap in accordance with their own Privacy Policy. We encourage you to review their policy for details on how they handle financial data.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Payment &amp; Identity Processing (Soap Payments &amp; Finix):</span> Pauv does not store your full credit card number or bank account routing details on our servers. Financial routing and strict KYC/KYB identity verification, geofencing, and fraud prevention are managed by Soap Payments and Finix.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Banking Rails (BVNK &amp; Lead Bank):</span> Your fiat funds are held in FBO accounts via BVNK and Lead Bank. Transaction metadata is shared securely via API to facilitate your deposits and withdrawals.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Partner Policies:</span> By using our Platform, you acknowledge that your financial and identity data will be processed by these partners in accordance with their respective Privacy Policies and strict federal banking standards.</li>
           </ul>
         </section>
 
@@ -128,10 +126,9 @@ export default function PrivacyPolicyPage() {
             We use your data for the following purposes:
           </p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Service Delivery:</span> To create your account, process USDP transactions, and execute PV trades using our linear pricing algorithm.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Security &amp; Fraud Prevention:</span> To detect wash trading, market manipulation, account takeovers, and other prohibited activities.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Service Delivery:</span> To create your account, process USDP transactions, execute PV trades using our linear pricing algorithm, and disburse Talent royalties.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Security &amp; AML Compliance:</span> As a registered Money Services Business (MSB), we use your data to detect wash trading, market manipulation, account takeovers, and to fulfill Bank Secrecy Act obligations (including OFAC screening, SARs, and CTRs).</li>
             <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Communication:</span> To send you transaction confirmations, security alerts, and administrative updates.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Legal Compliance:</span> To comply with applicable laws, including tax reporting and responding to lawful requests from government authorities.</li>
           </ul>
         </section>
 
@@ -144,12 +141,12 @@ export default function PrivacyPolicyPage() {
           </h2>
           <p style={{ color: colors.textSecondary }}>
             Pauv Inc. is headquartered in Texas. Under the Texas Data Privacy and Security Act
-            (TDPSA), residents of Texas (and other users, as a courtesy) have the following rights:
+            (TDPSA), residents of Texas (and all users, as a courtesy) have the following rights:
           </p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
             <li>Right to Access: You may request a copy of the specific personal data we maintain about you.</li>
             <li>Right to Correction: You may request that we correct inaccuracies in your personal data.</li>
-            <li>Right to Deletion: You may request that we delete personal data you have provided to us (subject to retention required by law for financial records).</li>
+            <li>Right to Deletion: You may request that we delete personal data you have provided to us. (Note: Financial transaction records and KYC data must be retained by law for up to 7 years to comply with AML/BSA regulations, even if you request deletion).</li>
             <li>Right to Portability: You may request a copy of your data in a digital, machine-readable format.</li>
             <li>Right to Appeal: If we deny your request, you have the right to appeal our decision.</li>
           </ul>
@@ -171,14 +168,14 @@ export default function PrivacyPolicyPage() {
           </h2>
           <p style={{ color: colors.textSecondary }}>
             <span className="font-semibold" style={{ color: colors.textPrimary }}>Security:</span> We implement
-            industry-standard encryption (SSL/TLS) and security protocols to protect your data during
-            transmission and storage. However, no method of transmission over the Internet is 100% secure.
+            industry-standard encryption (SSL/TLS) and bank-grade security protocols to protect your
+            data during transmission and storage.
           </p>
           <p style={{ color: colors.textSecondary }}>
             <span className="font-semibold" style={{ color: colors.textPrimary }}>Retention:</span> We retain
             personal information only for as long as necessary to provide our services and comply with legal
-            obligations. Specifically, financial transaction records may be retained for up to 7 years to comply
-            with tax and accounting laws, even if you delete your account.
+            obligations. Financial and identity records are stored securely for up to 7 years to comply with
+            state and federal financial regulations.
           </p>
         </section>
 
@@ -191,18 +188,17 @@ export default function PrivacyPolicyPage() {
           </h2>
           <p style={{ color: colors.textSecondary }}>
             <span className="font-semibold" style={{ color: colors.textPrimary }}>Traders:</span> The trading features
-            of Pauv (buying/selling USDP and PVs) are strictly for users aged 18 and older. We do not knowingly
-            collect personal information from children under 18 for the purpose of creating trading accounts.
+            of Pauv (buying/selling PVs and depositing/withdrawing USDP) are strictly for users aged 18 and
+            older. We do not knowingly collect personal information from children under 18 for trading accounts.
           </p>
           <p className="font-semibold" style={{ color: colors.textPrimary }}>
             Minor Talent (COPPA Notice):
           </p>
           <ul className="list-disc pl-6 space-y-2" style={{ color: colors.textSecondary }}>
-            <li>Pauv allows individuals under the age of 13 to be listed as &quot;Talent&quot; only with verifiable parental consent.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Collection:</span> We collect the Minor’s name, image (headshot), and biographical details solely for the purpose of creating their public profile.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Consent:</span> We require the parent or legal guardian to sign a legal agreement (Letter of Intent and Custodial Agreement) and provide their own government ID to verify their authority before we collect or publish any data regarding the Minor.</li>
+            <li>Pauv allows individuals under the age of 18 to be listed as &quot;Talent&quot; only with verifiable parental consent.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Collection:</span> We collect the Minor’s name, image, and biographical details solely to create their public profile.</li>
+            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Consent:</span> We require the parent or legal guardian to pass KYC verification and sign a legal agreement before we collect or publish any data regarding the Minor or disburse Talent royalties.</li>
             <li><span className="font-semibold" style={{ color: colors.textPrimary }}>Rights:</span> The parent/guardian has the right to review the Minor’s information, request its deletion, and revoke consent at any time by contacting support@pauv.com.</li>
-            <li><span className="font-semibold" style={{ color: colors.textPrimary }}>No Tracking:</span> We do not use the Minor’s personal information for behavioral advertising or sell it to third parties.</li>
           </ul>
         </section>
 
@@ -214,8 +210,8 @@ export default function PrivacyPolicyPage() {
             7. Changes to This Policy
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            We may update this Privacy Policy from time to time to reflect changes in our Phase 1
-            operations or legal requirements. We will notify you of any significant changes by posting
+            We may update this Privacy Policy from time to time to reflect changes in our operations
+            or legal requirements. We will notify you of any significant changes by posting
             the new policy on this page and updating the &quot;Last Updated&quot; date at the top. Your continued
             use of the Platform after these changes constitutes acceptance of the revised policy.
           </p>
@@ -229,7 +225,7 @@ export default function PrivacyPolicyPage() {
             8. Contact Us
           </h2>
           <p style={{ color: colors.textSecondary }}>
-            If you have questions about this Privacy Policy, please contact us at:
+            If you have questions about this Privacy Policy or your account, please contact us at:
           </p>
           <div className="space-y-1" style={{ color: colors.textSecondary }}>
             <p>Pauv Inc.</p>
